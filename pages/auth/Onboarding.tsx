@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, ChevronRight, Truck, Wrench, BarChart3, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth-context';
 
 interface OnboardingProps {
@@ -7,6 +8,7 @@ interface OnboardingProps {
 }
 
 const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
+  const router = useRouter();
   const { completeOnboarding, isLoading, error, clearError } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -33,24 +35,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     }));
   };
 
-  const handleComplete = async () => {
-    try {
-      setIsSubmitting(true);
-      clearError();
-      
-      await completeOnboarding({
-        fleetSize: formData.fleetSize,
-        industry: formData.industry,
-        objectives: formData.objectives
-      });
-      
-      onComplete();
-    } catch (error) {
-      // L'erreur est gérée par le contexte
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Cette fonction n'est plus utilisée directement, la logique est dans le bouton
 
   const steps = [
     { id: 1, title: 'Profil de la flotte' },
@@ -185,10 +170,36 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
        </p>
 
        <button 
-        onClick={onComplete}
-        className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#008751] hover:bg-[#007043]"
+        onClick={async () => {
+          try {
+            setIsSubmitting(true);
+            clearError();
+            
+            await completeOnboarding({
+              fleetSize: formData.fleetSize,
+              industry: formData.industry,
+              objectives: formData.objectives
+            });
+            
+            // Redirection explicite vers le dashboard
+            router.push('/app/(main)');
+          } catch (error) {
+            console.error('Erreur lors de la finalisation de l\'onboarding:', error);
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+        disabled={isSubmitting || isLoading}
+        className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#008751] hover:bg-[#007043] disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Aller au tableau de bord
+        {isSubmitting || isLoading ? (
+          <>
+            <Loader2 className="animate-spin h-4 w-4" />
+            Finalisation...
+          </>
+        ) : (
+          'Aller au tableau de bord'
+        )}
       </button>
     </div>
   );
@@ -207,7 +218,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                </div>
             ))}
              {/* Progress Line Background */}
-            <div className="absolute top-[84px] left-0 w-full h-[2px] bg-gray-200 -z-0 hidden md:block" style={{ width: 'calc(100% - 32px)', left: '16px', maxWidth: '30rem', margin: '0 auto', right: 0 }}></div> 
+             <div className="absolute top-[84px] left-0 w-full h-[2px] bg-gray-200 -z-0 hidden md:block" style={{ width: 'calc(100% - 32px)', left: '16px', maxWidth: '30rem', margin: '0 auto', right: 0 }}></div> 
              {/* Simple Line Mockup for the specific width constraints */}
              <div className="absolute w-full max-w-md h-[2px] bg-gray-200 -z-10 top-[80px] left-1/2 transform -translate-x-1/2">
                 <div 

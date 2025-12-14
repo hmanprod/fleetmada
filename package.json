@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:analyze": "ANALYZE=true npm run build",
+    "test:build": "npm run type-check && npm run build",
+    "test:build:prod": "NODE_ENV=production npm run type-check && npm run build",
+    "type-check": "tsc --noEmit",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -17,6 +21,11 @@
     "docker:restart": "docker-compose restart",
     "docker:logs": "docker-compose logs -f postgres",
     "test:infra": "node scripts/test-infrastructure.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "playwright:install": "npx playwright install",
     "setup": "npm install && npm run docker:up && cp .env.example .env.local && npm run db:generate && npm run db:migrate"
   },
   "dependencies": {
@@ -33,6 +42,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20",
