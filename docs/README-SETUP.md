@@ -37,6 +37,7 @@ npm run docker:up             # 🐳 Démarrage PostgreSQL + Redis
 cp .env.example .env.local     # ⚙️ Configuration environnement
 npm run db:generate           # 🗄️ Génération client Prisma
 npm run db:migrate            # 🏗️ Application des migrations
+npm run db:seed               # 🌱 Ajout des données de test
 npm run test:infra            # ✅ Test de validation infrastructure
 ```
 
@@ -98,6 +99,43 @@ npm run db:reset
 
 # (Optionnel) Ajouter des données de test
 npm run db:seed
+
+#### 6. 🌱 Configuration des Données de Test (Seed)
+
+Pour avoir des données de démonstration réalistes, exécutez le seed :
+
+```bash
+# Exécuter le seeding avec données de test malgaches
+npm run db:seed
+```
+
+**⚠️ Important :** Le seed supprime toutes les données existantes. Utilisez uniquement en développement !
+
+**📖 Documentation complète :** Consultez [`docs/SEED-TESTING.md`](./SEED-TESTING.md) pour :
+- Liste complète des credentials de test
+- Structure détaillée des données créées
+- Exemples d'utilisation pour les tests
+- Instructions de personnalisation
+
+**🔑 Credentials de Test Principaux :**
+
+| Rôle | Email | Mot de passe | Entreprise |
+|------|-------|--------------|------------|
+| **Admin** | `admin@fleetmadagascar.mg` | `testpassword123` | FleetMadagascar SARL |
+| **Manager** | `marie.ratsimba@fleetmadagascar.mg` | `userpassword123` | FleetMadagascar SARL |
+| **Driver** | `paul.andriamanantsoa@fleetmadagascar.mg` | `userpassword123` | FleetMadagascar SARL |
+| **Transport** | `sophie@transport-iavola.mg` | `userpassword123` | Transport Iavola |
+| **Taxi** | `alain@taxibe.mg` | `userpassword123` | Taxi Be Express |
+
+**Données créées :**
+- ✅ 3 entreprises malgaches
+- ✅ 5 utilisateurs avec différents rôles
+- ✅ 5 véhicules (Toyota, Nissan, Mitsubishi, Ford, Peugeot)
+- ✅ 3 entrées de carburant
+- ✅ 1 entrée de recharge électrique
+- ✅ 2 fournisseurs locaux
+- ✅ 2 contacts professionnels
+- ✅ 2 rappels de maintenance
 ```
 
 #### 5. 🚀 Lancement de l'Application
@@ -356,6 +394,7 @@ npm run docker:up             # 🐳 Démarrage conteneurs
 cp .env.example .env.local     # ⚙️ Configuration environnement
 npm run db:generate           # 🔧 Génération client Prisma
 npm run db:migrate            # 🏗️ Application migrations
+npm run db:seed               # 🌱 Données de test malgaches
 npm run test:infra            # ✅ Test infrastructure
 ```
 

@@ -7,6 +7,303 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id              String          @id @default(cuid())
+  name            String
+  email           String          @unique
+  password        String
+  companyId       String?
+  company         Company?        @relation(fields: [companyId], references: [id])
+  avatar          String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  chargingEntries ChargingEntry[]
+  fuelEntries     FuelEntry[]
+  issues          Issue[]
+  serviceEntries  ServiceEntry[]
+  vehicles        Vehicle[]
+  blacklistedTokens BlacklistedToken[]
+}
+
+model Company {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  address         String?
+  phone           String?
+  website         String?
+  description     String?
+  taxId           String?
+  employees       Int?
+  fleetSize       Int?
+  users           User[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model BlacklistedToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Vehicle {
+  id              String              @id @default(cuid())
+  name            String
+  vin             String              @unique
+  type            String
+  year            Int
+  make            String
+  model           String
+  status          VehicleStatus       @default(ACTIVE)
+  image           String?
+  meterReading    Float?
+  userId          String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  chargingEntries ChargingEntry[]
+  fuelEntries     FuelEntry[]
+  issues          Issue[]
+  meterEntries    MeterEntry[]
+  serviceEntries  ServiceEntry[]
+  reminders       ServiceReminder[]
+  user            User                @relation(fields: [userId], references: [id])
+  assignments     VehicleAssignment[]
+}
+
+model MeterEntry {
+  id        String    @id @default(cuid())
+  vehicleId String
+  date      DateTime
+  value     Float
+  type      MeterType
+  void      Boolean   @default(false)
+  source    String?
+  createdAt DateTime  @default(now())
+  vehicle   Vehicle   @relation(fields: [vehicleId], references: [id])
+}
+
+model VehicleAssignment {
+  id        String           @id @default(cuid())
+  vehicleId String
+  operator  String
+  startDate DateTime
+  endDate   DateTime?
+  status    AssignmentStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  vehicle   Vehicle          @relation(fields: [vehicleId], references: [id])
+}
+
+model Issue {
+  id           String       @id @default(cuid())
+  vehicleId    String?
+  userId       String
+  summary      String
+  status       IssueStatus  @default(OPEN)
+  priority     Priority     @default(MEDIUM)
+  reportedDate DateTime     @default(now())
+  assignedTo   String?
+  labels       String[]
+  watchers     Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  comments     Comment[]
+  user         User         @relation(fields: [userId], references: [id])
+  vehicle      Vehicle?     @relation(fields: [vehicleId], references: [id])
+  images       IssueImage[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  issueId   String
+  author    String
+  content   String
+  createdAt DateTime @default(now())
+  issue     Issue    @relation(fields: [issueId], references: [id])
+}
+
+model IssueImage {
+  id        String   @id @default(cuid())
+  issueId   String
+  fileName  String
+  filePath  String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now())
+  issue     Issue    @relation(fields: [issueId], references: [id])
+}
+
+model ServiceEntry {
+  id        String             @id @default(cuid())
+  vehicleId String
+  userId    String
+  date      DateTime
+  status    ServiceStatus
+  totalCost Float
+  meter     Float?
+  vendor    String?
+  notes     String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id])
+  vehicle   Vehicle            @relation(fields: [vehicleId], references: [id])
+  tasks     ServiceTaskEntry[]
+}
+
+model ServiceTask {
+  id            String             @id @default(cuid())
+  name          String
+  description   String?
+  entryCount    Int                @default(0)
+  reminderCount Int                @default(0)
+  programCount  Int                @default(0)
+  woCount       Int                @default(0)
+  categoryCode  String?
+  systemCode    String?
+  assemblyCode  String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  taskEntries   ServiceTaskEntry[]
+}
+
+model ServiceTaskEntry {
+  id             String       @id @default(cuid())
+  serviceEntryId String
+  serviceTaskId  String
+  cost           Float?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  serviceEntry   ServiceEntry @relation(fields: [serviceEntryId], references: [id])
+  serviceTask    ServiceTask  @relation(fields: [serviceTaskId], references: [id])
+}
+
+model Part {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  description  String
+  category     String?
+  manufacturer String?
+  cost         Float?
+  quantity     Int      @default(0)
+  minimumStock Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ServiceReminder {
+  id         String         @id @default(cuid())
+  vehicleId  String
+  task       String
+  status     ReminderStatus @default(ACTIVE)
+  nextDue    DateTime
+  compliance Float          @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  vehicle    Vehicle        @relation(fields: [vehicleId], references: [id])
+}
+
+model Contact {
+  id              String        @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String        @unique
+  phone           String?
+  group           String?
+  status          ContactStatus @default(ACTIVE)
+  userType        String?
+  classifications String[]
+  image           String?
+  jobTitle        String?
+  company         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Vendor {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  phone          String?
+  website        String?
+  address        String?
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  labels         String[]
+  classification String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model FuelEntry {
+  id        String   @id @default(cuid())
+  vehicleId String
+  userId    String
+  date      DateTime
+  vendor    String?
+  usage     Float?
+  volume    Float
+  cost      Float
+  mpg       Float?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model ChargingEntry {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  userId      String
+  date        DateTime
+  location    String?
+  energyKwh   Float
+  cost        Float
+  durationMin Int?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  fileName   String
+  fileSize   String
+  location   String?
+  autoDelete Boolean  @default(false)
+  attachedTo String?
+  mimeType   String?
+  labels     String[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Place {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  geofenceRadius Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Report {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  category    ReportCategory
+  isFavorite  Boolean        @default(false)
+  config      Json
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
 enum VehicleStatus {
   ACTIVE
   INACTIVE
@@ -67,282 +364,4 @@ enum ReportCategory {
   COST_ANALYSIS
   UTILIZATION
   COMPLIANCE
-}
-
-model User {
-  id         String   @id @default(cuid())
-  name       String
-  email      String   @unique
-  password   String
-  companyName String
-  avatar     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
-  // Relations
-  vehicles   Vehicle[]
-  issues     Issue[]
-  serviceEntries ServiceEntry[]
-  fuelEntries   FuelEntry[]
-  chargingEntries ChargingEntry[]
-}
-
-model Vehicle {
-  id           String   @id @default(cuid())
-  name         String
-  vin          String   @unique
-  type         String
-  year         Int
-  make         String
-  model        String
-  status       VehicleStatus @default(ACTIVE)
-  image        String?
-  meterReading Float?
-  userId       String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relations
-  user           User             @relation(fields: [userId], references: [id])
-  meterEntries   MeterEntry[]
-  assignments    VehicleAssignment[]
-  issues         Issue[]
-  serviceEntries ServiceEntry[]
-  fuelEntries    FuelEntry[]
-  chargingEntries ChargingEntry[]
-  reminders      ServiceReminder[]
-}
-
-model MeterEntry {
-  id        String   @id @default(cuid())
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
-  date      DateTime
-  value     Float
-  type      MeterType
-  void      Boolean  @default(false)
-  source    String?
-  createdAt DateTime @default(now())
-}
-
-model VehicleAssignment {
-  id        String   @id @default(cuid())
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
-  operator  String
-  startDate DateTime
-  endDate   DateTime?
-  status    AssignmentStatus @default(ACTIVE)
-  createdAt DateTime  @default(now())
-}
-
-model Issue {
-  id          String    @id @default(cuid())
-  vehicleId   String?
-  vehicle     Vehicle?  @relation(fields: [vehicleId], references: [id])
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  summary     String
-  status      IssueStatus @default(OPEN)
-  priority    Priority   @default(MEDIUM)
-  reportedDate DateTime  @default(now())
-  assignedTo  String?
-  labels      String[]
-  watchers    Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  // Relations
-  comments Comment[]
-  images   IssueImage[]
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  issueId   String
-  issue     Issue    @relation(fields: [issueId], references: [id])
-  author    String
-  content   String
-  createdAt DateTime @default(now())
-}
-
-model IssueImage {
-  id        String   @id @default(cuid())
-  issueId   String
-  issue     Issue    @relation(fields: [issueId], references: [id])
-  fileName  String
-  filePath  String
-  fileSize  Int
-  mimeType  String
-  createdAt DateTime @default(now())
-}
-
-model ServiceEntry {
-  id        String         @id @default(cuid())
-  vehicleId String
-  vehicle   Vehicle        @relation(fields: [vehicleId], references: [id])
-  userId    String
-  user      User           @relation(fields: [userId], references: [id])
-  date      DateTime
-  status    ServiceStatus
-  totalCost Float
-  meter     Float?
-  vendor    String?
-  notes     String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  
-  // Relations
-  tasks ServiceTaskEntry[]
-}
-
-model ServiceTask {
-  id                String   @id @default(cuid())
-  name              String
-  description       String?
-  entryCount        Int      @default(0)
-  reminderCount     Int      @default(0)
-  programCount      Int      @default(0)
-  woCount           Int      @default(0)
-  categoryCode      String?
-  systemCode        String?
-  assemblyCode      String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  // Relations
-  taskEntries ServiceTaskEntry[]
-}
-
-model ServiceTaskEntry {
-  id              String       @id @default(cuid())
-  serviceEntryId  String
-  serviceEntry    ServiceEntry @relation(fields: [serviceEntryId], references: [id])
-  serviceTaskId   String
-  serviceTask     ServiceTask  @relation(fields: [serviceTaskId], references: [id])
-  cost            Float?
-  notes           String?
-  createdAt       DateTime     @default(now())
-}
-
-model Part {
-  id            String   @id @default(cuid())
-  number        String   @unique
-  description   String
-  category      String?
-  manufacturer  String?
-  cost          Float?
-  quantity      Int      @default(0)
-  minimumStock  Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model ServiceReminder {
-  id          String        @id @default(cuid())
-  vehicleId   String
-  vehicle     Vehicle       @relation(fields: [vehicleId], references: [id])
-  task        String
-  status      ReminderStatus @default(ACTIVE)
-  nextDue     DateTime
-  compliance  Float         @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-}
-
-model Contact {
-  id              String      @id @default(cuid())
-  firstName       String
-  lastName        String
-  email           String      @unique
-  phone           String?
-  group           String?
-  status          ContactStatus @default(ACTIVE)
-  userType        String?
-  classifications String[]
-  image           String?
-  jobTitle        String?
-  company         String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-}
-
-model Vendor {
-  id             String      @id @default(cuid())
-  name           String      @unique
-  phone          String?
-  website        String?
-  address        String?
-  contactName    String?
-  contactEmail   String?
-  contactPhone   String?
-  labels         String[]
-  classification String[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-}
-
-model FuelEntry {
-  id       String  @id @default(cuid())
-  vehicleId String
-  vehicle  Vehicle @relation(fields: [vehicleId], references: [id])
-  userId   String
-  user     User    @relation(fields: [userId], references: [id])
-  date     DateTime
-  vendor   String?
-  usage    Float?
-  volume   Float
-  cost     Float
-  mpg      Float?
-  createdAt DateTime @default(now())
-}
-
-model ChargingEntry {
-  id          String   @id @default(cuid())
-  vehicleId   String
-  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  date        DateTime
-  location    String?
-  energyKwh   Float
-  cost        Float
-  durationMin Int?
-  createdAt   DateTime @default(now())
-}
-
-model Document {
-  id          String   @id @default(cuid())
-  fileName    String
-  fileSize    String
-  location    String?
-  autoDelete  Boolean  @default(false)
-  attachedTo  String?
-  mimeType    String?
-  labels      String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Place {
-  id             String   @id @default(cuid())
-  name           String
-  description    String?
-  address        String?
-  latitude       Float?
-  longitude      Float?
-  geofenceRadius Float?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
-model Report {
-  id          String        @id @default(cuid())
-  title       String
-  description String
-  category    ReportCategory
-  isFavorite  Boolean       @default(false)
-  config      Json          // Configuration du rapport
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
 }

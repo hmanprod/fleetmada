@@ -1,12 +1,56 @@
 import React, { useState } from 'react';
-import { Check, ChevronRight, Truck, Wrench, BarChart3, ShieldCheck } from 'lucide-react';
+import { Check, ChevronRight, Truck, Wrench, BarChart3, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '../../lib/auth-context';
 
 interface OnboardingProps {
   onComplete: () => void;
 }
 
 const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
+  const { completeOnboarding, isLoading, error, clearError } = useAuth();
   const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    fleetSize: '',
+    industry: '',
+    objectives: [] as string[]
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleFleetSizeSelect = (size: string) => {
+    setFormData(prev => ({ ...prev, fleetSize: size }));
+  };
+
+  const handleIndustryChange = (industry: string) => {
+    setFormData(prev => ({ ...prev, industry }));
+  };
+
+  const handleObjectiveToggle = (objective: string) => {
+    setFormData(prev => ({
+      ...prev,
+      objectives: prev.objectives.includes(objective)
+        ? prev.objectives.filter(obj => obj !== objective)
+        : [...prev.objectives, objective]
+    }));
+  };
+
+  const handleComplete = async () => {
+    try {
+      setIsSubmitting(true);
+      clearError();
+      
+      await completeOnboarding({
+        fleetSize: formData.fleetSize,
+        industry: formData.industry,
+        objectives: formData.objectives
+      });
+      
+      onComplete();
+    } catch (error) {
+      // L'erreur est gérée par le contexte
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const steps = [
     { id: 1, title: 'Profil de la flotte' },
@@ -25,7 +69,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         <label className="block text-sm font-medium text-gray-700 mb-2">Combien de véhicules gérez-vous ?</label>
         <div className="grid grid-cols-3 gap-3">
           {['1-10', '11-50', '51-200', '201-500', '500+'].map((size) => (
-             <button key={size} type="button" className="border border-gray-300 rounded-md py-3 px-4 text-sm font-medium hover:border-[#008751] hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-[#008751] focus:border-transparent transition-all">
+             <button 
+               key={size} 
+               type="button" 
+               onClick={() => handleFleetSizeSelect(size)}
+               className={`border rounded-md py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#008751] focus:border-transparent transition-all ${
+                 formData.fleetSize === size 
+                   ? 'border-[#008751] bg-green-50 text-[#008751]' 
+                   : 'border-gray-300 hover:border-[#008751] hover:bg-green-50'
+               }`}
+             >
                 {size}
              </button>
           ))}
@@ -34,18 +87,28 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Quel est votre secteur principal ?</label>
-        <select className="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-[#008751] focus:border-[#008751] sm:text-sm rounded-md bg-white border">
-          <option>Construction / BTP</option>
-          <option>Paysagisme</option>
-          <option>Logistique / Transport</option>
-          <option>Gouvernement / Municipal</option>
-          <option>Autre</option>
+        <select 
+          value={formData.industry}
+          onChange={(e) => handleIndustryChange(e.target.value)}
+          className="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-[#008751] focus:border-[#008751] sm:text-sm rounded-md bg-white border"
+        >
+          <option value="">Sélectionnez un secteur</option>
+          <option value="Construction / BTP">Construction / BTP</option>
+          <option value="Paysagisme">Paysagisme</option>
+          <option value="Logistique / Transport">Logistique / Transport</option>
+          <option value="Gouvernement / Municipal">Gouvernement / Municipal</option>
+          <option value="Autre">Autre</option>
         </select>
       </div>
 
       <button 
-        onClick={() => setStep(2)}
-        className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#008751] hover:bg-[#007043] mt-8"
+        onClick={() => {
+          if (formData.fleetSize && formData.industry) {
+            setStep(2);
+          }
+        }}
+        disabled={!formData.fleetSize || !formData.industry || isLoading}
+        className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#008751] hover:bg-[#007043] mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Continuer <ChevronRight size={16} />
       </button>
@@ -61,14 +124,24 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
 
       <div className="grid grid-cols-1 gap-4">
         {[
-            { icon: Wrench, title: 'Suivi de l\'entretien', desc: 'Plannings, historique et coûts' },
-            { icon: Truck, title: 'Gestion des actifs', desc: 'Affectations et historique de localisation' },
-            { icon: ShieldCheck, title: 'Inspections & Conformité', desc: 'DVIR et conformité sécurité' },
-            { icon: BarChart3, title: 'Réduire les coûts', desc: 'Analyse carburant et coût total de possession' }
+            { icon: Wrench, title: 'Suivi de l\'entretien', desc: 'Plannings, historique et coûts', id: 'maintenance' },
+            { icon: Truck, title: 'Gestion des actifs', desc: 'Affectations et historique de localisation', id: 'assets' },
+            { icon: ShieldCheck, title: 'Inspections & Conformité', desc: 'DVIR et conformité sécurité', id: 'inspections' },
+            { icon: BarChart3, title: 'Réduire les coûts', desc: 'Analyse carburant et coût total de possession', id: 'costs' }
         ].map((item, idx) => (
-             <div key={idx} className="relative flex items-start p-4 border border-gray-200 rounded-lg hover:border-[#008751] hover:bg-green-50 cursor-pointer transition-all">
+             <div key={idx} className={`relative flex items-start p-4 border rounded-lg cursor-pointer transition-all ${
+               formData.objectives.includes(item.id)
+                 ? 'border-[#008751] bg-green-50'
+                 : 'border-gray-200 hover:border-[#008751] hover:bg-green-50'
+             }`}>
                 <div className="flex items-center h-5">
-                  <input id={`goal-${idx}`} type="checkbox" className="focus:ring-[#008751] h-4 w-4 text-[#008751] border-gray-300 rounded" />
+                  <input 
+                    id={`goal-${idx}`} 
+                    type="checkbox" 
+                    checked={formData.objectives.includes(item.id)}
+                    onChange={() => handleObjectiveToggle(item.id)}
+                    className="focus:ring-[#008751] h-4 w-4 text-[#008751] border-gray-300 rounded" 
+                  />
                 </div>
                 <div className="ml-3 flex items-center gap-3">
                   <div className="bg-white p-2 rounded-full border border-gray-200">

@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { Car, Mail, Lock } from 'lucide-react';
+import { Car, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '../../lib/auth-context';
 
 interface LoginProps {
-  onLogin: () => void;
   onNavigateToRegister: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister }) => {
+const Login: React.FC<LoginProps> = ({ onNavigateToRegister }) => {
+  const { login, isLoading, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    clearError();
+    
+    try {
+      await login({ email, password });
+    } catch (error) {
+      // L'erreur est gérée par le contexte
+    }
   };
 
   return (
@@ -37,6 +44,13 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister }) => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-sm border border-gray-200 sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -105,9 +119,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister }) => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#008751] hover:bg-[#007043] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#008751]"
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#008751] hover:bg-[#007043] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#008751] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Se connecter
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                    Connexion...
+                  </>
+                ) : (
+                  'Se connecter'
+                )}
               </button>
             </div>
           </form>
