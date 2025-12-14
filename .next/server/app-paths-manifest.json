@@ -1,7 +1,0 @@
-{
-  "/_not-found": "app/_not-found.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(main)/page": "app/(main)/page.js",
-  "/(main)/vehicles/page": "app/(main)/vehicles/page.js",
-  "/(main)/settings/general/page": "app/(main)/settings/general/page.js"
-}

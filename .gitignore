@@ -1,5 +1,102 @@
+# ========================================
+# 🚀 FLEETMADA - .gitignore Next.js
+# ========================================
+
+# ========================================
+# 📦 NEXT.JS BUILD & CACHE
+# ========================================
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# Next.js specific cache and generated files
+.next/
+out/
+.vercel/
+.turbo/
+next-env.d.ts
+
+# ========================================
+# 🌍 ENVIRONMENT VARIABLES
+# ========================================
+# Environment variables (local overrides)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Environment variable examples (commit these)
+.env.example
+.env.sample
+
+# ========================================
+# 📦 NODE.JS & PACKAGE MANAGERS
+# ========================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Package manager lock files (choose one policy)
+# For monorepos or if using workspaces:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# NPM cache and logs
+.npm/
+.npm
+.npmrc
+.npm-debug.log*
+
+# Yarn cache and logs
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.yarn/pnp.*
+
+# ========================================
+# 🗄️ DATABASES & PRISMA
+# ========================================
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL dumps
+*.sql
+*.dump
+
+# Prisma
+# Note: Keep prisma/migrations/ but ignore client cache
+prisma/client/
+prisma/generated/
+
+# ========================================
+# 🐳 DOCKER & CONTAINERS
+# ========================================
+# Docker
+.dockerignore
+Dockerfile.prod
+docker-compose.override.yml
+
+# Docker volumes and runtime
+.docker/
+
+# ========================================
+# 📝 LOGS & CACHE
+# ========================================
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,18 +104,220 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Editor directories and files
-.vscode/*
+# Cache directories
+.cache/
+.parcel-cache/
+.cache/
+.tmp/
+.temp/
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# ========================================
+# 🛠️ BUILD TOOLS & BUNDLERS
+# ========================================
+# TypeScript
+*.tsbuildinfo
+
+# Webpack
+.webpack/
+
+# Rollup
+.rollup.cache/
+
+# Vite
+.vite/
+vite.config.js.timestamp-*
+
+# ========================================
+# 🧪 TESTING & COVERAGE
+# ========================================
+# Test coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Jest
+jest.config.js.bak
+
+# ========================================
+# 🔍 EDITORS & IDE
+# ========================================
+# VSCode
+.vscode/
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ========================================
+# 🖥️ OS SPECIFIC
+# ========================================
+# macOS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.AppleDouble
+.LSOverride
+Icon?
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Linux
+*~
+
+# ========================================
+# 📄 FILES & EXTENSIONS
+# ========================================
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Microsoft Office
+~$*.doc?
+~$*.xls?
+~$*.ppt?
+
+# Adobe
+*.ai
+*.eps
+*.psd
+*.indd
+*.xd
+
+# ========================================
+# 🔐 SECURITY & KEYS
+# ========================================
+# Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Certificates
+*.crt
+*.cer
+*.der
+*.p7b
+*.p7c
+
+# ========================================
+# 📊 ANALYTICS & MONITORING
+# ========================================
+# Analytics and monitoring data
+.vercel
+.sentryclirc
+
+# Performance and bundle analysis
+.bundle-analyzer/
+.webpack-bundle-analyzer/
+
+# ========================================
+# 🌐 WEB & ASSETS
+# ========================================
+# Public assets (if needed)
+# public/build/
+# public/bundles/
+
+# Favicon and manifest (if custom)
+# favicon.ico (usually committed)
+# manifest.json (usually committed)
+
+# ========================================
+# 🔧 DEVELOPMENT TOOLS
+# ========================================
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettierignore
+.prettiercheck
+
+# Stylelint cache
+.stylelintcache
+
+# ========================================
+# 📱 MOBILE & PWA
+# ========================================
+# Expo/React Native
+.expo/
+.expo-shared/
+.expo-settings/
+
+# PWA
+sw.js
+workbox-*.js
+
+# ========================================
+# 🎨 DESIGN & ASSETS
+# ========================================
+# Figma
+.figma/
+
+# Sketch
+*.sketch
+
+# Adobe XD
+*.xd
+
+# ========================================
+# 📋 MISC
+# ========================================
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Documentation builds
+docs/_build/
+site/
+
+# Sitemap
+sitemap.xml
+robots.txt
+
+# Other
+.nyc_output/
+test-results/
+playwright-report/
+.sonarqube/
+.scannerwork/
