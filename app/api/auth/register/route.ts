@@ -6,14 +6,23 @@ import { z } from 'zod'
 
 // Schéma de validation Zod
 const registerSchema = z.object({
-  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
+  firstName: z.string().min(1, 'Le prénom est requis').optional(),
+  lastName: z.string().min(1, 'Le nom est requis').optional(),
+  companyName: z.string().optional(),
   email: z.string().email('Format d\'email invalide'),
   password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
   avatar: z.string().url('URL d\'avatar invalide').optional().or(z.literal(''))
-})
+}).refine(data => data.name || (data.firstName && data.lastName), {
+  message: "Le nom complet ou le prénom+nom sont requis",
+  path: ["name"]
+});
 
 interface RegisterRequest {
-  name: string
+  name?: string
+  firstName?: string
+  lastName?: string
+  companyName?: string
   email: string
   password: string
   avatar?: string
@@ -24,6 +33,21 @@ const generateConfirmationToken = (userId: string): string => {
   const secret = process.env.JWT_SECRET || 'fallback-secret-key'
   return jwt.sign(
     { userId, type: 'confirmation' },
+    secret,
+    { expiresIn: '24h' }
+  )
+}
+
+// Génération du token JWT de connexion (auto-login)
+const generateLoginToken = (userId: string, email: string): string => {
+  const secret = process.env.JWT_SECRET || 'fallback-secret-key'
+  return jwt.sign(
+    {
+      userId,
+      email,
+      type: 'login',
+      iat: Math.floor(Date.now() / 1000)
+    },
     secret,
     { expiresIn: '24h' }
   )
@@ -57,19 +81,22 @@ export async function POST(request: NextRequest) {
         field: err.path.join('.'),
         message: err.message
       }))
-      
+
       logAction('Validation failed', { errors })
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Données invalides',
-          details: errors 
+          details: errors
         },
         { status: 400 }
       )
     }
 
-    const { name, email, password, avatar } = validationResult.data
+    const { name, firstName, lastName, companyName, email, password, avatar } = validationResult.data
+
+    // Combiner prénom et nom si nécessaire
+    const fullName = name || `${firstName} ${lastName}`;
 
     // Vérification si l'email existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -91,13 +118,23 @@ export async function POST(request: NextRequest) {
     // Création de l'utilisateur dans une transaction
     try {
       const newUser = await prisma.$transaction(async (tx) => {
-        // Créer l'utilisateur
+        // Créer l'utilisateur (et l'entreprise si fournie)
         const user = await tx.user.create({
           data: {
-            name: name.trim(),
+            name: fullName.trim(),
             email: email.toLowerCase().trim(),
             password: hashedPassword,
-            avatar: avatar?.trim() || null
+            avatar: avatar?.trim() || null,
+            ...(companyName && {
+              company: {
+                create: {
+                  name: companyName.trim()
+                }
+              }
+            })
+          },
+          include: {
+            company: true
           }
         })
 
@@ -107,36 +144,41 @@ export async function POST(request: NextRequest) {
       // Générer le token de confirmation
       const confirmationToken = generateConfirmationToken(newUser.id)
 
+      // Générer le token d'authentification (auto-login)
+      const authToken = generateLoginToken(newUser.id, newUser.email)
+
       // Préparer la réponse (sans mot de passe)
       const userResponse = {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
         avatar: newUser.avatar,
+        // companyId omitted to force onboarding flow
         createdAt: newUser.createdAt
       }
 
-      logAction('User created successfully', { 
-        userId: newUser.id, 
-        email: newUser.email 
+      logAction('User created successfully', {
+        userId: newUser.id,
+        email: newUser.email
       })
 
       // Réponse de succès
       return NextResponse.json(
         {
           success: true,
-          message: 'Inscription réussie. Veuillez vérifier votre email pour confirmer votre compte.',
+          message: 'Inscription réussie.',
           user: userResponse,
+          token: authToken, // Token pour auto-login
           confirmationToken: confirmationToken // En développement seulement
         },
         { status: 201 }
       )
 
     } catch (dbError) {
-      logAction('Database error', { 
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error' 
+      logAction('Database error', {
+        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
       })
-      
+
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la création du compte' },
         { status: 500 }
@@ -144,7 +186,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logAction('Server error', { 
+    logAction('Server error', {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })

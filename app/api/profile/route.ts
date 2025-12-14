@@ -43,6 +43,7 @@ interface UserResponse {
   name: string
   email: string
   avatar?: string | null
+  companyId?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -59,6 +60,7 @@ const prepareUserResponse = (user: any): UserResponse => {
     name: user.name,
     email: user.email,
     avatar: user.avatar,
+    companyId: user.companyId,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   }
@@ -69,13 +71,13 @@ const validateToken = (token: string): TokenPayload | null => {
   try {
     const secret = process.env.JWT_SECRET || 'fallback-secret-key'
     const decoded = jwt.verify(token, secret) as TokenPayload
-    
+
     // Vérifier que c'est un token de connexion
     if (decoded.type !== 'login') {
       console.log('[Profile API] Token type invalide:', decoded.type)
       return null
     }
-    
+
     return decoded
   } catch (error) {
     console.log('[Profile API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
@@ -88,7 +90,7 @@ export async function GET(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       logAction('GET Profile - Missing authorization header', 'unknown', {})
       return NextResponse.json(
@@ -108,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     const token = parts[1]
     const tokenPayload = validateToken(token)
-    
+
     if (!tokenPayload) {
       logAction('GET Profile - Invalid token', 'unknown', {})
       return NextResponse.json(
@@ -118,7 +120,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = tokenPayload.userId
-    
+
     if (!userId) {
       logAction('GET Profile - Missing user ID in token', 'unknown', {})
       return NextResponse.json(
@@ -157,7 +159,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('GET Profile - Server error', userId, { 
+    logAction('GET Profile - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })
@@ -174,7 +176,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       logAction('PUT Profile - Missing authorization header', 'unknown', {})
       return NextResponse.json(
@@ -194,7 +196,7 @@ export async function PUT(request: NextRequest) {
 
     const token = parts[1]
     const tokenPayload = validateToken(token)
-    
+
     if (!tokenPayload) {
       logAction('PUT Profile - Invalid token', 'unknown', {})
       return NextResponse.json(
@@ -204,7 +206,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const userId = tokenPayload.userId
-    
+
     if (!userId) {
       logAction('PUT Profile - Missing user ID in token', 'unknown', {})
       return NextResponse.json(
@@ -234,13 +236,13 @@ export async function PUT(request: NextRequest) {
         field: err.path.join('.'),
         message: err.message
       }))
-      
+
       logAction('PUT Profile - Validation failed', userId, { errors })
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Données invalides',
-          details: errors 
+          details: errors
         },
         { status: 400 }
       )
@@ -318,9 +320,9 @@ export async function PUT(request: NextRequest) {
       // Préparation de la réponse
       const userResponse = prepareUserResponse(updatedUser)
 
-      logAction('PUT Profile - Success', userId, { 
-        userId, 
-        updatedFields: Object.keys(dataToUpdate) 
+      logAction('PUT Profile - Success', userId, {
+        userId,
+        updatedFields: Object.keys(dataToUpdate)
       })
 
       return NextResponse.json(
@@ -352,10 +354,10 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      logAction('PUT Profile - Database error', userId, { 
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error' 
+      logAction('PUT Profile - Database error', userId, {
+        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
       })
-      
+
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la mise à jour du profil' },
         { status: 500 }
@@ -364,7 +366,7 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('PUT Profile - Server error', userId, { 
+    logAction('PUT Profile - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })
@@ -381,7 +383,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       logAction('DELETE Profile - Missing authorization header', 'unknown', {})
       return NextResponse.json(
@@ -401,7 +403,7 @@ export async function DELETE(request: NextRequest) {
 
     const token = parts[1]
     const tokenPayload = validateToken(token)
-    
+
     if (!tokenPayload) {
       logAction('DELETE Profile - Invalid token', 'unknown', {})
       return NextResponse.json(
@@ -411,7 +413,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const userId = tokenPayload.userId
-    
+
     if (!userId) {
       logAction('DELETE Profile - Missing user ID in token', 'unknown', {})
       return NextResponse.json(
@@ -466,10 +468,10 @@ export async function DELETE(request: NextRequest) {
       )
 
     } catch (dbError) {
-      logAction('DELETE Profile - Database error', userId, { 
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error' 
+      logAction('DELETE Profile - Database error', userId, {
+        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
       })
-      
+
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la suppression du compte' },
         { status: 500 }
@@ -478,7 +480,7 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('DELETE Profile - Server error', userId, { 
+    logAction('DELETE Profile - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })

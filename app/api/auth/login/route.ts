@@ -19,9 +19,9 @@ interface LoginRequest {
 const generateLoginToken = (userId: string, email: string): string => {
   const secret = process.env.JWT_SECRET || 'fallback-secret-key'
   return jwt.sign(
-    { 
-      userId, 
-      email, 
+    {
+      userId,
+      email,
       type: 'login',
       iat: Math.floor(Date.now() / 1000)
     },
@@ -58,13 +58,13 @@ export async function POST(request: NextRequest) {
         field: err.path.join('.'),
         message: err.message
       }))
-      
+
       logAction('Validation failed', { errors })
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Données invalides',
-          details: errors 
+          details: errors
         },
         { status: 400 }
       )
@@ -105,12 +105,13 @@ export async function POST(request: NextRequest) {
       name: user.name,
       email: user.email,
       avatar: user.avatar,
+      companyId: user.companyId,
       createdAt: user.createdAt
     }
 
-    logAction('Login successful', { 
-      userId: user.id, 
-      email: user.email 
+    logAction('Login successful', {
+      userId: user.id,
+      email: user.email
     })
 
     // Réponse de succès
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    logAction('Server error', { 
+    logAction('Server error', {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })

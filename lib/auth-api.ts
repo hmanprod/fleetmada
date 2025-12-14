@@ -73,7 +73,7 @@ class AuthAPI {
 
   async completeOnboarding(data: OnboardingData): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/onboarding/company`, {
-      method: 'POST',
+      method: 'PUT',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data)
     });

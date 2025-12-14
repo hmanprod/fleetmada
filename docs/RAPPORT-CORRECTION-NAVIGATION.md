@@ -38,7 +38,7 @@ import { useRouter } from 'next/navigation';
       });
       
       // Redirection explicite vers le dashboard
-      router.push('/app/(main)');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);
     } finally {
@@ -88,7 +88,7 @@ const AuthFlow: React.FC = () => {
 5. **Gestion d'erreurs** - Messages d'erreur affichés
 
 ### ⚠️ **Point d'Amélioration**
-- La redirection programmatique `router.push('/app/(main)')` nécessite une vérification dans le contexte SPA
+- La redirection programmatique `router.push('/dashboard')` nécessite une vérification dans le contexte SPA
 - Le test montre que l'API fonctionne mais la navigation frontend doit être ajustée
 
 ## 📋 État Final
@@ -114,11 +114,11 @@ const AuthFlow: React.FC = () => {
 - ✅ La navigation est mieux structurée
 
 **Point d'attention :**
-La redirection finale vers `/app/(main)` pourrait nécessiter un ajustement dans le système de routing de l'application (potentiellement lié à la gestion des groupes de routes dans Next.js 13+).
+La redirection finale vers `/dashboard` pourrait nécessiter un ajustement dans le système de routing de l'application (potentiellement lié à la gestion des groupes de routes dans Next.js 13+).
 
 ## 🚀 Recommandations
 
-1. **Tester la redirection finale** vers `/app/(main)` en conditions réelles
+1. **Tester la redirection finale** vers `/dashboard` en conditions réelles
 2. **Vérifier la configuration** des groupes de routes Next.js
 3. **Déployer les tests Playwright** dans la CI/CD
 4. **Surveiller les logs** de navigation après déploiement

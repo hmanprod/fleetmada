@@ -16,7 +16,8 @@ interface TokenPayload {
 const companyInfoSchema = z.object({
   name: z.string()
     .min(2, 'Le nom de l\'entreprise doit contenir au moins 2 caractères')
-    .max(100, 'Le nom de l\'entreprise ne peut pas dépasser 100 caractères'),
+    .max(100, 'Le nom de l\'entreprise ne peut pas dépasser 100 caractères')
+    .optional(),
   address: z.string()
     .max(500, 'L\'adresse ne peut pas dépasser 500 caractères')
     .optional()
@@ -43,10 +44,7 @@ const companyInfoSchema = z.object({
     .min(1, 'Le nombre d\'employés doit être au moins 1')
     .max(100000, 'Le nombre d\'employés ne peut pas dépasser 100000')
     .optional(),
-  fleetSize: z.number()
-    .int('La taille de la flotte doit être un nombre entier')
-    .min(0, 'La taille de la flotte doit être au moins 0')
-    .max(100000, 'La taille de la flotte ne peut pas dépasser 100000')
+  fleetSize: z.union([z.number(), z.string()])
     .optional()
 })
 
@@ -58,8 +56,11 @@ interface CompanyInfoRequest {
   description?: string
   taxId?: string
   employees?: number
-  fleetSize?: number
+  fleetSize?: number | string
+  industry?: string
+  objectives?: string[]
 }
+
 
 // Interface pour la réponse des informations d'entreprise
 interface CompanyInfoResponse {
@@ -105,13 +106,13 @@ const validateToken = (token: string): TokenPayload | null => {
   try {
     const secret = process.env.JWT_SECRET || 'fallback-secret-key'
     const decoded = jwt.verify(token, secret) as TokenPayload
-    
+
     // Vérifier que c'est un token de connexion
     if (decoded.type !== 'login') {
       console.log('[Onboarding Company API] Token type invalide:', decoded.type)
       return null
     }
-    
+
     return decoded
   } catch (error) {
     console.log('[Onboarding Company API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
@@ -143,7 +144,7 @@ export async function GET(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       logAction('GET Company Info - Missing authorization header', 'unknown', {})
       return NextResponse.json(
@@ -163,7 +164,7 @@ export async function GET(request: NextRequest) {
 
     const token = parts[1]
     const tokenPayload = validateToken(token)
-    
+
     if (!tokenPayload) {
       logAction('GET Company Info - Invalid token', 'unknown', {})
       return NextResponse.json(
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = tokenPayload.userId
-    
+
     if (!userId) {
       logAction('GET Company Info - Missing user ID in token', 'unknown', {})
       return NextResponse.json(
@@ -226,9 +227,9 @@ export async function GET(request: NextRequest) {
     // Préparation de la réponse
     const companyResponse = prepareCompanyResponse(user.company)
 
-    logAction('GET Company Info - Success', userId, { 
-      userId, 
-      companyId: user.company.id 
+    logAction('GET Company Info - Success', userId, {
+      userId,
+      companyId: user.company.id
     })
 
     return NextResponse.json(
@@ -241,7 +242,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('GET Company Info - Server error', userId, { 
+    logAction('GET Company Info - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })
@@ -258,7 +259,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       logAction('PUT Company Info - Missing authorization header', 'unknown', {})
       return NextResponse.json(
@@ -278,7 +279,7 @@ export async function PUT(request: NextRequest) {
 
     const token = parts[1]
     const tokenPayload = validateToken(token)
-    
+
     if (!tokenPayload) {
       logAction('PUT Company Info - Invalid token', 'unknown', {})
       return NextResponse.json(
@@ -288,7 +289,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const userId = tokenPayload.userId
-    
+
     if (!userId) {
       logAction('PUT Company Info - Missing user ID in token', 'unknown', {})
       return NextResponse.json(
@@ -318,13 +319,13 @@ export async function PUT(request: NextRequest) {
         field: err.path.join('.'),
         message: err.message
       }))
-      
+
       logAction('PUT Company Info - Validation failed', userId, { errors })
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Données invalides',
-          details: errors 
+          details: errors
         },
         { status: 400 }
       )
@@ -364,16 +365,22 @@ export async function PUT(request: NextRequest) {
     }
 
     // Préparation des données de l'entreprise
-    const dataToUpdate = {
-      name: companyData.name.trim(),
+    const dataToUpdate: any = {
+      name: companyData.name?.trim(),
       address: companyData.address?.trim() || null,
       phone: companyData.phone?.trim() || null,
       website: companyData.website?.trim() || null,
       description: companyData.description?.trim() || null,
       taxId: companyData.taxId?.trim() || null,
       employees: companyData.employees,
-      fleetSize: companyData.fleetSize,
+      // Gerer fleetSize qui peut être string ou number
+      fleetSize: typeof companyData.fleetSize === 'string' ? undefined : companyData.fleetSize,
       updatedAt: new Date()
+    }
+
+    // Gestion de 'name' qui est maintenant optionnel
+    if (companyData.name) {
+      dataToUpdate.name = companyData.name.trim()
     }
 
     // Mise à jour dans une transaction
@@ -397,11 +404,16 @@ export async function PUT(request: NextRequest) {
             }
           })
 
-          logAction('PUT Company Info - Company updated', userId, { 
+          logAction('PUT Company Info - Company updated', userId, {
             companyId: company.id,
-            updatedFields: Object.keys(dataToUpdate) 
+            updatedFields: Object.keys(dataToUpdate)
           })
         } else {
+          // Si le nom est manquant pour la création, utiliser un nom par défaut unique
+          if (!dataToUpdate.name) {
+            dataToUpdate.name = `Flotte de ${currentUser.name || 'Nouveau'} (${userId.slice(-4)})`
+          }
+
           // Création d'une nouvelle entreprise
           company = await tx.company.create({
             data: {
@@ -423,8 +435,8 @@ export async function PUT(request: NextRequest) {
             }
           })
 
-          logAction('PUT Company Info - Company created', userId, { 
-            companyId: company.id 
+          logAction('PUT Company Info - Company created', userId, {
+            companyId: company.id
           })
         }
 
@@ -435,8 +447,8 @@ export async function PUT(request: NextRequest) {
       const companyResponse = prepareCompanyResponse(result)
 
       const action = currentUser.company ? 'mise à jour' : 'création'
-      logAction('PUT Company Info - Success', userId, { 
-        userId, 
+      logAction('PUT Company Info - Success', userId, {
+        userId,
         companyId: result.id,
         action
       })
@@ -454,8 +466,8 @@ export async function PUT(request: NextRequest) {
       // Gestion des erreurs Prisma spécifiques
       if (dbError instanceof Error) {
         if (dbError.message.includes('Unique constraint')) {
-          logAction('PUT Company Info - Company name already exists', userId, { 
-            error: dbError.message 
+          logAction('PUT Company Info - Company name already exists', userId, {
+            error: dbError.message
           })
           return NextResponse.json(
             { success: false, error: 'Une entreprise avec ce nom existe déjà' },
@@ -464,10 +476,10 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      logAction('PUT Company Info - Database error', userId, { 
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error' 
+      logAction('PUT Company Info - Database error', userId, {
+        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
       })
-      
+
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la mise à jour des informations d\'entreprise' },
         { status: 500 }
@@ -476,7 +488,7 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('PUT Company Info - Server error', userId, { 
+    logAction('PUT Company Info - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })

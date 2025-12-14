@@ -50,6 +50,8 @@ export interface OnboardingData {
   objectives: string[];
 }
 
+export type AuthStep = 'login' | 'register' | 'onboarding' | 'dashboard';
+
 export interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
