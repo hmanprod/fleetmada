@@ -1,0 +1,5 @@
+{
+  "name": "FleetMada NextJs",
+  "description": "Une application complète de gestion de flotte clonée comprenant le suivi des véhicules, la création de formulaires d'inspection et des tableaux de bord analytiques.",
+  "requestFramePermissions": []
+}

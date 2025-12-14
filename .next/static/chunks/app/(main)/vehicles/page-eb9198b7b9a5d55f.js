@@ -1,0 +1,21 @@
+(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[2286],{50862:function(e,t,r){Promise.resolve().then(r.bind(r,72677))},72677:function(e,t,r){"use strict";r.r(t),r.d(t,{default:function(){return u}});var s=r(3827);r(64090);var n=r(70094),a=r(28670),i=r(87461);/**
+ * @license lucide-react v0.344.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let o=(0,i.Z)("Filter",[["polygon",{points:"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3",key:"1yg77f"}]]),c=(0,i.Z)("LayoutList",[["rect",{width:"7",height:"7",x:"3",y:"3",rx:"1",key:"1g98yp"}],["rect",{width:"7",height:"7",x:"3",y:"14",rx:"1",key:"1bb6yr"}],["path",{d:"M14 4h7",key:"3xa0d5"}],["path",{d:"M14 9h7",key:"1icrd9"}],["path",{d:"M14 15h7",key:"1mj8o2"}],["path",{d:"M14 20h7",key:"11slyb"}]]);var l=r(47907);function u(){let e=(0,l.useRouter)();return(0,s.jsxs)("div",{className:"p-8 max-w-7xl mx-auto",children:[(0,s.jsxs)("div",{className:"flex justify-between items-center mb-6",children:[(0,s.jsx)("h1",{className:"text-3xl font-bold text-gray-900",children:"V\xe9hicules"}),(0,s.jsxs)("button",{onClick:()=>e.push("/vehicles/create"),className:"bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2",children:[(0,s.jsx)(n.Z,{size:20})," Ajouter un v\xe9hicule"]})]}),(0,s.jsxs)("div",{className:"bg-white rounded-lg shadow-sm border border-gray-200",children:[(0,s.jsxs)("div",{className:"p-4 border-b border-gray-200 flex gap-4",children:[(0,s.jsxs)("div",{className:"relative flex-1",children:[(0,s.jsx)(a.Z,{className:"absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",size:18}),(0,s.jsx)("input",{type:"text",placeholder:"Rechercher...",className:"w-full pl-10 pr-4 py-2 border border-gray-300 rounded"})]}),(0,s.jsxs)("button",{className:"flex items-center gap-2 px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50",children:[(0,s.jsx)(o,{size:18})," Filtres"]})]}),(0,s.jsxs)("div",{className:"p-12 text-center text-gray-500",children:[(0,s.jsx)(c,{size:48,className:"mx-auto mb-4 text-gray-300"}),(0,s.jsx)("p",{children:"Aucun \xe9l\xe9ment trouv\xe9. Cr\xe9ez votre premier v\xe9hicule !"})]})]})]})}},87461:function(e,t,r){"use strict";r.d(t,{Z:function(){return i}});var s=r(64090),n={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"};/**
+ * @license lucide-react v0.344.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let a=e=>e.replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase().trim(),i=(e,t)=>{let r=(0,s.forwardRef)((r,i)=>{let{color:o="currentColor",size:c=24,strokeWidth:l=2,absoluteStrokeWidth:u,className:d="",children:h,...x}=r;return(0,s.createElement)("svg",{ref:i,...n,width:c,height:c,stroke:o,strokeWidth:u?24*Number(l)/Number(c):l,className:["lucide","lucide-".concat(a(e)),d].join(" "),...x},[...t.map(e=>{let[t,r]=e;return(0,s.createElement)(t,r)}),...Array.isArray(h)?h:[h]])});return r.displayName="".concat(e),r}},70094:function(e,t,r){"use strict";r.d(t,{Z:function(){return s}});/**
+ * @license lucide-react v0.344.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let s=(0,r(87461).Z)("Plus",[["path",{d:"M5 12h14",key:"1ays0h"}],["path",{d:"M12 5v14",key:"s699le"}]])},28670:function(e,t,r){"use strict";r.d(t,{Z:function(){return s}});/**
+ * @license lucide-react v0.344.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let s=(0,r(87461).Z)("Search",[["circle",{cx:"11",cy:"11",r:"8",key:"4ej97u"}],["path",{d:"m21 21-4.3-4.3",key:"1qie3q"}]])},47907:function(e,t,r){"use strict";var s=r(15313);r.o(s,"usePathname")&&r.d(t,{usePathname:function(){return s.usePathname}}),r.o(s,"useRouter")&&r.d(t,{useRouter:function(){return s.useRouter}})}},function(e){e.O(0,[2971,8069,1744],function(){return e(e.s=50862)}),_N_E=e.O()}]);
