@@ -33,6 +33,7 @@ export const useAuthFlow = (initialStep: AuthStep = 'login'): AuthFlowState & Au
         if (!user || !user.companyId) {
           // Onboarding non complété : rediriger vers onboarding
           setCurrentStep('onboarding');
+          router.replace('/onboarding');
         } else {
           // Onboarding complété : rediriger vers dashboard
           setCurrentStep('dashboard');
@@ -49,17 +50,17 @@ export const useAuthFlow = (initialStep: AuthStep = 'login'): AuthFlowState & Au
 
   const navigateToRegister = () => {
     setCurrentStep('register');
-    router.push('/auth/register');
+    router.push('/register');
   };
 
   const navigateToLogin = () => {
     setCurrentStep('login');
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   const navigateToOnboarding = () => {
     setCurrentStep('onboarding');
-    router.push('/auth/onboarding');
+    router.push('/onboarding');
   };
 
   const handleOnboardingComplete = () => {

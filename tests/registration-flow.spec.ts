@@ -15,7 +15,7 @@ test.describe('Flux d\'inscription user (SPA Flow)', () => {
         console.log(`📧 Email généré: ${email}`);
 
         // 1. Aller sur la racine (SPA Entry Point)
-        await page.goto('/');
+        await page.goto('/login');
 
         // Vérifier qu'on est sur le Login initialement
         await expect(page.locator('h2')).toContainText(/Connectez-vous à votre compte/i);

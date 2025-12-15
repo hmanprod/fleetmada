@@ -48,7 +48,7 @@ test.describe('Flux de Connexion et Onboarding', () => {
 
         // 2. Aller sur la page de connexion
         console.log('🔄 Navigation vers la page de connexion...');
-        await page.goto('/');
+        await page.goto('/login');
 
         // Vérifier page de connexion (titre ou bouton)
         await expect(page.locator('h2')).toContainText(/Connectez-vous à votre compte/i);
@@ -94,7 +94,7 @@ test.describe('Flux de Connexion et Onboarding', () => {
         await expect(page).toHaveURL(/.*dashboard.*/, { timeout: 15000 });
 
         // Vérifier le titre de bienvenue personnalisé
-        await expect(page.locator('h1')).toContainText(/Bienvenue sur FleetMada/i);
+        await expect(page.locator('h1').filter({ hasText: /Bienvenue sur FleetMada/i })).toBeVisible();
 
         // Vérifier la présence des widgets clés
         await expect(page.locator('h2', { hasText: 'Premiers pas' })).toBeVisible();

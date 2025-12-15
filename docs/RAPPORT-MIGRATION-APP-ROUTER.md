@@ -26,7 +26,7 @@ Migrer le projet FleetMada d'un mélange App Router / Pages Router vers une arch
 ### Phase 1: Structure de Base ✅
 - **✅ Page d'accueil créée** : `app/page.tsx`
 - **✅ Layout d'authentification** : `app/(auth)/layout.tsx`
-- **✅ Layout dashboard adapté** : `app/(dashboard)/layout.tsx`
+- **✅ Layout dashboard adapté** : `app/(main)/layout.tsx`
 
 ### Phase 2: Migration des Composants d'Authentification ✅
 - **✅ AuthFlow migré** : `app/components/AuthFlow.tsx`
@@ -54,7 +54,7 @@ app/
 │   │   └── page.tsx              # ✅ Page register (migrée)
 │   └── onboarding/
 │       └── page.tsx              # ✅ Page onboarding (migrée)
-├── (dashboard)/                  # ✅ Groupe dashboard
+├── (main)/                  # ✅ Groupe dashboard
 │   ├── layout.tsx                # ✅ Layout dashboard (adapté)
 │   ├── page.tsx                  # ✅ Dashboard principal (existant)
 │   ├── vehicles/
@@ -73,7 +73,7 @@ app/
 
 ### 1. Architecture Plus Claire
 - **Groupe de routes `(auth)`** : Toutes les pages d'authentification regroupées
-- **Groupe de routes `(dashboard)`** : Toutes les pages dashboard regroupées
+- **Groupe de routes `(main)`** : Toutes les pages dashboard regroupées
 - **Layouts spécifiques** : Chaque groupe a son propre layout
 
 ### 2. Meilleure Organisation des Composants
@@ -150,7 +150,7 @@ npm list next
 ```
 
 ### 2. Finalisation de la Migration
-- Migrer les pages restantes de `pages/` vers `app/(dashboard)/`
+- Migrer les pages restantes de `pages/` vers `app/(main)/`
 - Supprimer l'ancien dossier `pages/` une fois la migration terminée
 - Mettre à jour la documentation des routes
 

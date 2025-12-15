@@ -16,7 +16,7 @@ export default function HomePage() {
         router.replace('/dashboard');
       } else {
         // Rediriger vers login si non authentifié
-        router.replace('/auth/login');
+        router.replace('/login');
       }
     }
   }, [isAuthenticated, isLoading, router]);

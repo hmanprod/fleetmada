@@ -5,9 +5,15 @@ import { Car, Mail, Lock, User, Building, ArrowRight, AlertCircle, Loader2 } fro
 import { useAuth } from '../../../lib/auth-context';
 import { useRouter } from 'next/navigation';
 
+import useAuthFlow from '../../components/AuthFlow';
+
 const RegisterPage = () => {
   const { register, isLoading, error, clearError } = useAuth();
   const router = useRouter();
+
+  // Activer le flux d'authentification
+  useAuthFlow('register');
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -55,7 +61,7 @@ const RegisterPage = () => {
   };
 
   const handleNavigateToLogin = () => {
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   return (

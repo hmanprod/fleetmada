@@ -5,16 +5,23 @@ import { Car, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../lib/auth-context';
 import { useRouter } from 'next/navigation';
 
+
+import useAuthFlow from '../../components/AuthFlow';
+
 const LoginPage = () => {
   const { login, isLoading, error, clearError } = useAuth();
   const router = useRouter();
+
+  // Activer le flux d'authentification pour gérer les redirections
+  useAuthFlow('login');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    
+
     try {
       await login({ email, password });
       // La redirection se fera automatiquement via le hook useAuthFlow ou la page d'accueil
@@ -24,7 +31,7 @@ const LoginPage = () => {
   };
 
   const handleNavigateToRegister = () => {
-    router.push('/auth/register');
+    router.push('/register');
   };
 
   return (
@@ -32,7 +39,7 @@ const LoginPage = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center items-center gap-2 mb-6">
           <div className="bg-[#0f4c3a] p-2 rounded-lg">
-             <Car className="h-8 w-8 text-white" />
+            <Car className="h-8 w-8 text-white" />
           </div>
           <span className="text-3xl font-bold text-[#0f4c3a] tracking-tight">FleetMada</span>
         </div>
@@ -55,7 +62,7 @@ const LoginPage = () => {
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -156,7 +163,7 @@ const LoginPage = () => {
                 onClick={handleNavigateToRegister}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
-                 Créer un compte
+                Créer un compte
               </button>
             </div>
           </div>

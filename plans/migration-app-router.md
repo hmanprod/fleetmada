@@ -16,7 +16,7 @@
 
 3. **Conventions Next.js 13+ Non Respectées**
    - Tout doit être dans `app/` (App Router)
-   - Groupes de routes avec `(auth)`, `(dashboard)`
+   - Groupes de routes avec `(auth)`, `(main)`
    - `app/layout.tsx` global + layouts spécifiques par groupe
    - Migration complète de `pages/` (déprécié)
 
@@ -42,7 +42,7 @@ app/
 │       ├── page.tsx              # Page onboarding consolidée (MIGRÉE)
 │       ├── loading.tsx           # Loading onboarding (NOUVEAU)
 │       └── error.tsx             # Error onboarding (NOUVEAU)
-├── (dashboard)/                  # Groupe de routes dashboard
+├── (main)/                  # Groupe de routes dashboard
 │   ├── layout.tsx                # Layout dashboard (MIGRÉ)
 │   ├── page.tsx                  # Dashboard principal (MIGRÉ)
 │   ├── loading.tsx               # Loading dashboard (NOUVEAU)
@@ -71,7 +71,7 @@ app/
 ### Phase 1: Préparation et Structure de Base
 - [ ] **Créer la nouvelle page d'accueil** (`app/page.tsx`)
 - [ ] **Créer le layout d'authentification** (`app/(auth)/layout.tsx`)
-- [ ] **Créer les layouts de dashboard** (`app/(dashboard)/layout.tsx`)
+- [ ] **Créer les layouts de dashboard** (`app/(main)/layout.tsx`)
 
 ### Phase 2: Migration des Composants d'Authentification
 - [ ] **Migrer `AuthFlow`** vers `app/components/AuthFlow.tsx`
@@ -81,10 +81,10 @@ app/
 - [ ] **Consolider `Onboarding`** vers `app/(auth)/onboarding/page.tsx`
 
 ### Phase 3: Migration des Pages Dashboard
-- [ ] **Migrer `Dashboard`** vers `app/(dashboard)/page.tsx`
-- [ ] **Migrer les pages véhicules** vers `app/(dashboard)/vehicles/page.tsx`
-- [ ] **Migrer les pages settings** vers `app/(dashboard)/settings/*/page.tsx`
-- [ ] **Migrer toutes les autres pages** depuis `pages/` vers `app/(dashboard)/`
+- [ ] **Migrer `Dashboard`** vers `app/(main)/page.tsx`
+- [ ] **Migrer les pages véhicules** vers `app/(main)/vehicles/page.tsx`
+- [ ] **Migrer les pages settings** vers `app/(main)/settings/*/page.tsx`
+- [ ] **Migrer toutes les autres pages** depuis `pages/` vers `app/(main)/`
 
 ### Phase 4: Mise à Jour des Imports et Références
 - [ ] **Mettre à jour `app/layout.tsx`** pour utiliser les nouveaux composants
@@ -121,7 +121,7 @@ app/
 │       ├── page.tsx              # Onboarding consolidée
 │       ├── loading.tsx           # Loading onboarding
 │       └── error.tsx             # Error onboarding
-├── (dashboard)/
+├── (main)/
 │   ├── loading.tsx               # Loading dashboard
 │   ├── error.tsx                 # Error dashboard
 │   └── settings/
@@ -137,7 +137,7 @@ app/
 ```
 app/
 ├── layout.tsx                    # Adapter pour nouveaux composants
-└── (dashboard)/
+└── (main)/
     ├── layout.tsx                # Adapter pour nouveau routing
     └── settings/
         ├── layout.tsx            # Adapter pour nouveau routing
@@ -148,16 +148,16 @@ pages/  # TOUS CES FICHIERS SERONT MIGRÉS
 │   ├── Login.tsx                 # → app/(auth)/login/page.tsx
 │   ├── Register.tsx              # → app/(auth)/register/page.tsx
 │   └── Onboarding.tsx            # → app/(auth)/onboarding/page.tsx
-├── Dashboard.tsx                 # → app/(dashboard)/page.tsx
+├── Dashboard.tsx                 # → app/(main)/page.tsx
 ├── vehicles/
-│   ├── List.tsx                  # → app/(dashboard)/vehicles/page.tsx
-│   ├── Create.tsx                # → app/(dashboard)/vehicles/create/page.tsx
-│   └── [id].tsx                  # → app/(dashboard)/vehicles/[id]/page.tsx
+│   ├── List.tsx                  # → app/(main)/vehicles/page.tsx
+│   ├── Create.tsx                # → app/(main)/vehicles/create/page.tsx
+│   └── [id].tsx                  # → app/(main)/vehicles/[id]/page.tsx
 ├── settings/
-│   ├── UserProfile.tsx           # → app/(dashboard)/settings/user-profile/page.tsx
-│   ├── General.tsx               # → app/(dashboard)/settings/general/page.tsx
-│   └── Layout.tsx                # → app/(dashboard)/settings/layout.tsx
-└── [toutes les autres pages]     # → app/(dashboard)/[respective]/
+│   ├── UserProfile.tsx           # → app/(main)/settings/user-profile/page.tsx
+│   ├── General.tsx               # → app/(main)/settings/general/page.tsx
+│   └── Layout.tsx                # → app/(main)/settings/layout.tsx
+└── [toutes les autres pages]     # → app/(main)/[respective]/
 ```
 
 ## 🚀 Impact sur les Performances et SEO
