@@ -4,18 +4,18 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft, FileText, PenTool, RefreshCw,
-    BarChart3, Settings, Save, LayoutList, Lock
+    BarChart3, Settings, Save, LayoutList, Lock, Loader2, AlertCircle
 } from 'lucide-react';
-import {
-    Vehicle, VehicleStatus, VehicleType, Ownership,
-    LoanLeaseType, FuelUnit, MeasurementUnit, MeterUnit
-} from '../types';
+import { useVehicleOperations } from '@/lib/hooks/useVehicles';
+import { CreateVehicleInput } from '@/lib/validations/vehicle-validations';
+import type { VehicleListQuery } from '@/lib/validations/vehicle-validations';
 
 export default function CreateVehicle() {
     const router = useRouter();
+    const { createVehicle, loading, error } = useVehicleOperations();
     const [activeTab, setActiveTab] = useState('details');
-    const [formData, setFormData] = useState<Partial<Vehicle>>({
-        status: 'Active',
+    const [formData, setFormData] = useState<any>({
+        status: 'ACTIVE',
         type: 'Car',
         ownership: 'Owned',
         primaryMeter: 'Miles',
@@ -23,12 +23,51 @@ export default function CreateVehicle() {
         measurementUnits: 'Imperial',
         loanLeaseType: 'None',
     });
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
-    const handleSave = () => {
-        console.log('Saving vehicle:', formData);
-        // In a real app, this would be a server action
-        alert('Vehicle saved! (Mock)');
-        router.push('/vehicles/list');
+    const handleSave = async () => {
+        setSaveStatus('saving');
+        setValidationErrors({});
+        
+        try {
+            // Validation basique côté client
+            const errors: Record<string, string> = {};
+            
+            if (!formData.name?.trim()) errors.name = 'Le nom du véhicule est requis';
+            if (!formData.vin?.trim()) errors.vin = 'Le VIN est requis';
+            if (!formData.type?.trim()) errors.type = 'Le type de véhicule est requis';
+            if (!formData.make?.trim()) errors.make = 'La marque est requise';
+            if (!formData.model?.trim()) errors.model = 'Le modèle est requis';
+            if (!formData.year || formData.year < 1886 || formData.year > new Date().getFullYear() + 1) {
+                errors.year = 'Année invalide';
+            }
+
+            if (Object.keys(errors).length > 0) {
+                setValidationErrors(errors);
+                setSaveStatus('error');
+                return;
+            }
+
+            // Préparation des données pour l'API
+            const vehicleData = {
+                ...formData,
+                year: Number(formData.year),
+                labels: formData.labels || [],
+            } as CreateVehicleInput;
+
+            const newVehicle = await createVehicle(vehicleData);
+            setSaveStatus('success');
+            
+            // Redirection vers la page de détails du véhicule créé
+            setTimeout(() => {
+                router.push(`/vehicles/list/${newVehicle.id}`);
+            }, 1000);
+            
+        } catch (err) {
+            console.error('Erreur lors de la création du véhicule:', err);
+            setSaveStatus('error');
+        }
     };
 
     const TabButton = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
@@ -70,9 +109,25 @@ export default function CreateVehicle() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm"
+                            disabled={loading || saveStatus === 'saving'}
+                            className="bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded shadow-sm flex items-center gap-2"
                         >
-                            Save Vehicle
+                            {saveStatus === 'saving' ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={16} />
+                                    Sauvegarde...
+                                </>
+                            ) : saveStatus === 'success' ? (
+                                <>
+                                    <Save size={16} />
+                                    Véhicule créé !
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={16} />
+                                    Enregistrer
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -137,7 +192,7 @@ export default function CreateVehicle() {
                                         <select
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.type || 'Car'}
-                                            onChange={(e) => setFormData({ ...formData, type: e.target.value as VehicleType })}
+                                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                         >
                                             <option value="Car">Car</option>
                                             <option value="Truck">Truck</option>
@@ -152,7 +207,7 @@ export default function CreateVehicle() {
                                         <select
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.status || 'Active'}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value as VehicleStatus })}
+                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                         >
                                             <option value="Active">Active</option>
                                             <option value="Inactive">Inactive</option>
@@ -167,7 +222,7 @@ export default function CreateVehicle() {
                                         <select
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.ownership || 'Owned'}
-                                            onChange={(e) => setFormData({ ...formData, ownership: e.target.value as Ownership })}
+                                            onChange={(e) => setFormData({ ...formData, ownership: e.target.value })}
                                         >
                                             <option value="Owned">Owned</option>
                                             <option value="Leased">Leased</option>
@@ -339,7 +394,7 @@ export default function CreateVehicle() {
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">Loan/Lease</h2>
                                 <div className="flex border border-gray-200 rounded">
-                                    {(['Loan', 'Lease', 'None'] as LoanLeaseType[]).map((type) => (
+                                    {(['Loan', 'Lease', 'None'] as string[]).map((type) => (
                                         <div
                                             key={type}
                                             className={`flex-1 p-4 border-r last:border-r-0 cursor-pointer flex items-start gap-3
@@ -380,7 +435,7 @@ export default function CreateVehicle() {
                                                     name="primaryMeter"
                                                     className="text-[#008751] focus:ring-[#008751]"
                                                     checked={formData.primaryMeter === unit}
-                                                    onChange={() => setFormData({ ...formData, primaryMeter: unit as MeterUnit })}
+                                                    onChange={() => setFormData({ ...formData, primaryMeter: unit })}
                                                 />
                                                 <span className="text-sm text-gray-700">{unit}</span>
                                             </label>
@@ -399,7 +454,7 @@ export default function CreateVehicle() {
                                                     name="fuelUnit"
                                                     className="text-[#008751] focus:ring-[#008751]"
                                                     checked={formData.fuelUnit === unit}
-                                                    onChange={() => setFormData({ ...formData, fuelUnit: unit as FuelUnit })}
+                                                    onChange={() => setFormData({ ...formData, fuelUnit: unit })}
                                                 />
                                                 <span className="text-sm text-gray-700">{unit}</span>
                                             </label>

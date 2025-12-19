@@ -3,51 +3,48 @@
 import React, { useState } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, ChevronRight, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-interface ServiceReminder {
-  id: number;
-  vehicle: string;
-  task: string;
-  status: string;
-  nextDue: string;
-  compliance: number;
-}
-
-const mockReminders: ServiceReminder[] = [
-  { id: 1, vehicle: 'AP101', task: 'Tire Rotation', status: 'Overdue', nextDue: '4 months ago', compliance: 100 },
-  { id: 2, vehicle: 'AP101', task: 'Engine Oil & Filter Replacement', status: 'Overdue', nextDue: '3 months ago', compliance: 67 },
-  { id: 3, vehicle: 'RP101', task: 'Engine Oil & Filter Replacement', status: 'Overdue', nextDue: '5 months ago', compliance: 100 },
-  { id: 4, vehicle: 'BSA111TRNS', task: 'Diesel Emissions Fluid Fill', status: 'Overdue', nextDue: '1 month ago', compliance: 50 },
-  { id: 5, vehicle: 'RP101', task: 'Tire Rotation', status: 'Overdue', nextDue: '4 months ago', compliance: 100 },
-  { id: 6, vehicle: 'BSA113TRNS', task: 'Diesel Emissions Fluid Fill', status: 'Overdue', nextDue: '3 weeks ago', compliance: 50 },
-  { id: 7, vehicle: 'BS102', task: 'Diesel Emissions Fluid Fill', status: 'Overdue', nextDue: '2 weeks ago', compliance: 50 },
-];
+import { useServiceReminders } from '@/lib/hooks/useServiceReminders';
 
 export default function ServiceRemindersPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedReminders, setSelectedReminders] = useState<number[]>([]);
+  const [selectedReminders, setSelectedReminders] = useState<string[]>([]);
+
+  // Configuration des filtres basée sur l'onglet actif
+  const getFilters = () => {
+    switch (activeTab) {
+      case 'overdue':
+        return { overdue: true };
+      case 'snoozed':
+        return { status: 'DISMISSED' };
+      case 'due-soon':
+        // Cette logique sera gérée côté serveur ou avec des filtres supplémentaires
+        return {};
+      default:
+        return {};
+    }
+  };
+
+  const { reminders, loading, error, pagination, refresh } = useServiceReminders(getFilters());
 
   const handleAddServiceReminder = () => {
-    router.push('/reminders/service/create'); // Navigate to create page
+    router.push('/reminders/service/create');
   };
 
   const handleLearnMore = () => {
-    // TODO: Navigate to documentation or help page
     console.log('Navigate to learn more about service reminders');
   };
 
   const handleEnableForecasting = () => {
-    // TODO: Enable forecasting feature
     console.log('Enable forecasting');
   };
 
-  const handleReminderClick = (reminderId: number) => {
-    router.push(`/reminders/service/${reminderId}`); // Navigate to detail page
+  const handleReminderClick = (reminderId: string) => {
+    router.push(`/reminders/service/${reminderId}`);
   };
 
-  const handleSelectReminder = (reminderId: number) => {
+  const handleSelectReminder = (reminderId: string) => {
     setSelectedReminders(prev =>
       prev.includes(reminderId)
         ? prev.filter(id => id !== reminderId)
@@ -56,12 +53,79 @@ export default function ServiceRemindersPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedReminders.length === mockReminders.length) {
+    if (selectedReminders.length === reminders.length) {
       setSelectedReminders([]);
     } else {
-      setSelectedReminders(mockReminders.map(reminder => reminder.id));
+      setSelectedReminders(reminders.map(reminder => reminder.id));
     }
   };
+
+  const getStatusColor = (status: string, isOverdue?: boolean) => {
+    if (isOverdue) return 'text-red-600';
+    switch (status) {
+      case 'ACTIVE': return 'text-green-600';
+      case 'DISMISSED': return 'text-gray-500';
+      case 'COMPLETED': return 'text-blue-600';
+      case 'OVERDUE': return 'text-red-600';
+      default: return 'text-gray-500';
+    }
+  };
+
+  const getStatusDot = (status: string, isOverdue?: boolean) => {
+    if (isOverdue) return 'bg-red-500';
+    switch (status) {
+      case 'ACTIVE': return 'bg-green-500';
+      case 'DISMISSED': return 'bg-gray-400';
+      case 'COMPLETED': return 'bg-blue-500';
+      case 'OVERDUE': return 'bg-red-500';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR');
+  };
+
+  const formatNextDue = (reminder: any) => {
+    if (!reminder.nextDue) return '—';
+    
+    const dueDate = new Date(reminder.nextDue);
+    const now = new Date();
+    const diffTime = dueDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return `${Math.abs(diffDays)} jours de retard`;
+    } else if (diffDays === 0) {
+      return 'Aujourd\'hui';
+    } else if (diffDays === 1) {
+      return 'Demain';
+    } else {
+      return `Dans ${diffDays} jours`;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-[1600px] mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">Chargement des rappels...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-[1600px] mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-red-500">Erreur: {error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -114,7 +178,7 @@ export default function ServiceRemindersPage() {
           className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'overdue' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
             }`}
         >
-          <div className="w-2 h-2 rounded-full bg-red-500"></div> Overdue <span className="bg-gray-100 text-gray-600 rounded-full px-2 text-xs ml-1">10</span>
+          <div className="w-2 h-2 rounded-full bg-red-500"></div> Overdue <span className="bg-gray-100 text-gray-600 rounded-full px-2 text-xs ml-1">{reminders.filter(r => r.isOverdue).length}</span>
         </button>
         <button
           onClick={() => setActiveTab('snoozed')}
@@ -152,30 +216,45 @@ export default function ServiceRemindersPage() {
           <Filter size={14} /> Filters
         </button>
         <div className="flex-1 text-right text-sm text-gray-500">
-          1 - 50 of 161
+          {pagination && `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total}`}
         </div>
         <div className="flex gap-1">
-          <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} className="rotate-180" /></button>
-          <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} /></button>
+          <button 
+            className="p-1 border border-gray-300 rounded text-gray-400 bg-white"
+            disabled={!pagination?.hasPrev}
+            onClick={() => {/* TODO: Implémenter pagination */}}
+          >
+            <ChevronRight size={16} className="rotate-180" />
+          </button>
+          <button 
+            className="p-1 border border-gray-300 rounded text-gray-400 bg-white"
+            disabled={!pagination?.hasNext}
+            onClick={() => {/* TODO: Implémenter pagination */}}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
 
       <div className="bg-white mb-6 p-4 rounded-lg border border-gray-200 grid grid-cols-4 gap-4 text-center divide-x divide-gray-200">
         <div>
           <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Overdue Vehicles</div>
-          <div className="text-2xl font-bold text-red-600">7</div>
+          <div className="text-2xl font-bold text-red-600">{reminders.filter(r => r.isOverdue).length}</div>
         </div>
         <div>
           <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Due Soon Vehicles</div>
-          <div className="text-2xl font-bold text-orange-500">6</div>
+          <div className="text-2xl font-bold text-orange-500">{reminders.filter(r => r.daysUntilDue != null && r.daysUntilDue <= 7 && !r.isOverdue).length}</div>
         </div>
         <div>
           <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Snoozed Vehicles</div>
-          <div className="text-2xl font-bold text-gray-900">0</div>
+          <div className="text-2xl font-bold text-gray-900">{reminders.filter(r => r.status === 'DISMISSED').length}</div>
         </div>
         <div>
           <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Average Compliance</div>
-          <div className="text-2xl font-bold text-[#008751]">98% <span className="text-xs text-gray-500 font-normal">on-time</span></div>
+          <div className="text-2xl font-bold text-[#008751]">
+            {reminders.length > 0 ? Math.round(reminders.reduce((sum, r) => sum + r.compliance, 0) / reminders.length) : 0}%
+            <span className="text-xs text-gray-500 font-normal"> on-time</span>
+          </div>
         </div>
       </div>
 
@@ -186,7 +265,7 @@ export default function ServiceRemindersPage() {
               <th className="w-8 px-6 py-3">
                 <input
                   type="checkbox"
-                  checked={selectedReminders.length === mockReminders.length && mockReminders.length > 0}
+                  checked={selectedReminders.length === reminders.length && reminders.length > 0}
                   onChange={handleSelectAll}
                   className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
                 />
@@ -201,7 +280,7 @@ export default function ServiceRemindersPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {mockReminders.map((reminder) => (
+            {reminders.map((reminder) => (
               <tr
                 key={reminder.id}
                 className="hover:bg-gray-50 cursor-pointer"
@@ -219,30 +298,47 @@ export default function ServiceRemindersPage() {
                   <div className="flex items-center gap-2">
                     <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${reminder.id}`} className="w-6 h-6 rounded object-cover" alt="" />
                     <div>
-                      <div className="text-sm font-bold text-[#008751] hover:underline">{reminder.vehicle}</div>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Sample</span>
+                      <div className="text-sm font-bold text-[#008751] hover:underline">{reminder.vehicle?.name || 'N/A'}</div>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                        {reminder.vehicle?.make} {reminder.vehicle?.model}
+                      </span>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                  {reminder.task}
-                  <div className="text-xs text-gray-500 font-normal">Every 5 month(s) or 7,500 miles</div>
+                  {reminder.title || reminder.task || 'Service non spécifié'}
+                  {reminder.description && (
+                    <div className="text-xs text-gray-500 font-normal">{reminder.description}</div>
+                  )}
+                  {reminder.intervalMonths && (
+                    <div className="text-xs text-gray-500 font-normal">Tous les {reminder.intervalMonths} mois</div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="flex items-center gap-1.5 text-sm text-red-600 font-medium">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div> {reminder.status}
+                  <span className={`flex items-center gap-1.5 text-sm font-medium ${getStatusColor(reminder.status, reminder.isOverdue)}`}>
+                    <div className={`w-2 h-2 rounded-full ${getStatusDot(reminder.status, reminder.isOverdue)}`}></div> 
+                    {reminder.status === 'OVERDUE' ? 'Overdue' : 
+                     reminder.status === 'ACTIVE' ? 'Active' :
+                     reminder.status === 'DISMISSED' ? 'Snoozed' : 
+                     reminder.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium underline decoration-dotted underline-offset-4">
-                  {reminder.nextDue}
-                  <div className="text-xs text-red-600 font-normal">12,219 miles overdue</div>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <div className={`font-medium ${reminder.isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
+                    {formatNextDue(reminder)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {formatDate(reminder.nextDue)}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   —
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#008751]">
-                  03/15/2025
-                  <div className="text-xs text-gray-500">36,550 mi</div>
+                  {formatDate(reminder.lastServiceDate)}
+                  {reminder.lastServiceMeter && (
+                    <div className="text-xs text-gray-500">{reminder.lastServiceMeter.toLocaleString()} mi</div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {reminder.compliance}%
@@ -251,6 +347,12 @@ export default function ServiceRemindersPage() {
             ))}
           </tbody>
         </table>
+        
+        {reminders.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            Aucun rappel de service trouvé
+          </div>
+        )}
       </div>
     </div>
   );

@@ -162,28 +162,35 @@ export interface ServiceProgram {
 }
 
 export interface Contact {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
   group?: string;
-  status: 'Active' | 'No Access';
+  status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
   userType?: string;
   classifications: string[];
   image?: string;
   jobTitle?: string;
+  company?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Vendor {
-  id: number;
+  id: string;
   name: string;
   phone?: string;
   website?: string;
   address?: string;
   contactName?: string;
-  labels?: string[];
-  classification?: string[];
+  contactEmail?: string;
+  contactPhone?: string;
+  labels: string[];
+  classification: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FuelEntry {

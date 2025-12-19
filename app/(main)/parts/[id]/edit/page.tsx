@@ -1,39 +1,112 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ArrowLeft, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, ChevronDown, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePartDetails } from '@/lib/hooks/usePartDetails';
+import { UpdatePartData } from '@/lib/services/parts-api';
 
 export default function PartEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-
-    // Mock initial data
-    const [formData, setFormData] = useState({
-        partNumber: 'WF-10902',
-        description: 'Fuel Filter',
-        category: 'engine',
-        manufacturer: 'bosch',
+    const { part, loading, error, updatePart } = usePartDetails(params.id);
+    
+    const [formData, setFormData] = useState<UpdatePartData>({
+        number: '',
+        description: '',
+        category: '',
+        manufacturer: '',
         manufacturerPartNumber: '',
         upc: '',
-        unitCost: 'Ar 25000',
+        cost: 0,
+        quantity: 0,
+        minimumStock: 0,
         measurementUnit: 'pieces'
     });
+    
+    const [saving, setSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    // Load part data when component mounts
+    useEffect(() => {
+        if (part) {
+            setFormData({
+                number: part.number,
+                description: part.description || '',
+                category: part.category || '',
+                manufacturer: part.manufacturer || '',
+                manufacturerPartNumber: part.manufacturerPartNumber || '',
+                upc: part.upc || '',
+                cost: part.cost || 0,
+                quantity: part.quantity || 0,
+                minimumStock: part.minimumStock || 0,
+                measurementUnit: part.measurementUnit || 'pieces'
+            });
+        }
+    }, [part]);
 
     const handleBack = () => {
         router.back();
     };
 
-    const handleSave = () => {
-        // TODO: Implement update logic
-        router.push(`/parts/${params.id}`);
+    const handleSave = async () => {
+        if (!formData.number || !formData.description) {
+            alert('Le numéro et la description de la pièce sont requis.');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const result = await updatePart(formData);
+            if (result) {
+                setSaveSuccess(true);
+                setTimeout(() => {
+                    router.push(`/parts/${params.id}`);
+                }, 1000);
+            }
+        } catch (err) {
+            console.error('Erreur lors de la mise à jour:', err);
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const handleInputChange = (field: string, value: string) => {
+    const handleInputChange = (field: keyof UpdatePartData, value: string | number) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
     };
+
+    const formatCurrency = (amount: number) => {
+        return `Ar ${amount.toLocaleString()}`;
+    };
+
+    if (loading) {
+        return (
+            <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008751]"></div>
+                    <span className="text-gray-500">Chargement des données...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-500 mb-4">Erreur de chargement: {error}</p>
+                    <button
+                        onClick={() => router.back()}
+                        className="bg-[#008751] hover:bg-[#007043] text-white px-4 py-2 rounded"
+                    >
+                        Retour
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -45,9 +118,16 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                     <h1 className="text-2xl font-bold text-gray-900">Edit Part</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Changes</button>
-                </div>
+            <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Annuler</button>
+            <button 
+                onClick={handleSave} 
+                className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled={saving || !formData.number || !formData.description}
+            >
+                {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
+            </button>
+        </div>
             </div>
 
             <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
@@ -60,8 +140,8 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Part Number <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
-                                value={formData.partNumber}
-                                onChange={(e) => handleInputChange('partNumber', e.target.value)}
+                                value={formData.number}
+                                onChange={(e) => handleInputChange('number', e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
                             <p className="mt-1 text-xs text-gray-500">Internal part identifier. Must be unique per part.</p>
@@ -154,8 +234,8 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                                 <div className="relative">
                                     <input
                                         type="text"
-                                        value={formData.unitCost}
-                                        onChange={(e) => handleInputChange('unitCost', e.target.value)}
+                                        value={formData.cost || ''}
+                                        onChange={(e) => handleInputChange('cost', parseFloat(e.target.value) || 0)}
                                         className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                     />
                                     <div className="absolute right-3 top-2 flex flex-col items-center">

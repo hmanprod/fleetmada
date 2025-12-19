@@ -1,59 +1,120 @@
 'use client';
 
-import React from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, Lightbulb, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, Lightbulb, Zap, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import useIssues from '@/lib/hooks/useIssues';
+import type { IssueFilters } from '@/lib/services/issues-api';
 
 export default function IssuesPage() {
   const router = useRouter();
+  
+  // Initialiser les filtres depuis l'URL si nécessaire (dans une vraie app)
+  // Pour l'instant on garde l'état local mais on mettra à jour l'URL
+  const [filters, setFilters] = useState<IssueFilters>({ 
+    page: 1, 
+    limit: 20,
+    status: 'OPEN'
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const {
+    issues,
+    loading,
+    error,
+    pagination,
+    fetchIssues,
+    clearError
+  } = useIssues(filters);
 
   const handleAdd = () => {
     router.push('/issues/create');
   };
 
-  const handleRowClick = (id: number) => {
+  const handleRowClick = (id: string) => {
     router.push(`/issues/${id}`);
   };
 
-  const issues = [
-    { id: 1, priority: 'Critical', vehicle: 'AC101', type: 'Vehicle', issueNo: '#1', summary: 'Dead battery', status: 'Open', reported: '08/22/2025', assigned: '', watchers: '1 watcher', labels: [] },
-    { id: 2, priority: 'Critical', vehicle: 'AM101', type: 'Vehicle', issueNo: '#2', summary: 'Oil leak', status: 'Open', reported: '11/16/2025', assigned: '', watchers: '1 watcher', labels: [] },
-    { id: 3, priority: 'High', vehicle: 'AP101', type: 'Vehicle', issueNo: '#3', summary: 'Flat tire', status: 'Open', reported: '08/16/2025', assigned: '', watchers: '1 watcher', labels: [] },
-    { id: 4, priority: 'Medium', vehicle: 'AS101', type: 'Vehicle', issueNo: '#4', summary: 'Brake light', status: 'Open', reported: '11/28/2025', assigned: '', watchers: '1 watcher', labels: [] },
-    { id: 5, priority: 'Medium', vehicle: 'AT101', type: 'Vehicle', issueNo: '#5', summary: 'Brake pads worn', status: 'Closed', reported: '07/20/2025', assigned: '', watchers: '1 watcher', labels: [] },
-    { id: 6, priority: 'Low', vehicle: 'AV101', type: 'Vehicle', issueNo: '#6', summary: 'Bad Engine Air Filter', status: 'Resolved', reported: '06/01/2025', assigned: '', watchers: '1 watcher', labels: [] },
-    { id: 7, priority: 'Medium', vehicle: 'BF101', type: 'Vehicle', issueNo: '#7', summary: 'Need Transfluid', status: 'Resolved', reported: '05/13/2025', assigned: '', watchers: '', labels: [] },
-    { id: 8, priority: 'High', vehicle: 'BS102', type: 'Vehicle', issueNo: '#8', summary: '[Recall] Dtna is recalling certain model year 2011 business class m2...', status: 'Open', reported: '12/13/2025', assigned: '', watchers: '', labels: ['Recall #11V289000'] },
-    { id: 9, priority: 'High', vehicle: 'BS101', type: 'Vehicle', issueNo: '#9', summary: '[Recall] Dtna is recalling certain model year 2011 business class m2...', status: 'Resolved', reported: '12/03/2025', assigned: '', watchers: '', labels: ['Recall #11V289000'] },
-  ];
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    const newFilters = { ...filters, search: query || undefined };
+    setFilters(newFilters);
+    fetchIssues(newFilters);
+    
+    // Mettre à jour l'URL
+    const params = new URLSearchParams();
+    if (filters.status) params.set('status', filters.status);
+    if (query) params.set('search', query);
+    
+    router.replace(`/issues?${params.toString()}`);
+  };
 
-  const getPriorityColor = (p: string) => {
-    switch (p) {
-      case 'Critical': return 'text-red-600 bg-red-50';
-      case 'High': return 'text-orange-600 bg-orange-50';
-      case 'Medium': return 'text-yellow-600 bg-yellow-50';
-      case 'Low': return 'text-blue-600 bg-blue-50';
+  const handleFilterChange = (newFilters: Partial<IssueFilters>) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    fetchIssues(updatedFilters);
+    
+    // Mettre à jour l'URL pour refléter les filtres (utile pour les tests et le partage)
+    const params = new URLSearchParams();
+    if (updatedFilters.status) params.set('status', updatedFilters.status);
+    if (updatedFilters.search) params.set('search', updatedFilters.search);
+    if (updatedFilters.priority) params.set('priority', updatedFilters.priority);
+    
+    // Utiliser replace pour ne pas empiler l'historique à chaque frappe
+    router.replace(`/issues?${params.toString()}`);
+  };
+
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      year: 'numeric' 
+    });
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'CRITICAL': return 'text-red-600 bg-red-50';
+      case 'HIGH': return 'text-orange-600 bg-orange-50';
+      case 'MEDIUM': return 'text-yellow-600 bg-yellow-50';
+      case 'LOW': return 'text-blue-600 bg-blue-50';
       default: return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const getStatusColor = (s: string) => {
-    switch (s) {
-      case 'Open': return 'bg-yellow-400 text-yellow-900 border-yellow-500';
-      case 'Closed': return 'bg-gray-500 text-white border-gray-600';
-      case 'Resolved': return 'bg-green-600 text-white border-green-700';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'OPEN': return 'bg-yellow-400 text-yellow-900 border-yellow-500';
+      case 'CLOSED': return 'bg-gray-500 text-white border-gray-600';
+      case 'RESOLVED': return 'bg-green-600 text-white border-green-700';
+      case 'IN_PROGRESS': return 'bg-blue-500 text-white border-blue-600';
       default: return 'bg-gray-200 text-gray-800';
     }
   };
 
-  const getPriorityIconColor = (p: string) => {
-    switch (p) {
-      case 'Critical': return 'text-red-600';
-      case 'High': return 'text-orange-600';
-      case 'Medium': return 'text-orange-400';
-      case 'Low': return 'text-blue-400';
+  const getPriorityIconColor = (priority: string) => {
+    switch (priority) {
+      case 'CRITICAL': return 'text-red-600';
+      case 'HIGH': return 'text-orange-600';
+      case 'MEDIUM': return 'text-orange-400';
+      case 'LOW': return 'text-blue-400';
       default: return 'text-gray-400';
     }
+  };
+
+  // Handle loading state
+  if (loading && issues.length === 0) {
+    return (
+      <div className="p-6 max-w-[1800px] mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008751] mx-auto"></div>
+            <p className="mt-2 text-gray-500">Chargement des problèmes...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -83,19 +144,39 @@ export default function IssuesPage() {
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
-        <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500 flex items-center gap-1">All <MoreHorizontal size={14} /></button>
-        <button className="pb-3 border-b-2 border-[#008751] text-[#008751] font-bold">Open</button>
+        <button className={`pb-3 border-b-2 ${filters.status === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'} flex items-center gap-1`} onClick={() => handleFilterChange({ status: undefined })}>All <MoreHorizontal size={14} /></button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'OPEN' })}>Open</button>
         <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">Overdue</button>
-        <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">Resolved</button>
-        <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">Closed</button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Resolved</button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'CLOSED' })}>Closed</button>
         <button className="pb-3 border-b-2 border-transparent hover:text-green-700 text-[#008751] flex items-center gap-1"><Plus size={14} /> Add Tab</button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="text-red-600" size={20} />
+          <span className="text-red-700">{error}</span>
+          <button 
+            onClick={clearError}
+            className="ml-auto text-red-600 hover:text-red-800"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Filters Bar */}
       <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <input type="text" placeholder="Search" className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" />
+          <input 
+            type="text" 
+            placeholder="Search" 
+            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </div>
         <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
           Issue Assigned To <ChevronDown size={14} />
@@ -108,11 +189,21 @@ export default function IssuesPage() {
         </button>
 
         <div className="flex-1 text-right text-sm text-gray-500">
-          1 - 9 of 9
+          {pagination ? `${pagination.page * pagination.limit - pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} of ${pagination.totalCount}` : '0'}
         </div>
         <div className="flex gap-1 ml-auto">
-          <button className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"><ChevronRight size={16} className="rotate-180" /></button>
-          <button className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"><ChevronRight size={16} /></button>
+          <button 
+            className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"
+            disabled={!pagination?.hasPrev}
+          >
+            <ChevronRight className="rotate-180" size={16} />
+          </button>
+          <button 
+            className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"
+            disabled={!pagination?.hasNext}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
         <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
           Group: None <ChevronDown size={14} />
@@ -157,25 +248,43 @@ export default function IssuesPage() {
                   <div className="flex items-center gap-2">
                     <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${issue.id}`} className="w-6 h-6 rounded object-cover" alt="" />
                     <div className="flex flex-col">
-                      <span className="text-[#008751] font-bold hover:underline cursor-pointer">{issue.vehicle}</span>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded w-fit">Sample</span>
+                      <span className="text-[#008751] font-bold hover:underline cursor-pointer">
+                        {issue.vehicle ? `${issue.vehicle.make} ${issue.vehicle.model}` : 'N/A'}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded w-fit">
+                        {issue.vehicle?.vin || 'No VIN'}
+                      </span>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-500">{issue.type}</td>
-                <td className="px-4 py-3 font-medium text-gray-900">{issue.issueNo} <span className="text-xs bg-gray-100 px-1 rounded text-gray-500 font-normal">Sample</span></td>
+                <td className="px-4 py-3 text-gray-500">Vehicle</td>
+                <td className="px-4 py-3 font-medium text-gray-900">#{issue.id.slice(-6)} <span className="text-xs bg-gray-100 px-1 rounded text-gray-500 font-normal">FleetMada</span></td>
                 <td className="px-4 py-3 text-gray-900 font-medium">
                   {issue.summary}
-                  {issue.labels.length > 0 && <span className="ml-2 text-[#008751] text-xs hover:underline cursor-pointer">{issue.labels[0]}</span>}
+                  {issue.labels.length > 0 && (
+                    <span className="ml-2 text-[#008751] text-xs hover:underline cursor-pointer">{issue.labels[0]}</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-bold border ${getStatusColor(issue.status)}`}>{issue.status}</span>
                 </td>
-                <td className="px-4 py-3 text-gray-400">—</td>
-                <td className="px-4 py-3 text-gray-900 underline decoration-dotted underline-offset-4">{issue.reported}</td>
-                <td className="px-4 py-3 text-gray-400">—</td>
-                <td className="px-4 py-3 text-gray-400">—</td>
-                <td className="px-4 py-3 text-gray-500 hover:text-[#008751] hover:underline">{issue.watchers}</td>
+                <td className="px-4 py-3 text-gray-400">FleetMada</td>
+                <td className="px-4 py-3 text-gray-900 underline decoration-dotted underline-offset-4">{formatDate(issue.reportedDate)}</td>
+                <td className="px-4 py-3 text-gray-400">{issue.assignedTo || '—'}</td>
+                <td className="px-4 py-3">
+                  {issue.labels.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {issue.labels.map((label, index) => (
+                        <span key={index} className="text-xs bg-blue-100 text-blue-800 px-1 rounded">{label}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-gray-500 hover:text-[#008751] hover:underline">
+                  {issue.watchers > 0 ? `${issue.watchers} watcher${issue.watchers > 1 ? 's' : ''}` : '—'}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <span className="text-gray-400 flex gap-2">
                     <div onClick={e => e.stopPropagation()}><Settings size={14} className="hover:text-gray-600" /></div>

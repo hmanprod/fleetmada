@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, ChevronDown, Info, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Info, HelpCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useServiceReminders } from '@/lib/hooks/useServiceReminders';
 
 export default function CreateServiceReminderPage() {
     const router = useRouter();
+    const { createReminder, loading } = useServiceReminders();
     const [formData, setFormData] = useState({
         vehicle: '',
         serviceTask: '',
@@ -18,6 +20,7 @@ export default function CreateServiceReminderPage() {
         meterThreshold: '',
         meterThresholdUnit: 'mi',
         manualDueDate: false,
+        nextDue: '',
         notifications: true,
         watcher: ''
     });
@@ -26,10 +29,32 @@ export default function CreateServiceReminderPage() {
         router.push('/reminders/service'); // Or just /reminders/service
     };
 
-    const handleSave = () => {
-        console.log('Saving service reminder:', formData);
-        // TODO: Implement save logic
-        router.push('/reminders/service');
+    const handleSave = async () => {
+        try {
+            // Valider les champs obligatoires
+            if (!formData.vehicle || !formData.serviceTask) {
+                alert('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            // Préparer les données pour l'API
+            const reminderData = {
+                vehicleId: formData.vehicle,
+                task: formData.serviceTask,
+                nextDue: formData.manualDueDate ? formData.nextDue : undefined,
+                intervalMonths: formData.timeInterval ? parseInt(formData.timeInterval) : undefined,
+                intervalMeter: formData.meterInterval ? parseInt(formData.meterInterval) : undefined,
+                title: formData.serviceTask === 'oil_change' ? 'Changement d\'huile moteur' : 
+                      formData.serviceTask === 'tire_rotation' ? 'Rotation des pneus' : formData.serviceTask,
+                description: `Rappel de service programmé automatiquement`
+            };
+
+            await createReminder(reminderData);
+            router.push('/reminders/service');
+        } catch (error) {
+            console.error('Erreur lors de la création du rappel:', error);
+            alert('Erreur lors de la création du rappel. Veuillez réessayer.');
+        }
     };
 
     const handleSaveAndAddAnother = () => {

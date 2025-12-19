@@ -4,26 +4,84 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft, FileText, PenTool, RefreshCw,
-    BarChart3, Settings, LayoutList, Lock, MoreHorizontal
+    BarChart3, Settings, LayoutList, Lock, MoreHorizontal, Loader2, AlertCircle
 } from 'lucide-react';
-import { MOCK_VEHICLES, Vehicle } from '../types';
+import { useVehicle } from '@/lib/hooks/useVehicles';
 
 export default function VehicleDetail({ params }: { params: { id: string } }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('details');
+    const { vehicle, loading, error, refresh } = useVehicle(params.id, true);
 
-    const vehicle = MOCK_VEHICLES.find(v => v.id === params.id);
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="animate-spin mx-auto mb-4 text-[#008751]" size={48} />
+                    <p className="text-gray-600">Chargement du véhicule...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-8 text-center">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+                    <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+                    <h1 className="text-xl font-bold text-red-900 mb-2">Erreur de chargement</h1>
+                    <p className="text-red-700 mb-4">{error}</p>
+                    <div className="flex gap-2 justify-center">
+                        <button 
+                            onClick={() => router.push('/vehicles/list')} 
+                            className="px-4 py-2 text-red-700 hover:text-red-900 font-medium"
+                        >
+                            Retour à la liste
+                        </button>
+                        <button 
+                            onClick={refresh}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                            Réessayer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (!vehicle) {
         return (
             <div className="p-8 text-center">
-                <h1 className="text-2xl font-bold text-gray-900">Vehicle Not Found</h1>
-                <button onClick={() => router.push('/vehicles/list')} className="mt-4 text-[#008751] hover:underline">
-                    Return to Vehicle List
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Véhicule non trouvé</h1>
+                <p className="text-gray-600 mb-4">Le véhicule demandé n'existe pas ou vous n'avez pas les permissions pour y accéder.</p>
+                <button 
+                    onClick={() => router.push('/vehicles/list')} 
+                    className="text-[#008751] hover:underline"
+                >
+                    Retour à la liste des véhicules
                 </button>
             </div>
         );
     }
+
+    // Mapper les statuts API vers les statuts UI
+    const getStatusBadge = (status: string) => {
+        const statusMap = {
+            'ACTIVE': { label: 'Active', class: 'bg-green-100 text-green-800' },
+            'INACTIVE': { label: 'Inactive', class: 'bg-gray-100 text-gray-800' },
+            'MAINTENANCE': { label: 'En maintenance', class: 'bg-yellow-100 text-yellow-800' },
+            'DISPOSED': { label: 'Retiré du service', class: 'bg-red-100 text-red-800' }
+        };
+        
+        const config = statusMap[status as keyof typeof statusMap] || { label: status, class: 'bg-gray-100 text-gray-800' };
+        
+        return (
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${config.class}`}>
+                {config.label}
+            </span>
+        );
+    };
 
     const TabButton = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
         <button
@@ -66,10 +124,11 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                                 <div className="flex items-center gap-2 text-sm text-gray-500">
                                     <span>{vehicle.type}</span>
                                     <span>•</span>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                          ${vehicle.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                        {vehicle.status}
-                                    </span>
+                                    <span>{vehicle.year}</span>
+                                    <span>•</span>
+                                    <span>{vehicle.make} {vehicle.model}</span>
+                                    <span>•</span>
+                                    {getStatusBadge(vehicle.status)}
                                 </div>
                             </div>
                         </div>
@@ -112,10 +171,25 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                                 <DetailRow label="VIN/SN" value={vehicle.vin} />
                                 <DetailRow label="Vehicle Name" value={vehicle.name} />
                                 <DetailRow label="Type" value={vehicle.type} />
-                                <DetailRow label="Status" value={vehicle.status} />
+                                <DetailRow label="Year" value={vehicle.year} />
+                                <DetailRow label="Make" value={vehicle.make} />
+                                <DetailRow label="Model" value={vehicle.model} />
+                                <DetailRow label="Status" value={getStatusBadge(vehicle.status)} />
                                 <DetailRow label="Ownership" value={vehicle.ownership} />
                                 <DetailRow label="Group" value={vehicle.group} />
                                 <DetailRow label="Current Operator" value={vehicle.operator} />
+                                <DetailRow label="Meter Reading" value={
+                                    vehicle.meterReading ? 
+                                        `${vehicle.meterReading.toLocaleString()} ${vehicle.primaryMeter || 'mi'}` :
+                                    vehicle.lastMeterReading ? 
+                                        `${vehicle.lastMeterReading.toLocaleString()} ${vehicle.lastMeterUnit || 'mi'}` :
+                                        '-'
+                                } />
+                                <DetailRow label="Recent Costs" value={
+                                    vehicle.recentCosts ? 
+                                        `${vehicle.recentCosts.toLocaleString()}` :
+                                        '-'
+                                } />
                             </div>
                         </div>
                     )}

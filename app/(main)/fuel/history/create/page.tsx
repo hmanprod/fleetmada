@@ -1,25 +1,57 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Upload, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useCreateFuelEntry } from '@/lib/hooks/useFuelEntries';
+import { CreateFuelEntryData } from '@/types/fuel';
 
 export default function FuelEntryCreatePage() {
   const router = useRouter();
-  const [vehicle, setVehicle] = useState('');
-  const [date, setDate] = useState('');
-  const [vendor, setVendor] = useState('');
-  const [volume, setVolume] = useState('');
-  const [cost, setCost] = useState('');
+  const { createEntry, loading, error } = useCreateFuelEntry();
+  
+  const [formData, setFormData] = useState<CreateFuelEntryData>({
+    vehicleId: '',
+    date: '',
+    vendor: '',
+    volume: 0,
+    cost: 0,
+    usage: 0,
+    odometer: 0,
+    fuelType: '',
+    notes: '',
+    location: ''
+  });
+  
+  const [notes, setNotes] = useState('');
 
   const handleCancel = () => {
-    router.push('/dashboard/fuel');
+    router.push('/fuel/history');
   };
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Save fuel entry:', { vehicle, date, vendor, volume, cost });
-    router.push('/dashboard/fuel');
+  const handleSave = async () => {
+    if (!formData.vehicleId || !formData.date || !formData.volume || !formData.cost) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const entryData = {
+        ...formData,
+        notes: notes || undefined
+      };
+      
+      const newEntry = await createEntry(entryData);
+      if (newEntry) {
+        router.push('/fuel/history');
+      }
+    } catch (err) {
+      console.error('Error creating fuel entry:', err);
+    }
+  };
+
+  const handleInputChange = (field: keyof CreateFuelEntryData, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
   
   return (
@@ -33,11 +65,24 @@ export default function FuelEntryCreatePage() {
          </div>
          <div className="flex gap-3">
              <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-             <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Entry</button>
+             <button 
+               onClick={handleSave} 
+               disabled={loading}
+               className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
+             >
+               {loading && <Loader2 size={16} className="animate-spin" />}
+               Save Entry
+             </button>
          </div>
        </div>
 
        <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              Error: {error}
+            </div>
+          )}
+
           {/* Basic Information */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
              <h2 className="text-lg font-bold text-gray-900 mb-6">Basic Information</h2>
@@ -46,11 +91,11 @@ export default function FuelEntryCreatePage() {
                  <div>
                      <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle <span className="text-red-500">*</span></label>
                      <select 
-                       value={vehicle} 
-                       onChange={e => setVehicle(e.target.value)}
+                       value={formData.vehicleId} 
+                       onChange={e => handleInputChange('vehicleId', e.target.value)}
                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                      >
-                         <option>Please select</option>
+                         <option value="">Please select</option>
                          <option value="MV112TRNS">MV112TRNS</option>
                          <option value="AM101">AM101</option>
                          <option value="AG103">AG103</option>
@@ -61,8 +106,8 @@ export default function FuelEntryCreatePage() {
                      <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
                      <input 
                        type="datetime-local" 
-                       value={date} 
-                       onChange={e => setDate(e.target.value)}
+                       value={formData.date} 
+                       onChange={e => handleInputChange('date', e.target.value)}
                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                      />
                  </div>
@@ -70,11 +115,11 @@ export default function FuelEntryCreatePage() {
                  <div>
                      <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
                      <select 
-                       value={vendor} 
-                       onChange={e => setVendor(e.target.value)}
+                       value={formData.vendor || ''} 
+                       onChange={e => handleInputChange('vendor', e.target.value)}
                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                      >
-                         <option>Please select</option>
+                         <option value="">Please select</option>
                          <option value="Chevron">Chevron</option>
                          <option value="Shell">Shell</option>
                          <option value="BP">BP</option>
@@ -82,12 +127,12 @@ export default function FuelEntryCreatePage() {
                  </div>
 
                  <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">Volume (gallons) <span className="text-red-500">*</span></label>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">Volume (L) <span className="text-red-500">*</span></label>
                      <input 
                        type="number" 
                        step="0.001"
-                       value={volume} 
-                       onChange={e => setVolume(e.target.value)}
+                       value={formData.volume || ''} 
+                       onChange={e => handleInputChange('volume', parseFloat(e.target.value) || 0)}
                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                      />
                  </div>
@@ -98,11 +143,25 @@ export default function FuelEntryCreatePage() {
                          <span className="absolute left-3 top-2.5 text-gray-500">MGA</span>
                          <input 
                            type="number" 
-                           value={cost} 
-                           onChange={e => setCost(e.target.value)}
+                           value={formData.cost || ''} 
+                           onChange={e => handleInputChange('cost', parseFloat(e.target.value) || 0)}
                            className="w-full pl-8 p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                          />
                      </div>
+                 </div>
+
+                 <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Type</label>
+                     <select 
+                       value={formData.fuelType || ''} 
+                       onChange={e => handleInputChange('fuelType', e.target.value)}
+                       className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
+                     >
+                         <option value="">Please select</option>
+                         <option value="Diesel">Diesel</option>
+                         <option value="Gasoline">Gasoline</option>
+                         <option value="LPG">LPG</option>
+                     </select>
                  </div>
              </div>
           </div>
@@ -113,9 +172,11 @@ export default function FuelEntryCreatePage() {
              
              <div className="grid grid-cols-2 gap-6">
                  <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">Odometer (miles)</label>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">Odometer (km)</label>
                      <input 
                        type="number" 
+                       value={formData.odometer || ''} 
+                       onChange={e => handleInputChange('odometer', parseInt(e.target.value) || 0)}
                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                      />
                  </div>
@@ -125,6 +186,8 @@ export default function FuelEntryCreatePage() {
                      <input 
                        type="number" 
                        step="0.1"
+                       value={formData.usage || ''} 
+                       onChange={e => handleInputChange('usage', parseFloat(e.target.value) || 0)}
                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
                      />
                  </div>
@@ -152,14 +215,23 @@ export default function FuelEntryCreatePage() {
              <textarea 
                rows={4} 
                placeholder="Add any additional notes..."
+               value={notes}
+               onChange={e => setNotes(e.target.value)}
                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
              ></textarea>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 pb-12">
              <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white">Cancel</button>
-             <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Entry</button>
-         </div>
+             <button 
+               onClick={handleSave} 
+               disabled={loading}
+               className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
+             >
+               {loading && <Loader2 size={16} className="animate-spin" />}
+               Save Entry
+             </button>
+          </div>
        </div>
     </div>
   );

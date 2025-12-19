@@ -1,0 +1,317 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import jwt from 'jsonwebtoken'
+
+// Interface pour les données du token JWT décodé
+interface TokenPayload {
+  userId: string
+  email: string
+  type: string
+  iat: number
+  exp?: number
+}
+
+// Fonction de validation du token JWT
+const validateToken = (token: string): TokenPayload | null => {
+  try {
+    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
+    const decoded = jwt.verify(token, secret) as TokenPayload
+
+    if (decoded.type !== 'login') {
+      console.log('[Fuel Entry API] Token type invalide:', decoded.type)
+      return null
+    }
+
+    return decoded
+  } catch (error) {
+    console.log('[Fuel Entry API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
+    return null
+  }
+}
+
+// Fonction de logging
+const logAction = (action: string, userId: string, details: any) => {
+  console.log(`[Fuel Entry API] ${new Date().toISOString()} - ${action} - User: ${userId}:`, details)
+}
+
+// GET /api/fuel/entries/[id] - Détails entrée spécifique
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Token d\'authentification manquant' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7)
+    const user = validateToken(token)
+    if (!user) {
+      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    }
+
+    const entryId = params.id
+
+    logAction('GET_FUEL_ENTRY', user.userId, { entryId })
+
+    // Récupération de l'entrée avec vérification des permissions
+    const entry = await prisma.fuelEntry.findFirst({
+      where: {
+        id: entryId,
+        userId: user.userId
+      },
+      include: {
+        vehicle: {
+          select: {
+            id: true,
+            name: true,
+            vin: true,
+            make: true,
+            model: true,
+            year: true,
+            status: true
+          }
+        }
+      }
+    })
+
+    if (!entry) {
+      return NextResponse.json({ error: 'Entrée carburant non trouvée' }, { status: 404 })
+    }
+
+    // Format de réponse
+    const formattedEntry = {
+      id: entry.id,
+      vehicleId: entry.vehicleId,
+      userId: entry.userId,
+      date: entry.date.toISOString(),
+      vendor: entry.vendor || '',
+      usage: entry.usage || 0,
+      volume: entry.volume,
+      cost: entry.cost,
+      mpg: entry.mpg || 0,
+      odometer: entry.odometer || undefined,
+      fuelType: entry.fuelType || undefined,
+      fuelCard: entry.fuelCard || false,
+      reference: entry.reference || undefined,
+      notes: entry.notes || undefined,
+      receipt: entry.receipt || undefined,
+      location: entry.location || undefined,
+      createdAt: entry.createdAt.toISOString(),
+      updatedAt: entry.updatedAt.toISOString(),
+      vehicle: entry.vehicle
+    }
+
+    logAction('GET_FUEL_ENTRY_SUCCESS', user.userId, { entryId })
+
+    return NextResponse.json(formattedEntry)
+  } catch (error) {
+    console.error('[Fuel Entry API] GET Error:', error)
+    return NextResponse.json(
+      { error: 'Erreur lors de la récupération de l\'entrée carburant' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/fuel/entries/[id] - Modification entrée
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Token d\'authentification manquant' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7)
+    const user = validateToken(token)
+    if (!user) {
+      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    }
+
+    const entryId = params.id
+    const body = await request.json()
+
+    logAction('UPDATE_FUEL_ENTRY', user.userId, { entryId, body })
+
+    // Vérification que l'entrée existe et appartient à l'utilisateur
+    const existingEntry = await prisma.fuelEntry.findFirst({
+      where: {
+        id: entryId,
+        userId: user.userId
+      }
+    })
+
+    if (!existingEntry) {
+      return NextResponse.json({ error: 'Entrée carburant non trouvée' }, { status: 404 })
+    }
+
+    // Validation des données si fournies
+    if (body.volume !== undefined && body.volume <= 0) {
+      return NextResponse.json({ error: 'Le volume doit être supérieur à 0' }, { status: 400 })
+    }
+
+    if (body.cost !== undefined && body.cost < 0) {
+      return NextResponse.json({ error: 'Le coût ne peut pas être négatif' }, { status: 400 })
+    }
+
+    // Si le véhicule est modifié, vérifier qu'il appartient à l'utilisateur
+    if (body.vehicleId && body.vehicleId !== existingEntry.vehicleId) {
+      const vehicle = await prisma.vehicle.findFirst({
+        where: {
+          id: body.vehicleId,
+          userId: user.userId
+        }
+      })
+
+      if (!vehicle) {
+        return NextResponse.json({ error: 'Véhicule non trouvé' }, { status: 404 })
+      }
+    }
+
+    // Préparation des données de mise à jour
+    const updateData: any = {}
+    
+    if (body.vehicleId) updateData.vehicleId = body.vehicleId
+    if (body.date) updateData.date = new Date(body.date)
+    if (body.vendor !== undefined) updateData.vendor = body.vendor || null
+    if (body.usage !== undefined) updateData.usage = body.usage || null
+    if (body.volume !== undefined) updateData.volume = body.volume
+    if (body.cost !== undefined) updateData.cost = body.cost
+    if (body.mpg !== undefined) updateData.mpg = body.mpg || null
+    if (body.odometer !== undefined) updateData.odometer = body.odometer || null
+    if (body.fuelType !== undefined) updateData.fuelType = body.fuelType || null
+    if (body.fuelCard !== undefined) updateData.fuelCard = body.fuelCard
+    if (body.reference !== undefined) updateData.reference = body.reference || null
+    if (body.notes !== undefined) updateData.notes = body.notes || null
+    if (body.receipt !== undefined) updateData.receipt = body.receipt || null
+    if (body.location !== undefined) updateData.location = body.location || null
+
+    // Recalculer le MPG si l'odometer ou le volume change
+    if ((body.odometer !== undefined || body.volume !== undefined) && (body.odometer || existingEntry.odometer)) {
+      const odometer = body.odometer || existingEntry.odometer
+      const volume = body.volume || existingEntry.volume
+
+      if (odometer && volume > 0) {
+        const previousEntry = await prisma.fuelEntry.findFirst({
+          where: {
+            vehicleId: updateData.vehicleId || existingEntry.vehicleId,
+            odometer: { not: null },
+            id: { not: entryId } // Exclure l'entrée actuelle
+          },
+          orderBy: { date: 'desc' }
+        })
+
+        if (previousEntry && previousEntry.odometer && odometer > previousEntry.odometer) {
+          const distance = odometer - previousEntry.odometer
+          updateData.mpg = distance / volume
+        }
+      }
+    }
+
+    // Mise à jour de l'entrée
+    const updatedEntry = await prisma.fuelEntry.update({
+      where: { id: entryId },
+      data: updateData,
+      include: {
+        vehicle: {
+          select: {
+            id: true,
+            name: true,
+            vin: true,
+            make: true,
+            model: true,
+            year: true,
+            status: true
+          }
+        }
+      }
+    })
+
+    // Format de réponse
+    const formattedEntry = {
+      id: updatedEntry.id,
+      vehicleId: updatedEntry.vehicleId,
+      userId: updatedEntry.userId,
+      date: updatedEntry.date.toISOString(),
+      vendor: updatedEntry.vendor || '',
+      usage: updatedEntry.usage || 0,
+      volume: updatedEntry.volume,
+      cost: updatedEntry.cost,
+      mpg: updatedEntry.mpg || 0,
+      odometer: updatedEntry.odometer || undefined,
+      fuelType: updatedEntry.fuelType || undefined,
+      fuelCard: updatedEntry.fuelCard || false,
+      reference: updatedEntry.reference || undefined,
+      notes: updatedEntry.notes || undefined,
+      receipt: updatedEntry.receipt || undefined,
+      location: updatedEntry.location || undefined,
+      createdAt: updatedEntry.createdAt.toISOString(),
+      updatedAt: updatedEntry.updatedAt.toISOString(),
+      vehicle: updatedEntry.vehicle
+    }
+
+    logAction('UPDATE_FUEL_ENTRY_SUCCESS', user.userId, { entryId })
+
+    return NextResponse.json(formattedEntry)
+  } catch (error) {
+    console.error('[Fuel Entry API] PUT Error:', error)
+    return NextResponse.json(
+      { error: 'Erreur lors de la mise à jour de l\'entrée carburant' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/fuel/entries/[id] - Suppression entrée
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Token d\'authentification manquant' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7)
+    const user = validateToken(token)
+    if (!user) {
+      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    }
+
+    const entryId = params.id
+
+    logAction('DELETE_FUEL_ENTRY', user.userId, { entryId })
+
+    // Vérification que l'entrée existe et appartient à l'utilisateur
+    const existingEntry = await prisma.fuelEntry.findFirst({
+      where: {
+        id: entryId,
+        userId: user.userId
+      }
+    })
+
+    if (!existingEntry) {
+      return NextResponse.json({ error: 'Entrée carburant non trouvée' }, { status: 404 })
+    }
+
+    // Suppression de l'entrée
+    await prisma.fuelEntry.delete({
+      where: { id: entryId }
+    })
+
+    logAction('DELETE_FUEL_ENTRY_SUCCESS', user.userId, { entryId })
+
+    return NextResponse.json({ message: 'Entrée carburant supprimée avec succès' })
+  } catch (error) {
+    console.error('[Fuel Entry API] DELETE Error:', error)
+    return NextResponse.json(
+      { error: 'Erreur lors de la suppression de l\'entrée carburant' },
+      { status: 500 }
+    )
+  }
+}

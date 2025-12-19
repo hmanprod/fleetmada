@@ -1,9 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { AlignLeft, MoreHorizontal } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlignLeft, MoreHorizontal, Loader2, Check, AlertCircle } from 'lucide-react';
+import { useGeneralSettings } from '@/lib/hooks/useSettings';
 
 export default function SettingsGeneralPage() {
+  const { 
+    settings, 
+    loading, 
+    error, 
+    isSaving,
+    updateSettings, 
+    clearError 
+  } = useGeneralSettings();
+  
   const [formData, setFormData] = useState({
     companyName: 'ONNO',
     address: '',
@@ -14,12 +24,12 @@ export default function SettingsGeneralPage() {
     country: 'Madagascar',
     phone: '',
     industry: 'Transport & Logistique',
-    currency: '(MGA) Ariary Malgache (Ar20,000.0)',
-    dateFormat: 'JJ/MM/AAAA',
-    timezone: '(GMT+03:00) Antananarivo',
+    currency: 'EUR',
+    dateFormat: 'DD/MM/YYYY',
+    timezone: 'UTC',
     timeFormat: '24',
     usageUnit: 'kilometers',
-    fuelUnit: 'liters',
+    fuelUnit: 'L',
     measurementSystem: 'metric',
     vehicleLabel: 'vehicle',
     laborTaxExempt: false,
@@ -28,17 +38,94 @@ export default function SettingsGeneralPage() {
     defaultTax2: '',
     defaultTaxType: 'percentage'
   });
+  const [isSaved, setIsSaved] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+
+  // Charger les données existantes
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        companyName: settings.name || 'ONNO',
+        address: settings.address || '',
+        addressLine2: settings.addressLine2 || '',
+        city: settings.city || 'Antananarivo',
+        state: settings.state || 'Analamanga',
+        postalCode: settings.postalCode || '',
+        country: settings.country || 'Madagascar',
+        phone: settings.phone || '',
+        industry: settings.industry || 'Transport & Logistique',
+        currency: settings.currency || 'EUR',
+        dateFormat: settings.dateFormat || 'DD/MM/YYYY',
+        timezone: settings.timezone || 'UTC',
+        timeFormat: settings.timeFormat || '24',
+        usageUnit: settings.distanceUnit === 'MI' ? 'miles' : 'kilometers',
+        fuelUnit: settings.fuelUnit === 'GAL' ? 'gallons_us' : 'liters',
+        measurementSystem: settings.distanceUnit === 'MI' ? 'imperial' : 'metric',
+        vehicleLabel: 'vehicle',
+        laborTaxExempt: settings.laborTaxExempt || false,
+        secondaryTax: settings.secondaryTax || false,
+        defaultTax1: settings.defaultTax1 || '',
+        defaultTax2: settings.defaultTax2 || '',
+        defaultTaxType: settings.defaultTaxType || 'percentage'
+      });
+    }
+  }, [settings]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    setIsSaved(false);
+    setSaveMessage('');
+    clearError();
   };
 
-  const handleSave = () => {
-    console.log('Saving general settings:', formData);
-    // TODO: Implement save logic
+  const handleSave = async () => {
+    try {
+      setIsSaved(false);
+      setSaveMessage('');
+      clearError();
+      
+      // Mapper les données du formulaire vers l'API
+      const apiData = {
+        name: formData.companyName,
+        address: formData.address,
+        addressLine2: formData.addressLine2,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
+        country: formData.country,
+        phone: formData.phone,
+        industry: formData.industry,
+        currency: formData.currency,
+        dateFormat: formData.dateFormat,
+        timezone: formData.timezone,
+        timeFormat: formData.timeFormat,
+        fuelUnit: formData.fuelUnit === 'gallons_us' ? 'GAL' : 'L',
+        distanceUnit: formData.usageUnit === 'miles' ? 'MI' : 'KM',
+        laborTaxExempt: formData.laborTaxExempt,
+        secondaryTax: formData.secondaryTax,
+        defaultTax1: formData.defaultTax1,
+        defaultTax2: formData.defaultTax2,
+        defaultTaxType: formData.defaultTaxType
+      };
+      
+      const result = await updateSettings(apiData);
+      
+      if (result.success) {
+        setIsSaved(true);
+        setSaveMessage('Paramètres généraux mis à jour avec succès !');
+        setTimeout(() => {
+          setIsSaved(false);
+          setSaveMessage('');
+        }, 3000);
+      } else {
+        setSaveMessage('Erreur lors de la sauvegarde des paramètres.');
+      }
+    } catch (error) {
+      setSaveMessage('Erreur lors de la sauvegarde.');
+    }
   };
 
   const handleDisableDemoData = () => {
@@ -56,9 +143,32 @@ export default function SettingsGeneralPage() {
     // TODO: Implement explore plans logic
   };
 
+  if (loading && !settings) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin h-8 w-8 text-[#008751]" />
+        <span className="ml-2 text-gray-600">Chargement des paramètres...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       <h1 className="text-2xl font-bold text-gray-900">Paramètres généraux</h1>
+      
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+      
+      {(isSaved || saveMessage) && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
+          <Check className="h-4 w-4 text-green-500" />
+          <p className="text-sm text-green-600">{saveMessage || 'Paramètres mis à jour avec succès !'}</p>
+        </div>
+      )}
 
       {/* Sample Data Banner */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
@@ -578,9 +688,17 @@ export default function SettingsGeneralPage() {
       <div className="flex justify-end">
           <button 
             onClick={handleSave}
-            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm"
+            disabled={isSaving}
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Enregistrer le compte
+            {isSaving ? (
+              <>
+                <Loader2 className="animate-spin h-4 w-4" />
+                Enregistrement...
+              </>
+            ) : (
+              'Enregistrer le compte'
+            )}
           </button>
       </div>
     </div>

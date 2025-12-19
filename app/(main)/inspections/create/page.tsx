@@ -1,101 +1,298 @@
 'use client';
 
-import React from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, LayoutGrid, List } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Calendar, FileText, Plus, X, AlertCircle, CheckCircle, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import useInspections from '@/lib/hooks/useInspections';
+import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
+import { useVehicles } from '@/lib/hooks/useVehicles';
+import type { InspectionCreateData, InspectionTemplate } from '@/lib/services/inspections-api';
 
-export default function InspectionFormsPage() {
+export default function NewInspectionPage() {
     const router = useRouter();
+    const { createInspection } = useInspections();
+    const { templates, loading: templatesLoading, fetchTemplates } = useInspectionTemplates();
+    const { vehicles, loading: vehiclesLoading, fetchVehicles } = useVehicles();
+    
+    // États du formulaire
+    const [formData, setFormData] = useState<InspectionCreateData>({
+        vehicleId: '',
+        inspectionTemplateId: '',
+        title: '',
+        description: '',
+        scheduledDate: '',
+        inspectorName: '',
+        location: '',
+        notes: ''
+    });
+    
+    // États d'interface
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+    
+    // Charger les données au montage
+    useEffect(() => {
+        fetchVehicles();
+        fetchTemplates();
+    }, []);
 
-    const handleStartInspection = () => {
-        // Navigate to start inspection
+    const handleCancel = () => {
+        router.back();
+    };
+    
+    const handleInputChange = (field: keyof InspectionCreateData, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setError(null);
+    };
+    
+    const validateForm = (): boolean => {
+        if (!formData.vehicleId) {
+            setError('Veuillez sélectionner un véhicule');
+            return false;
+        }
+        if (!formData.inspectionTemplateId) {
+            setError('Veuillez sélectionner un modèle d\'inspection');
+            return false;
+        }
+        if (!formData.title.trim()) {
+            setError('Le titre est requis');
+            return false;
+        }
+        return true;
     };
 
-    const handleAddForm = () => {
-        // Navigate to create form
+    const handleSave = async () => {
+        if (!validateForm()) return;
+        
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const newInspection = await createInspection({
+                ...formData,
+                title: formData.title.trim()
+            });
+            
+            setSuccess(true);
+            
+            // Redirect after short delay
+            setTimeout(() => {
+                router.push(`/inspections/${newInspection.id}`);
+            }, 1500);
+            
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de l\'inspection';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const handleSaveAndAddAnother = async () => {
+        if (!validateForm()) return;
+        
+        try {
+            setLoading(true);
+            setError(null);
+            
+            await createInspection({
+                ...formData,
+                title: formData.title.trim()
+            });
+            
+            // Reset form for new entry
+            setFormData({
+                vehicleId: '',
+                inspectionTemplateId: '',
+                title: '',
+                description: '',
+                scheduledDate: '',
+                inspectorName: '',
+                location: '',
+                notes: ''
+            });
+            
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 2000);
+            
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de l\'inspection';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="p-6 max-w-[1800px] mx-auto">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">Inspection Forms</h1>
-                <div className="flex gap-2">
-                    <button className="bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded hover:bg-gray-50">Start Inspection</button>
-                    <button
-                        onClick={handleAddForm}
-                        className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
-                    >
-                        <Plus size={20} /> Add Inspection Form
+        <div className="bg-gray-50 min-h-screen pb-12">
+            <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                    <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
+                        <ArrowLeft size={16} /> Inspections
                     </button>
+                    <h1 className="text-2xl font-bold text-gray-900">Nouvelle Inspection</h1>
+                </div>
+                <div className="flex gap-3">
+                    <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Annuler</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Sauvegarder</button>
                 </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-6 border-b border-gray-200 mb-6">
-                <button className="pb-3 border-b-2 border-[#008751] text-[#008751] font-bold text-sm">Active</button>
-                <button className="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Archived</button>
-            </div>
-
-            {/* Filters Bar */}
-            <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    <input type="text" placeholder="Search" className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" />
-                </div>
-                <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                    Inspection Form <ChevronDown size={14} />
-                </button>
-                <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                    <Filter size={14} /> Filters
-                </button>
-
-                <div className="flex-1 text-right text-sm text-gray-500">
-                    1 - 1 of 1
-                </div>
-                <div className="flex gap-1 ml-auto">
-                    <button className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"><ChevronRight size={16} className="rotate-180" /></button>
-                    <button className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"><ChevronRight size={16} /></button>
-                </div>
-                <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                    <span className="flex items-center gap-1"><span className="text-gray-400">↑↓</span> Title</span> <ChevronDown size={14} />
-                </button>
-                <div className="flex bg-white rounded border border-gray-300 overflow-hidden">
-                    <button className="p-1.5 text-gray-500 hover:bg-gray-50 border-r border-gray-300"><List size={16} /></button>
-                    <button className="p-1.5 text-green-600 bg-green-50"><LayoutGrid size={16} /></button>
-                </div>
-            </div>
-
-            {/* Grid of Forms */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Card: Basic Form */}
-                <div
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => router.push('/inspections/forms/basic-form')}
-                >
-                    <div className="p-4 border-b border-gray-100 mb-2">
-                        <h3 className="font-bold text-gray-900 text-lg">Basic Form</h3>
+            <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+                {/* Messages d'état */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+                        <AlertCircle className="text-red-600" size={20} />
+                        <span className="text-red-700">{error}</span>
                     </div>
-                    <div className="px-4 py-2 space-y-3">
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">Items</span>
-                            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">5</span>
+                )}
+                
+                {success && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
+                        <CheckCircle className="text-green-600" size={20} />
+                        <span className="text-green-700">Inspection créée avec succès !</span>
+                    </div>
+                )}
+                
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Détails de l'Inspection</h2>
+
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule <span className="text-red-500">*</span></label>
+                            {vehiclesLoading ? (
+                                <div className="flex justify-center items-center h-32">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008751]"></div>
+                                </div>
+                            ) : vehicles.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    <FileText size={24} className="mx-auto mb-2 opacity-50" />
+                                    <p>Aucun véhicule disponible</p>
+                                    <p className="text-sm">Contactez votre administrateur pour ajouter des véhicules.</p>
+                                </div>
+                            ) : (
+                                <select 
+                                    className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
+                                    value={formData.vehicleId}
+                                    onChange={(e) => handleInputChange('vehicleId', e.target.value)}
+                                >
+                                    <option value="">Veuillez sélectionner</option>
+                                    {vehicles.map(vehicle => (
+                                        <option key={vehicle.id} value={vehicle.id}>
+                                            {vehicle.name} - {vehicle.make} {vehicle.model} ({vehicle.vin})
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">Workflows</span>
-                            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">1</span>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Modèle d'Inspection <span className="text-red-500">*</span></label>
+                            {templatesLoading ? (
+                                <div className="flex justify-center items-center h-32">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008751]"></div>
+                                </div>
+                            ) : templates.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    <FileText size={24} className="mx-auto mb-2 opacity-50" />
+                                    <p>Aucun modèle d'inspection disponible</p>
+                                    <p className="text-sm">Contactez votre administrateur pour créer des modèles d'inspection.</p>
+                                </div>
+                            ) : (
+                                <select 
+                                    className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
+                                    value={formData.inspectionTemplateId}
+                                    onChange={(e) => handleInputChange('inspectionTemplateId', e.target.value)}
+                                >
+                                    <option value="">Veuillez sélectionner</option>
+                                    {templates.map(template => (
+                                        <option key={template.id} value={template.id}>
+                                            {template.name} ({template.category})
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">Vehicles</span>
-                            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">4</span>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Titre <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                value={formData.title}
+                                onChange={(e) => handleInputChange('title', e.target.value)}
+                                placeholder="Entrez le titre de l'inspection"
+                            />
                         </div>
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">Submissions</span>
-                            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">0</span>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea 
+                                rows={3} 
+                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                value={formData.description}
+                                onChange={(e) => handleInputChange('description', e.target.value)}
+                                placeholder="Description optionnelle de l'inspection..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l'Inspecteur</label>
+                            <input 
+                                type="text" 
+                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                value={formData.inspectorName}
+                                onChange={(e) => handleInputChange('inspectorName', e.target.value)}
+                                placeholder="Nom de l'inspecteur"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
+                            <input 
+                                type="text" 
+                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                value={formData.location}
+                                onChange={(e) => handleInputChange('location', e.target.value)}
+                                placeholder="Lieu de l'inspection"
+                            />
                         </div>
                     </div>
-                    <div className="p-4 mt-2">
-                        {/* Spacer or additional footer if needed */}
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Planification</h2>
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Date Programmée</label>
+                            <input 
+                                type="datetime-local" 
+                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                value={formData.scheduledDate}
+                                onChange={(e) => handleInputChange('scheduledDate', e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Laissez vide pour une inspection immédiate</p>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea 
+                                rows={3} 
+                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                value={formData.notes}
+                                onChange={(e) => handleInputChange('notes', e.target.value)}
+                                placeholder="Notes supplémentaires..."
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-4">
+                    <button onClick={handleCancel} className="text-[#008751] hover:underline text-sm font-medium">Annuler</button>
+                    <div className="flex gap-3">
+                        <button onClick={handleSaveAndAddAnother} className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-bold bg-white hover:bg-gray-50">Sauvegarder et Ajouter un Autre</button>
+                        <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Sauvegarder</button>
                     </div>
                 </div>
             </div>

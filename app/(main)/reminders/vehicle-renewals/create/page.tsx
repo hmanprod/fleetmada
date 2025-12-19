@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, ChevronDown, Lock, Calendar, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Lock, Calendar, HelpCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useVehicleRenewals } from '@/lib/hooks/useVehicleRenewals';
 
 export default function CreateVehicleRenewalPage() {
     const router = useRouter();
+    const { createRenewal, loading } = useVehicleRenewals();
     const [formData, setFormData] = useState({
         vehicle: '',
         renewalType: '',
@@ -21,10 +23,31 @@ export default function CreateVehicleRenewalPage() {
         router.push('/reminders/vehicle-renewals');
     };
 
-    const handleSave = () => {
-        console.log('Saving renewal:', formData);
-        // TODO: Implement save logic
-        router.push('/reminders/vehicle-renewals');
+    const handleSave = async () => {
+        try {
+            // Valider les champs obligatoires
+            if (!formData.vehicle || !formData.renewalType || !formData.dueDate) {
+                alert('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            // Préparer les données pour l'API
+            const renewalData = {
+                vehicleId: formData.vehicle,
+                type: formData.renewalType,
+                title: formData.renewalType === 'emission_test' ? 'Test d\'émission' :
+                      formData.renewalType === 'registration' ? 'Renouvellement immatriculation' : 'Renouvellement',
+                dueDate: formData.dueDate,
+                priority: 'HIGH',
+                notes: formData.comment
+            };
+
+            await createRenewal(renewalData);
+            router.push('/reminders/vehicle-renewals');
+        } catch (error) {
+            console.error('Erreur lors de la création du renouvellement:', error);
+            alert('Erreur lors de la création du renouvellement. Veuillez réessayer.');
+        }
     };
 
     const handleSaveAndAddAnother = () => {

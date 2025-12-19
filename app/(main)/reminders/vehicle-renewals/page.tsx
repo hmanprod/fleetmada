@@ -3,45 +3,84 @@
 import React, { useState } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-interface VehicleRenewal {
-  id: number;
-  vehicle: string;
-  type: string;
-  status: string;
-  dueDate: string;
-}
-
-const mockRenewals: VehicleRenewal[] = [
-  { id: 1, vehicle: 'AC101', type: 'Emission Test', status: 'Overdue', dueDate: '11/11/2025' },
-  { id: 2, vehicle: 'AC101', type: 'Registration', status: 'Due Soon', dueDate: '12/27/2025' },
-  { id: 3, vehicle: 'AC101', type: 'Insurance', status: 'Due Soon', dueDate: '01/02/2026' },
-  { id: 4, vehicle: 'HF109', type: 'Inspection', status: 'Upcoming', dueDate: '02/19/2026' },
-  { id: 5, vehicle: 'RF101', type: 'Inspection', status: 'Upcoming', dueDate: '02/28/2026' },
-  { id: 6, vehicle: 'RE103', type: 'Registration', status: 'Upcoming', dueDate: '05/16/2026' },
-  { id: 7, vehicle: 'AG103', type: 'Registration', status: 'Upcoming', dueDate: '05/18/2026' },
-];
+import { useVehicleRenewals } from '@/lib/hooks/useVehicleRenewals';
 
 export default function VehicleRenewalsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedRenewals, setSelectedRenewals] = useState<number[]>([]);
+  const [selectedRenewals, setSelectedRenewals] = useState<string[]>([]);
 
-  const getStatusColor = (status: string) => {
+  // Configuration des filtres basée sur l'onglet actif
+  const getFilters = () => {
+    switch (activeTab) {
+      case 'overdue':
+        return { overdue: true };
+      case 'due-soon':
+        return { dueSoon: true };
+      default:
+        return {};
+    }
+  };
+
+  const { renewals, loading, error, pagination, refresh } = useVehicleRenewals(getFilters());
+
+  const getStatusColor = (status: string, isOverdue?: boolean) => {
+    if (isOverdue) return 'text-red-600';
     switch (status) {
-      case 'Overdue': return 'text-red-600';
-      case 'Due Soon': return 'text-orange-500';
+      case 'DUE': return 'text-orange-500';
+      case 'COMPLETED': return 'text-green-600';
+      case 'OVERDUE': return 'text-red-600';
+      case 'DISMISSED': return 'text-gray-500';
       default: return 'text-gray-500';
     }
   };
 
-  const getStatusDot = (status: string) => {
+  const getStatusDot = (status: string, isOverdue?: boolean) => {
+    if (isOverdue) return 'bg-red-500';
     switch (status) {
-      case 'Overdue': return 'bg-red-500';
-      case 'Due Soon': return 'bg-orange-500';
+      case 'DUE': return 'bg-orange-500';
+      case 'COMPLETED': return 'bg-green-500';
+      case 'OVERDUE': return 'bg-red-500';
+      case 'DISMISSED': return 'bg-gray-400';
       default: return 'bg-gray-400';
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR');
+  };
+
+  const formatDueDate = (renewal: any) => {
+    if (!renewal.dueDate) return '—';
+    
+    const dueDate = new Date(renewal.dueDate);
+    const now = new Date();
+    const diffTime = dueDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return `${Math.abs(diffDays)} jours de retard`;
+    } else if (diffDays === 0) {
+      return 'Aujourd\'hui';
+    } else if (diffDays === 1) {
+      return 'Demain';
+    } else {
+      return `Dans ${diffDays} jours`;
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    const typeLabels: { [key: string]: string } = {
+      'REGISTRATION': 'Immatriculation',
+      'INSURANCE': 'Assurance',
+      'INSPECTION': 'Contrôle technique',
+      'EMISSION_TEST': 'Test d\'émission',
+      'OTHER': 'Autre'
+    };
+    return typeLabels[type] || type;
   };
 
   const handleAddVehicleRenewal = () => {
@@ -52,11 +91,11 @@ export default function VehicleRenewalsPage() {
     console.log('Navigate to learn more about vehicle renewals');
   };
 
-  const handleRenewalClick = (renewalId: number) => {
+  const handleRenewalClick = (renewalId: string) => {
     router.push(`/reminders/vehicle-renewals/${renewalId}`);
   };
 
-  const handleSelectRenewal = (renewalId: number) => {
+  const handleSelectRenewal = (renewalId: string) => {
     setSelectedRenewals(prev =>
       prev.includes(renewalId)
         ? prev.filter(id => id !== renewalId)
@@ -65,12 +104,32 @@ export default function VehicleRenewalsPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedRenewals.length === mockRenewals.length) {
+    if (selectedRenewals.length === renewals.length) {
       setSelectedRenewals([]);
     } else {
-      setSelectedRenewals(mockRenewals.map(renewal => renewal.id));
+      setSelectedRenewals(renewals.map(renewal => renewal.id));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-[1600px] mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">Chargement des renouvellements...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-[1600px] mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-red-500">Erreur: {error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -110,14 +169,14 @@ export default function VehicleRenewalsPage() {
           className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'due-soon' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
             }`}
         >
-          <div className="w-2 h-2 rounded-full bg-orange-400"></div> Due Soon <span className="bg-gray-100 text-gray-600 rounded-full px-2 text-xs ml-1">2</span>
+          <div className="w-2 h-2 rounded-full bg-orange-400"></div> Due Soon <span className="bg-gray-100 text-gray-600 rounded-full px-2 text-xs ml-1">{renewals.filter(r => r.daysUntilDue != null && r.daysUntilDue <= 7 && !r.isOverdue).length}</span>
         </button>
         <button
           onClick={() => setActiveTab('overdue')}
           className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'overdue' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
             }`}
         >
-          <div className="w-2 h-2 rounded-full bg-red-500"></div> Overdue <span className="bg-gray-100 text-gray-600 rounded-full px-2 text-xs ml-1">1</span>
+          <div className="w-2 h-2 rounded-full bg-red-500"></div> Overdue <span className="bg-gray-100 text-gray-600 rounded-full px-2 text-xs ml-1">{renewals.filter(r => r.isOverdue).length}</span>
         </button>
       </div>
 
@@ -148,11 +207,23 @@ export default function VehicleRenewalsPage() {
           <Filter size={14} /> Filters
         </button>
         <div className="flex-1 text-right text-sm text-gray-500">
-          1 - 50 of 54
+          {pagination && `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total}`}
         </div>
         <div className="flex gap-1">
-          <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} className="rotate-180" /></button>
-          <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} /></button>
+          <button 
+            className="p-1 border border-gray-300 rounded text-gray-400 bg-white"
+            disabled={!pagination?.hasPrev}
+            onClick={() => {/* TODO: Implémenter pagination */}}
+          >
+            <ChevronRight size={16} className="rotate-180" />
+          </button>
+          <button 
+            className="p-1 border border-gray-300 rounded text-gray-400 bg-white"
+            disabled={!pagination?.hasNext}
+            onClick={() => {/* TODO: Implémenter pagination */}}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
 
@@ -163,7 +234,7 @@ export default function VehicleRenewalsPage() {
               <th className="w-8 px-6 py-3">
                 <input
                   type="checkbox"
-                  checked={selectedRenewals.length === mockRenewals.length && mockRenewals.length > 0}
+                  checked={selectedRenewals.length === renewals.length && renewals.length > 0}
                   onChange={handleSelectAll}
                   className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
                 />
@@ -176,7 +247,7 @@ export default function VehicleRenewalsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {mockRenewals.map((renewal) => (
+            {renewals.map((renewal) => (
               <tr
                 key={renewal.id}
                 className="hover:bg-gray-50 cursor-pointer"
@@ -194,32 +265,59 @@ export default function VehicleRenewalsPage() {
                   <div className="flex items-center gap-2">
                     <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${renewal.id}`} className="w-6 h-6 rounded object-cover" alt="" />
                     <div>
-                      <div className="text-sm font-bold text-[#008751] hover:underline">{renewal.vehicle}</div>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Sample</span>
+                      <div className="text-sm font-bold text-[#008751] hover:underline">{renewal.vehicle?.name || 'N/A'}</div>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                        {renewal.vehicle?.make} {renewal.vehicle?.model}
+                      </span>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                  {renewal.type}
+                  {renewal.title || getTypeLabel(renewal.type)}
+                  {renewal.description && (
+                    <div className="text-xs text-gray-500 font-normal">{renewal.description}</div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`flex items-center gap-1.5 text-sm font-medium ${getStatusColor(renewal.status)}`}>
-                    <div className={`w-2 h-2 rounded-full ${getStatusDot(renewal.status)}`}></div> {renewal.status}
+                  <span className={`flex items-center gap-1.5 text-sm font-medium ${getStatusColor(renewal.status, renewal.isOverdue)}`}>
+                    <div className={`w-2 h-2 rounded-full ${getStatusDot(renewal.status, renewal.isOverdue)}`}></div> 
+                    {renewal.status === 'OVERDUE' ? 'Overdue' : 
+                     renewal.status === 'DUE' ? 'Due Soon' :
+                     renewal.status === 'COMPLETED' ? 'Completed' :
+                     renewal.status === 'DISMISSED' ? 'Dismissed' : 
+                     renewal.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                  {renewal.dueDate}
-                  <div className={`text-xs font-normal ${getStatusColor(renewal.status)}`}>
-                    {renewal.status === 'Overdue' ? '1 month ago' : '2 weeks from now'}
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <div className={`font-medium ${renewal.isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
+                    {formatDueDate(renewal)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {formatDate(renewal.dueDate)}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  —
+                  {renewal.watchers?.length > 0 ? (
+                    <div className="flex items-center gap-1">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white">
+                        {renewal.watchers.length}
+                      </div>
+                      <span className="text-xs text-gray-500">watchers</span>
+                    </div>
+                  ) : (
+                    '—'
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        
+        {renewals.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            Aucun renouvellement de véhicule trouvé
+          </div>
+        )}
       </div>
     </div>
   );

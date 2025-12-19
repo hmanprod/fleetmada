@@ -1,42 +1,98 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useParts } from '@/lib/hooks/useParts';
+import { CreatePartData } from '@/lib/services/parts-api';
 
 export default function PartCreatePage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    partNumber: '',
+  const { createPart, loading, error } = useParts();
+  
+  const [formData, setFormData] = useState<CreatePartData>({
+    number: '',
     description: '',
     category: '',
     manufacturer: '',
     manufacturerPartNumber: '',
     upc: '',
-    unitCost: 'Ar',
-    measurementUnit: ''
+    cost: 0,
+    quantity: 0,
+    minimumStock: 0,
+    measurementUnit: 'pieces'
   });
+  
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleBack = () => {
     router.push('/parts');
   };
 
-  const handleSave = () => {
-    console.log('Saving part:', formData);
-    // TODO: Implement save logic
-    router.push('/parts');
+  const handleSave = async () => {
+    if (!formData.number || !formData.description) {
+      alert('Le numéro et la description de la pièce sont requis.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await createPart(formData);
+      if (result) {
+        setSaveSuccess(true);
+        setTimeout(() => {
+          router.push('/parts');
+        }, 1000);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la création:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveAndAddAnother = () => {
-    console.log('Save and add another:', formData);
-    // TODO: Implement save and reset logic
+  const handleSaveAndAddAnother = async () => {
+    if (!formData.number || !formData.description) {
+      alert('Le numéro et la description de la pièce sont requis.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await createPart(formData);
+      if (result) {
+        // Reset form for new part
+        setFormData({
+          number: '',
+          description: '',
+          category: '',
+          manufacturer: '',
+          manufacturerPartNumber: '',
+          upc: '',
+          cost: 0,
+          quantity: 0,
+          minimumStock: 0,
+          measurementUnit: 'pieces'
+        });
+        setSaveSuccess(false);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la création:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof CreatePartData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `Ar ${amount.toLocaleString()}`;
   };
 
   return (
@@ -49,8 +105,15 @@ export default function PartCreatePage() {
           <h1 className="text-2xl font-bold text-gray-900">New Part</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Part</button>
+          <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Cancel</button>
+          <button 
+            onClick={handleSave} 
+            className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={saving || !formData.number || !formData.description}
+          >
+            {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+            {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+          </button>
         </div>
       </div>
 
@@ -61,23 +124,25 @@ export default function PartCreatePage() {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Part Number <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de pièce <span className="text-red-500">*</span></label>
               <input
                 type="text"
-                value={formData.partNumber}
-                onChange={(e) => handleInputChange('partNumber', e.target.value)}
+                value={formData.number}
+                onChange={(e) => handleInputChange('number', e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                placeholder="Ex: WF-10902"
               />
-              <p className="mt-1 text-xs text-gray-500">Internal part identifier. Must be unique per part.</p>
+              <p className="mt-1 text-xs text-gray-500">Identifiant interne de la pièce. Doit être unique.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
               <textarea
                 rows={3}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                placeholder="Description détaillée de la pièce"
               ></textarea>
             </div>
 
@@ -101,86 +166,124 @@ export default function PartCreatePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
               <select
-                value={formData.category}
+                value={formData.category || ''}
                 onChange={(e) => handleInputChange('category', e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
               >
-                <option value="">Please select</option>
-                <option value="engine">Engine Parts</option>
-                <option value="transmission">Transmission</option>
-                <option value="brakes">Brakes</option>
-                <option value="electrical">Electrical</option>
+                <option value="">Sélectionner</option>
+                <option value="engine">Moteur</option>
+                <option value="transmission">Boîte de vitesses</option>
+                <option value="brakes">Freins</option>
+                <option value="electrical">Électrique</option>
+                <option value="filters">Filtres</option>
+                <option value="oil">Huiles & Fluides</option>
+                <option value="tires">Pneus</option>
+                <option value="body">Carrosserie</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Manufacturer</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fabricant</label>
               <select
-                value={formData.manufacturer}
+                value={formData.manufacturer || ''}
                 onChange={(e) => handleInputChange('manufacturer', e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
               >
-                <option value="">Please select</option>
+                <option value="">Sélectionner</option>
                 <option value="bosch">Bosch</option>
                 <option value="continental">Continental</option>
                 <option value="delphi">Delphi</option>
                 <option value="denso">Denso</option>
+                <option value="wix">Wix</option>
+                <option value="mobil">Mobil</option>
+                <option value="shell">Shell</option>
+                <option value="bridgestone">Bridgestone</option>
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Manufacturer Part #</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Numéro fabricant</label>
                 <input
                   type="text"
-                  value={formData.manufacturerPartNumber}
+                  value={formData.manufacturerPartNumber || ''}
                   onChange={(e) => handleInputChange('manufacturerPartNumber', e.target.value)}
                   className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                  placeholder="Numéro du fabricant"
                 />
-                <p className="mt-1 text-xs text-gray-500">Manufacturer specific part number that can differentiate the part from an internal part number.</p>
+                <p className="mt-1 text-xs text-gray-500">Numéro spécifique du fabricant pour différencier de l'identifiant interne.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">UPC</label>
                 <input
                   type="text"
-                  value={formData.upc}
+                  value={formData.upc || ''}
                   onChange={(e) => handleInputChange('upc', e.target.value)}
                   className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                  placeholder="Code UPC"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Unit Cost</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Coût unitaire</label>
                 <div className="relative">
                   <input
-                    type="text"
-                    value={formData.unitCost}
-                    onChange={(e) => handleInputChange('unitCost', e.target.value)}
+                    type="number"
+                    value={formData.cost || ''}
+                    onChange={(e) => handleInputChange('cost', parseFloat(e.target.value) || 0)}
                     className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
                   />
-                  <div className="absolute right-3 top-2 flex flex-col items-center">
-                    <ChevronDown size={12} className="rotate-180 text-gray-400" />
-                    <ChevronDown size={12} className="text-gray-400" />
+                  <div className="absolute right-3 top-2 flex items-center text-gray-500 text-sm font-medium">
+                    Ar
                   </div>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Measurement Unit</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Unité de mesure</label>
                 <select
-                  value={formData.measurementUnit}
+                  value={formData.measurementUnit || 'pieces'}
                   onChange={(e) => handleInputChange('measurementUnit', e.target.value)}
                   className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
                 >
-                  <option value="">Please select</option>
-                  <option value="pieces">Pieces</option>
-                  <option value="liters">Liters</option>
-                  <option value="kilograms">Kilograms</option>
-                  <option value="meters">Meters</option>
+                  <option value="pieces">Pièces</option>
+                  <option value="liters">Litres</option>
+                  <option value="kilograms">Kilogrammes</option>
+                  <option value="meters">Mètres</option>
+                  <option value="liters">Litres</option>
                 </select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantité initiale</label>
+                <input
+                  type="number"
+                  value={formData.quantity || ''}
+                  onChange={(e) => handleInputChange('quantity', parseInt(e.target.value) || 0)}
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stock minimum</label>
+                <input
+                  type="number"
+                  value={formData.minimumStock || ''}
+                  onChange={(e) => handleInputChange('minimumStock', parseInt(e.target.value) || 0)}
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                  placeholder="0"
+                  min="0"
+                />
+                <p className="mt-1 text-xs text-gray-500">Seuil d'alerte pour le réapprovisionnement</p>
               </div>
             </div>
           </div>
@@ -198,10 +301,53 @@ export default function PartCreatePage() {
           </div>
         </div>
 
+        {/* Messages de succès/erreur */}
+        {saveSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+            <div className="flex items-center">
+              <div className="text-green-600">
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-green-800">Pièce créée avec succès!</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div className="flex items-center">
+              <div className="text-red-600">
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="flex justify-end gap-3 pt-4 pb-12">
-          <button onClick={handleBack} className="text-[#008751] font-medium hover:underline mr-auto ml-2">Cancel</button>
-          <button onClick={handleSaveAndAddAnother} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white">Save & Add Another</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Part</button>
+          <button onClick={handleBack} className="text-[#008751] font-medium hover:underline mr-auto ml-2" disabled={saving}>Annuler</button>
+          <button 
+            onClick={handleSaveAndAddAnother} 
+            className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white disabled:opacity-50"
+            disabled={saving || !formData.number || !formData.description}
+          >
+            {saving ? 'Sauvegarde...' : 'Sauvegarder et ajouter'}
+          </button>
+          <button 
+            onClick={handleSave} 
+            className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={saving || !formData.number || !formData.description}
+          >
+            {saving ? 'Sauvegarde...' : 'Sauvegarder la pièce'}
+          </button>
         </div>
 
       </div>

@@ -1,171 +1,353 @@
 "use client";
 
-import React from 'react';
-import { ChevronRight, Car, Clipboard, Users, DollarSign, Activity } from 'lucide-react';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { RefreshCw, Settings, Bell, AlertTriangle, TrendingUp, Calendar, Bug } from 'lucide-react';
+
+// Import des composants dashboard
+import MetricCard from '@/components/dashboard/MetricCard';
+import TrendChart from '@/components/dashboard/TrendChart';
+import VehicleOverview from '@/components/dashboard/VehicleOverview';
+import CostAnalysis from '@/components/dashboard/CostAnalysis';
+import MaintenanceStatus from '@/components/dashboard/MaintenanceStatus';
+import IssuesStatus from '@/components/dashboard/IssuesStatus';
+import AlertWidget, { AlertSummary } from '@/components/dashboard/AlertWidget';
+
+// Import des hooks
+import { useDashboardMetrics } from '@/lib/hooks/useDashboardMetrics';
+import { useFleetOverview } from '@/lib/hooks/useFleetOverview';
+import { useCostAnalysis } from '@/lib/hooks/useCostAnalysis';
+import { useMaintenanceStatus } from '@/lib/hooks/useMaintenanceStatus';
+import { useIssuesStatus } from '@/lib/hooks/useIssuesStatus';
 
 export default function Dashboard() {
-   const router = useRouter();
-   const chartData = [
-      { name: 'Mar', cost: 1200 },
-      { name: 'Avr', cost: 1900 },
-      { name: 'Mai', cost: 1400 },
-      { name: 'Juin', cost: 2400 },
-   ];
+  const [activeTab, setActiveTab] = useState<'overview' | 'costs' | 'maintenance' | 'vehicles' | 'issues'>('overview');
+  const [refreshing, setRefreshing] = useState(false);
 
-   return (
-      <div className="p-8 max-w-7xl mx-auto">
-         <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Bienvenue sur FleetMada, Hery !</h1>
-            <p className="text-gray-600 mt-2 text-lg">
-               N'hésitez pas à explorer ou à aller directement à ce qui vous intéresse, mais la section "Premiers pas" est le meilleur endroit pour configurer un compte adapté à votre secteur.
-            </p>
-         </div>
+  // Hooks pour récupérer les données
+  const fleetOverview = useFleetOverview();
+  const costAnalysis = useCostAnalysis({ period: '30d' });
+  const maintenanceStatus = useMaintenanceStatus();
+  const dashboardMetrics = useDashboardMetrics();
+  const issuesStatus = useIssuesStatus();
 
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Getting Started Widget */}
-            <div className="lg:col-span-1">
-               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="p-6 border-b border-gray-100">
-                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="font-bold text-xl text-gray-800">Premiers pas</h2>
-                        <span className="text-sm text-gray-500">10 min</span>
-                     </div>
-                     <p className="text-sm text-gray-500 mb-4">Gardez votre flotte en mouvement</p>
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fleetOverview.refresh(),
+        costAnalysis.refresh(),
+        maintenanceStatus.refresh(),
+        dashboardMetrics.refreshAll(),
+        issuesStatus.refresh()
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
-                     <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Réduire les temps d'arrêt</span>
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Inspections</span>
-                     </div>
-                  </div>
+  // Alertes système basées sur les données
+  const systemAlerts = [
+    ...(fleetOverview.hasIssues ? [{
+      id: 'fleet-issues',
+      type: 'warning' as const,
+      title: 'Problèmes de flotte détectés',
+      message: `${fleetOverview.criticalIssues} problème${fleetOverview.criticalIssues > 1 ? 's' : ''} nécessitent votre attention`,
+      timestamp: new Date().toISOString(),
+      dismissible: true
+    }] : []),
+    ...(maintenanceStatus.hasCritical ? [{
+      id: 'maintenance-critical',
+      type: 'error' as const,
+      title: 'Maintenance critique',
+      message: 'Des maintenances sont en retard et nécessitent une attention immédiate',
+      timestamp: new Date().toISOString(),
+      dismissible: true
+    }] : []),
+    ...(costAnalysis.needsAttention ? [{
+      id: 'cost-optimization',
+      type: 'info' as const,
+      title: 'Optimisation des coûts',
+      message: 'Des opportunités d\'optimisation des coûts ont été détectées',
+      timestamp: new Date().toISOString(),
+      dismissible: true
+    }] : [])
+  ];
 
-                  <div className="p-0">
-                     <div
-                        className="flex items-center p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group"
-                        onClick={() => router.push('/vehicles/create')}
-                     >
-                        <div className="mr-4 text-gray-400 group-hover:text-green-600">
-                           <Car size={24} />
-                        </div>
-                        <div className="flex-1">
-                           <h3 className="text-sm font-medium text-gray-900">Ajouter votre premier véhicule</h3>
-                        </div>
-                        <ChevronRight size={16} className="text-gray-300" />
-                     </div>
+  const tabs = [
+    { id: 'overview', label: 'Vue d\'ensemble', icon: TrendingUp },
+    { id: 'costs', label: 'Analyse des coûts', icon: TrendingUp },
+    { id: 'maintenance', label: 'Maintenance', icon: Calendar },
+    { id: 'vehicles', label: 'Véhicules', icon: TrendingUp },
+    { id: 'issues', label: 'Problèmes', icon: Bug }
+  ];
 
-                     <div
-                        className="flex items-center p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group"
-                        onClick={() => router.push('/inspections/create')}
-                     >
-                        <div className="mr-4 text-gray-400 group-hover:text-green-600">
-                           <Clipboard size={24} />
-                        </div>
-                        <div className="flex-1">
-                           <h3 className="text-sm font-medium text-gray-900">En savoir plus sur les inspections</h3>
-                        </div>
-                        <ChevronRight size={16} className="text-gray-300" />
-                     </div>
-
-                     <div className="flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors group">
-                        <div className="mr-4 text-gray-400 group-hover:text-green-600">
-                           <Users size={24} />
-                        </div>
-                        <div className="flex-1">
-                           <h3 className="text-sm font-medium text-gray-900">Inviter votre équipe</h3>
-                        </div>
-                        <ChevronRight size={16} className="text-gray-300" />
-                     </div>
-                  </div>
-
-                  <div className="p-6 border-t border-gray-100">
-                     <button className="w-full bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded transition-colors">
-                        Continuer
-                     </button>
-                  </div>
-               </div>
-
-               <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                     <span className="bg-gray-100 p-1 rounded"><Activity size={16} /></span>
-                     Besoin d'aide ?
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                     Laissez-nous vous aider à configurer et à gérer efficacement votre flotte le plus rapidement possible.
-                  </p>
-                  <button className="border border-gray-300 rounded px-4 py-2 text-sm font-medium text-gray-700 w-full flex justify-between items-center hover:bg-gray-50">
-                     Options d'aide <ChevronRight size={16} className="rotate-90" />
-                  </button>
-               </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard FleetMada</h1>
+              <p className="text-gray-600 mt-1">
+                Vue d'ensemble de votre flotte en temps réel
+              </p>
             </div>
-
-            {/* Analytics & Features Area */}
-            <div className="lg:col-span-2 space-y-8">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Cost Card */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-gray-900">Coûts Totaux</h3>
-                        <DollarSign size={20} className="text-gray-400" />
-                     </div>
-                     <div className="h-48 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                           <BarChart data={chartData}>
-                              <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={12} stroke="#9ca3af" />
-                              <Tooltip cursor={{ fill: '#f3f4f6' }} />
-                              <Bar dataKey="cost" fill="#fbbf24" radius={[4, 4, 0, 0]} barSize={30} />
-                           </BarChart>
-                        </ResponsiveContainer>
-                     </div>
-                     <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-gray-500">
-                        <div>
-                           <span className="block w-3 h-3 bg-yellow-400 rounded-full mx-auto mb-1"></span>
-                           Carburant
-                        </div>
-                        <div>
-                           <span className="block w-3 h-3 bg-green-400 rounded-full mx-auto mb-1"></span>
-                           Entretien
-                        </div>
-                        <div>
-                           <span className="block w-3 h-3 bg-blue-400 rounded-full mx-auto mb-1"></span>
-                           Autres
-                        </div>
-                     </div>
-                  </div>
-
-                  {/* Service Reminders */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                     <h3 className="font-bold text-gray-900 mb-6">Rappels d'entretien</h3>
-                     <div className="flex justify-around items-center h-40">
-                        <div className="text-center">
-                           <div className="text-5xl font-light text-yellow-500 mb-2">2</div>
-                           <div className="text-sm text-gray-500 font-medium">Bientôt dû</div>
-                        </div>
-                        <div className="text-center">
-                           <div className="text-5xl font-light text-red-500 mb-2">6</div>
-                           <div className="text-sm text-gray-500 font-medium">En retard</div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               {/* Feature Highlights */}
-               <div className="bg-green-50 rounded-lg p-6 flex flex-col md:flex-row items-center gap-6 border border-green-100">
-                  <div className="flex-1">
-                     <h3 className="text-xl font-bold text-gray-900 mb-2">Capturez le kilométrage et les diagnostics</h3>
-                     <p className="text-gray-700 mb-4">Temps réel avec les intégrations ELD & télématiques.</p>
-                     <button className="text-[#008751] font-bold hover:underline flex items-center gap-1">
-                        Explorer les intégrations <ChevronRight size={16} />
-                     </button>
-                  </div>
-                  <div className="flex-shrink-0">
-                     <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md">
-                        <Activity size={40} className="text-[#008751]" />
-                     </div>
-                  </div>
-               </div>
+            
+            <div className="flex items-center space-x-4">
+              {/* Indicateur de statut */}
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  fleetOverview.isHealthy ? 'bg-green-500' : 
+                  fleetOverview.hasIssues ? 'bg-yellow-500' : 'bg-red-500'
+                }`}></div>
+                <span className="text-sm text-gray-600">
+                  {fleetOverview.isHealthy ? 'Système opérationnel' : 'Attention requise'}
+                </span>
+              </div>
+              
+              {/* Bouton refresh */}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center px-4 py-2 bg-[#008751] text-white rounded-lg hover:bg-[#007043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                Actualiser
+              </button>
+              
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-600 hover:text-gray-900">
+                <Bell className="w-6 h-6" />
+                {systemAlerts.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {systemAlerts.length}
+                  </span>
+                )}
+              </button>
+              
+              {/* Settings */}
+              <button className="p-2 text-gray-600 hover:text-gray-900">
+                <Settings className="w-6 h-6" />
+              </button>
             </div>
-         </div>
+          </div>
+        </div>
       </div>
-   );
+
+      {/* Onboarding pour nouveaux utilisateurs */}
+      {fleetOverview.data?.totalVehicles === 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-blue-900">
+                  Bienvenue sur FleetMada !
+                </h3>
+                <div className="mt-2 text-blue-700">
+                  <p>
+                    Commencez par ajouter des véhicules à votre flotte pour voir vos métriques dashboard.
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                    Ajouter mon premier véhicule
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation par onglets */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                    activeTab === tab.id
+                      ? 'border-[#008751] text-[#008751]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Contenu principal */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {/* Vue d'ensemble */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Métriques principales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <MetricCard
+                title="Total Véhicules"
+                value={fleetOverview.data?.totalVehicles || 0}
+                icon={TrendingUp}
+                color="blue"
+                loading={fleetOverview.loading}
+                trend={{
+                  value: fleetOverview.healthScore,
+                  label: 'Score santé',
+                  isPositive: fleetOverview.healthScore >= 80
+                }}
+              />
+              
+              <MetricCard
+                title="Coûts (30j)"
+                value={`${(costAnalysis.data?.summary.totalCosts || 0).toLocaleString()}€`}
+                icon={TrendingUp}
+                color="purple"
+                loading={costAnalysis.loading}
+                subtitle="Carburant + Entretien"
+              />
+              
+              <MetricCard
+                title="Maintenance"
+                value={maintenanceStatus.data?.summary.overdueReminders || 0}
+                icon={Calendar}
+                color={maintenanceStatus.hasCritical ? 'red' : 'yellow'}
+                loading={maintenanceStatus.loading}
+                subtitle="En retard"
+              />
+              
+              <MetricCard
+                title="Taux d'Utilisation"
+                value={`${fleetOverview.data?.utilizationRate || 0}%`}
+                icon={TrendingUp}
+                color="green"
+                loading={fleetOverview.loading}
+                trend={{
+                  value: fleetOverview.data?.utilizationRate || 0,
+                  isPositive: (fleetOverview.data?.utilizationRate || 0) >= 80
+                }}
+              />
+            </div>
+
+            {/* Alertes et graphiques */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Alertes */}
+              <div className="lg:col-span-1">
+                <AlertSummary alerts={systemAlerts} />
+              </div>
+              
+              {/* Graphique des coûts */}
+              <div className="lg:col-span-2">
+                {costAnalysis.data ? (
+                  <TrendChart
+                    title="Évolution des Coûts (30 derniers jours)"
+                    data={[
+                      { name: 'Carburant', value: costAnalysis.data.breakdown.fuel.total },
+                      { name: 'Entretien', value: costAnalysis.data.breakdown.service.total },
+                      { name: 'Recharge', value: costAnalysis.data.breakdown.charging.total }
+                    ]}
+                    type="bar"
+                    height={300}
+                    color="#008751"
+                  />
+                ) : (
+                  <TrendChart
+                    title="Évolution des Coûts (30 derniers jours)"
+                    data={[]}
+                    type="bar"
+                    height={300}
+                    loading={costAnalysis.loading}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Vue d'ensemble véhicules */}
+            {dashboardMetrics.vehicles && (
+              <VehicleOverview
+                vehicles={dashboardMetrics.vehicles.vehiclesWithMetrics}
+                summary={dashboardMetrics.vehicles.summary}
+                loading={dashboardMetrics.loading}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Analyse des coûts */}
+        {activeTab === 'costs' && costAnalysis.data && (
+          <CostAnalysis
+            summary={costAnalysis.data.summary}
+            breakdown={costAnalysis.data.breakdown}
+            loading={costAnalysis.loading}
+          />
+        )}
+
+        {/* Status maintenance */}
+        {activeTab === 'maintenance' && maintenanceStatus.data && (
+          <MaintenanceStatus
+            summary={maintenanceStatus.data.summary}
+            upcomingReminders={maintenanceStatus.data.upcomingReminders}
+            overdueReminders={maintenanceStatus.data.overdueReminders}
+            status={maintenanceStatus.data.status}
+            loading={maintenanceStatus.loading}
+          />
+        )}
+
+        {/* Vue d'ensemble véhicules */}
+        {activeTab === 'vehicles' && dashboardMetrics.vehicles && (
+          <VehicleOverview
+            vehicles={dashboardMetrics.vehicles.vehiclesWithMetrics}
+            summary={dashboardMetrics.vehicles.summary}
+            loading={dashboardMetrics.loading}
+          />
+        )}
+
+        {/* Status problèmes */}
+        {activeTab === 'issues' && issuesStatus.data && (
+          <IssuesStatus
+            summary={issuesStatus.data.summary}
+            recentIssues={issuesStatus.data.recentIssues}
+            criticalIssues={issuesStatus.data.criticalIssues}
+            status={issuesStatus.data.status}
+            loading={issuesStatus.loading}
+          />
+        )}
+      </div>
+
+      {/* Loading overlay */}
+      {(fleetOverview.loading || costAnalysis.loading || maintenanceStatus.loading || dashboardMetrics.loading || issuesStatus.loading) && (
+        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
+            <RefreshCw className="w-6 h-6 animate-spin text-[#008751]" />
+            <span className="text-gray-900">Chargement des données...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error display */}
+      {(fleetOverview.error || costAnalysis.error || maintenanceStatus.error || dashboardMetrics.error || issuesStatus.error) && (
+        <div className="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 max-w-sm">
+          <div className="flex">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Erreur de chargement</h3>
+              <p className="mt-1 text-sm text-red-700">
+                {fleetOverview.error || costAnalysis.error || maintenanceStatus.error || dashboardMetrics.error || issuesStatus.error}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

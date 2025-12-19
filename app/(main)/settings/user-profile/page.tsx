@@ -3,9 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { MoreHorizontal, AlertCircle, Loader2, Check } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useUserPreferences } from '@/lib/hooks/useSettings';
 
 export default function UserProfilePage() {
   const { user, updateProfile, isLoading, error, clearError } = useAuth();
+  const { 
+    preferences, 
+    loading: preferencesLoading, 
+    error: preferencesError, 
+    isSaving: preferencesSaving,
+    updatePreferences, 
+    clearError: clearPreferencesError 
+  } = useUserPreferences();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,6 +24,7 @@ export default function UserProfilePage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -22,43 +32,59 @@ export default function UserProfilePage() {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        fuelEconomyDisplay: user.preferences?.fuelEconomyDisplay || 'L/100km · L/100hr · Litres',
-        itemsPerPage: user.preferences?.itemsPerPage || 50
+        fuelEconomyDisplay: preferences?.fuelEconomyDisplay || 'L/100km · L/100hr · Litres',
+        itemsPerPage: preferences?.itemsPerPage || 50
       });
     }
-  }, [user]);
+  }, [user, preferences]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsSaved(false);
+    setSaveMessage('');
     clearError();
+    clearPreferencesError();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setIsSaved(false);
+    setSaveMessage('');
     clearError();
+    clearPreferencesError();
     
     try {
+      // Mise à jour du profil utilisateur
       await updateProfile({
         firstName: formData.firstName,
-        lastName: formData.lastName,
-        preferences: {
-          fuelEconomyDisplay: formData.fuelEconomyDisplay,
-          itemsPerPage: formData.itemsPerPage
-        }
+        lastName: formData.lastName
       });
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 3000);
+      
+      // Mise à jour des préférences
+      const preferencesResult = await updatePreferences({
+        fuelEconomyDisplay: formData.fuelEconomyDisplay,
+        itemsPerPage: formData.itemsPerPage
+      });
+      
+      if (preferencesResult.success) {
+        setIsSaved(true);
+        setSaveMessage('Profil et préférences mis à jour avec succès !');
+        setTimeout(() => {
+          setIsSaved(false);
+          setSaveMessage('');
+        }, 3000);
+      } else {
+        setSaveMessage('Profil mis à jour, mais erreur lors de la sauvegarde des préférences.');
+      }
     } catch (error) {
-      // L'erreur est gérée par le contexte
+      setSaveMessage('Erreur lors de la sauvegarde.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading && !user) {
+  if ((isLoading && !user) || (preferencesLoading && !preferences)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="animate-spin h-8 w-8 text-[#008751]" />
@@ -71,17 +97,17 @@ export default function UserProfilePage() {
     <div className="space-y-8 pb-12">
       <h1 className="text-2xl font-bold text-gray-900">Profil utilisateur</h1>
 
-      {error && (
+      {(error || preferencesError) && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-red-500" />
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-red-600">{error || preferencesError}</p>
         </div>
       )}
       
-      {isSaved && (
+      {(isSaved || saveMessage) && (
         <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500" />
-          <p className="text-sm text-green-600">Profil mis à jour avec succès !</p>
+          <p className="text-sm text-green-600">{saveMessage || 'Profil mis à jour avec succès !'}</p>
         </div>
       )}
 
@@ -202,10 +228,10 @@ export default function UserProfilePage() {
         <div className="flex justify-end">
           <button 
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || preferencesSaving}
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting ? (
+            {isSubmitting || preferencesSaving ? (
               <>
                 <Loader2 className="animate-spin h-4 w-4" />
                 Enregistrement...

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, MapPin } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, MapPin, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePlaces, usePlaceSearch } from '@/lib/hooks/usePlaces';
+import { PlaceType } from '@/types/geolocation';
 
 export default function PlacesPage() {
   const router = useRouter();
@@ -12,6 +14,16 @@ export default function PlacesPage() {
     locationDate: false,
     geofenceRadius: false
   });
+  const [placeTypeFilter, setPlaceTypeFilter] = useState<PlaceType | ''>('');
+
+  // Utilisation des hooks
+  const { places, loading, error, refresh } = usePlaces({
+    search: searchTerm,
+    type: placeTypeFilter || undefined,
+    limit: 20
+  });
+
+  const { searchPlaces } = usePlaceSearch();
 
   const handleAddPlace = () => {
     router.push('/dashboard/places/create');
@@ -28,6 +40,33 @@ export default function PlacesPage() {
       [filter]: !prev[filter as keyof typeof prev]
     }));
   };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    if (value.trim()) {
+      searchPlaces(value);
+    }
+  };
+
+  const handlePlaceTypeFilter = (type: PlaceType | '') => {
+    setPlaceTypeFilter(type);
+  };
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-[1800px] mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">Error loading places: {error}</p>
+          <button 
+            onClick={refresh}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-[1800px] mx-auto">
@@ -57,9 +96,9 @@ export default function PlacesPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
             <input 
               type="text" 
-              placeholder="Search"
+              placeholder="Search places..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" 
             />
          </div>
@@ -71,7 +110,7 @@ export default function PlacesPage() {
                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
            }`}
          >
-               Location Entry Type <ChevronDown size={14}/>
+             Location Entry Type <ChevronDown size={14}/>
          </button>
          <button 
            onClick={() => toggleFilter('locationDate')}
@@ -81,7 +120,7 @@ export default function PlacesPage() {
                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
            }`}
          >
-               Location Entry Date <ChevronDown size={14}/>
+             Location Entry Date <ChevronDown size={14}/>
          </button>
          <button 
            onClick={() => toggleFilter('geofenceRadius')}
@@ -91,7 +130,7 @@ export default function PlacesPage() {
                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
            }`}
          >
-               Place Geofence Radius <ChevronDown size={14}/>
+             Place Geofence Radius <ChevronDown size={14}/>
          </button>
          <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
            <Filter size={14} /> Filters
@@ -112,11 +151,23 @@ export default function PlacesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Name ▲</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Description</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider underline decoration-dotted">Address</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td colSpan={3} className="px-6 py-24 text-center">
+            <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-24 text-center">
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="animate-spin mr-2" size={24} />
+                        <span>Loading places...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : places.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-24 text-center">
                         <div className="flex flex-col items-center justify-center">
                             <div className="h-16 w-16 rounded-full border-2 border-green-500 flex items-center justify-center mb-4">
                                 <Search size={32} className="text-green-500" />
@@ -146,7 +197,52 @@ export default function PlacesPage() {
                             </button>
                         </div>
                     </td>
-                </tr>
+                  </tr>
+                ) : (
+                  places.map((place) => (
+                    <tr key={place.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/dashboard/places/${place.id}`)}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <MapPin size={16} className="text-gray-400 mr-2" />
+                          <div className="text-sm font-medium text-gray-900">{place.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                          {place.description || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                          {place.address || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          place.placeType === 'FUEL_STATION' ? 'bg-green-100 text-green-800' :
+                          place.placeType === 'SERVICE_CENTER' ? 'bg-blue-100 text-blue-800' :
+                          place.placeType === 'OFFICE' ? 'bg-purple-100 text-purple-800' :
+                          place.placeType === 'CLIENT_SITE' ? 'bg-orange-100 text-orange-800' :
+                          place.placeType === 'HOME' ? 'bg-pink-100 text-pink-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {place.placeType.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/dashboard/places/${place.id}/edit`);
+                          }}
+                          className="text-[#008751] hover:text-[#007043]"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
             </tbody>
           </table>
       </div>
