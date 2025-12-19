@@ -13,7 +13,7 @@ export default function NewInspectionPage() {
     const { createInspection } = useInspections();
     const { templates, loading: templatesLoading, fetchTemplates } = useInspectionTemplates();
     const { vehicles, loading: vehiclesLoading, fetchVehicles } = useVehicles();
-    
+
     // États du formulaire
     const [formData, setFormData] = useState<InspectionCreateData>({
         vehicleId: '',
@@ -25,12 +25,12 @@ export default function NewInspectionPage() {
         location: '',
         notes: ''
     });
-    
+
     // États d'interface
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
-    
+
     // Charger les données au montage
     useEffect(() => {
         fetchVehicles();
@@ -40,12 +40,12 @@ export default function NewInspectionPage() {
     const handleCancel = () => {
         router.back();
     };
-    
+
     const handleInputChange = (field: keyof InspectionCreateData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setError(null);
     };
-    
+
     const validateForm = (): boolean => {
         if (!formData.vehicleId) {
             setError('Veuillez sélectionner un véhicule');
@@ -64,23 +64,23 @@ export default function NewInspectionPage() {
 
     const handleSave = async () => {
         if (!validateForm()) return;
-        
+
         try {
             setLoading(true);
             setError(null);
-            
+
             const newInspection = await createInspection({
                 ...formData,
                 title: formData.title.trim()
             });
-            
+
             setSuccess(true);
-            
+
             // Redirect after short delay
             setTimeout(() => {
                 router.push(`/inspections/${newInspection.id}`);
             }, 1500);
-            
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de l\'inspection';
             setError(errorMessage);
@@ -88,19 +88,19 @@ export default function NewInspectionPage() {
             setLoading(false);
         }
     };
-    
+
     const handleSaveAndAddAnother = async () => {
         if (!validateForm()) return;
-        
+
         try {
             setLoading(true);
             setError(null);
-            
+
             await createInspection({
                 ...formData,
                 title: formData.title.trim()
             });
-            
+
             // Reset form for new entry
             setFormData({
                 vehicleId: '',
@@ -112,10 +112,10 @@ export default function NewInspectionPage() {
                 location: '',
                 notes: ''
             });
-            
+
             setSuccess(true);
             setTimeout(() => setSuccess(false), 2000);
-            
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de l\'inspection';
             setError(errorMessage);
@@ -147,14 +147,14 @@ export default function NewInspectionPage() {
                         <span className="text-red-700">{error}</span>
                     </div>
                 )}
-                
+
                 {success && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
                         <CheckCircle className="text-green-600" size={20} />
                         <span className="text-green-700">Inspection créée avec succès !</span>
                     </div>
                 )}
-                
+
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-6">Détails de l'Inspection</h2>
 
@@ -172,7 +172,8 @@ export default function NewInspectionPage() {
                                     <p className="text-sm">Contactez votre administrateur pour ajouter des véhicules.</p>
                                 </div>
                             ) : (
-                                <select 
+                                <select
+                                    name="vehicleId"
                                     className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                                     value={formData.vehicleId}
                                     onChange={(e) => handleInputChange('vehicleId', e.target.value)}
@@ -200,7 +201,8 @@ export default function NewInspectionPage() {
                                     <p className="text-sm">Contactez votre administrateur pour créer des modèles d'inspection.</p>
                                 </div>
                             ) : (
-                                <select 
+                                <select
+                                    name="inspectionTemplateId"
                                     className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                                     value={formData.inspectionTemplateId}
                                     onChange={(e) => handleInputChange('inspectionTemplateId', e.target.value)}
@@ -217,8 +219,8 @@ export default function NewInspectionPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Titre <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.title}
                                 onChange={(e) => handleInputChange('title', e.target.value)}
@@ -228,8 +230,8 @@ export default function NewInspectionPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea 
-                                rows={3} 
+                            <textarea
+                                rows={3}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.description}
                                 onChange={(e) => handleInputChange('description', e.target.value)}
@@ -239,8 +241,8 @@ export default function NewInspectionPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l'Inspecteur</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.inspectorName}
                                 onChange={(e) => handleInputChange('inspectorName', e.target.value)}
@@ -250,8 +252,8 @@ export default function NewInspectionPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.location}
                                 onChange={(e) => handleInputChange('location', e.target.value)}
@@ -266,19 +268,19 @@ export default function NewInspectionPage() {
                     <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Date Programmée</label>
-                            <input 
-                                type="datetime-local" 
+                            <input
+                                type="datetime-local"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.scheduledDate}
                                 onChange={(e) => handleInputChange('scheduledDate', e.target.value)}
                             />
                             <p className="text-xs text-gray-500 mt-1">Laissez vide pour une inspection immédiate</p>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                            <textarea 
-                                rows={3} 
+                            <textarea
+                                rows={3}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.notes}
                                 onChange={(e) => handleInputChange('notes', e.target.value)}

@@ -16,7 +16,7 @@ interface TokenPayload {
 const InspectionResultsSubmitSchema = z.object({
   results: z.array(z.object({
     inspectionItemId: z.string().min(1, 'ID de l\'élément requis'),
-    resultValue: z.string().min(1, 'Valeur de résultat requise'),
+    resultValue: z.string().optional(),
     isCompliant: z.boolean(),
     notes: z.string().optional(),
     imageUrl: z.string().url().optional()
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         }
       })
 
-      logAction('GET Results - Success', userId, { 
+      logAction('GET Results - Success', userId, {
         inspectionId,
         resultsCount: results.length
       })
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const body = await request.json()
     const resultsData = InspectionResultsSubmitSchema.parse(body)
 
-    logAction('POST Results', userId, { 
+    logAction('POST Results', userId, {
       inspectionId,
       resultsCount: resultsData.results.length
     })
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
       // Vérifier que l'inspection est en cours ou planifiée
       if (inspection.status === 'COMPLETED' || inspection.status === 'CANCELLED') {
-        logAction('POST Results - Cannot submit results for completed/cancelled inspection', userId, { 
+        logAction('POST Results - Cannot submit results for completed/cancelled inspection', userId, {
           inspectionId,
           status: inspection.status
         })
@@ -280,12 +280,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
         // Créer les nouveaux résultats
         const results = await Promise.all(
-          resultsData.results.map(resultData => 
+          resultsData.results.map(resultData =>
             tx.inspectionResult.create({
               data: {
                 inspectionId,
                 inspectionItemId: resultData.inspectionItemId,
-                resultValue: resultData.resultValue,
+                resultValue: resultData.resultValue || '',
                 isCompliant: resultData.isCompliant,
                 notes: resultData.notes,
                 imageUrl: resultData.imageUrl
@@ -308,7 +308,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         const compliantResults = results.filter(r => r.isCompliant).length
         const totalResults = results.length
         const overallScore = totalResults > 0 ? (compliantResults / totalResults) * 100 : 0
-        
+
         // Déterminer le statut de conformité (seuil de 80%)
         const complianceStatus = overallScore >= 80 ? 'COMPLIANT' : 'NON_COMPLIANT'
 
@@ -327,10 +327,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         return results
       })
 
-      logAction('POST Results - Success', userId, { 
+      logAction('POST Results - Success', userId, {
         inspectionId,
         resultsCount: submittedResults.length,
-        overallScore: submittedResults.length > 0 ? 
+        overallScore: submittedResults.length > 0 ?
           Math.round((submittedResults.filter(r => r.isCompliant).length / submittedResults.length) * 100) : 0
       })
 
@@ -344,20 +344,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
 
     } catch (dbError) {
-      logAction('POST Results - Database error', userId, {
-        inspectionId,
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      })
-
+      console.error('[Inspection Results API] Database error details:', dbError);
       return NextResponse.json(
-        { success: false, error: 'Erreur lors de la soumission des résultats' },
+        { success: false, error: 'Erreur lors de la soumission des résultats', details: dbError instanceof Error ? dbError.message : String(dbError) },
         { status: 500 }
       )
     }
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Results - Validation error', userId, {
@@ -370,13 +366,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
-    logAction('POST Results - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
+    console.error('[Inspection Results API] Server error details:', error);
     return NextResponse.json(
-      { success: false, error: 'Erreur serveur interne' },
+      { success: false, error: 'Erreur serveur interne', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

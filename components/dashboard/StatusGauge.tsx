@@ -79,20 +79,20 @@ export default function StatusGauge({
 }: StatusGaugeProps) {
   const colors = colorClasses[color];
   const sizes = sizeClasses[size];
-  
+
   // Normaliser la valeur entre 0 et 100
   const normalizedValue = Math.max(0, Math.min(100, (value / max) * 100));
-  
+
   // Déterminer la couleur en fonction de la valeur
   const getGaugeColor = () => {
     if (normalizedValue >= 80) return 'green';
     if (normalizedValue >= 50) return 'yellow';
     return 'red';
   };
-  
+
   const gaugeColor = getGaugeColor();
-  const gaugeColors = colorClasses[gaugeColor];
-  
+  const gaugeColors = colorClasses[gaugeColor] || colorClasses.green;
+
   // Calculer la circonférence du cercle
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
@@ -139,23 +139,23 @@ export default function StatusGauge({
             className="transition-all duration-1000 ease-out"
           />
         </svg>
-        
+
         {/* Contenu au centre */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             {Icon && (
-              <Icon 
-                size={size === 'sm' ? 12 : size === 'md' ? 16 : 20} 
-                className={`${sizes.text} ${gaugeColors.text} mx-auto mb-1`} 
+              <Icon
+                size={size === 'sm' ? 12 : size === 'md' ? 16 : 20}
+                className={`${sizes.text} ${gaugeColors?.text || ''} mx-auto mb-1`}
               />
             )}
-            <div className={`font-bold ${sizes.text} ${gaugeColors.text}`}>
+            <div className={`font-bold ${sizes.text} ${gaugeColors?.text || ''}`}>
               {showPercentage ? `${Math.round(normalizedValue)}%` : value}
             </div>
           </div>
         </div>
       </div>
-      
+
       <h3 className="font-medium text-gray-900 text-sm">{title}</h3>
       {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
     </div>
@@ -195,14 +195,14 @@ export function HorizontalGauge({
           </span>
         )}
       </div>
-      
+
       <div className="w-full bg-gray-200 rounded-full h-3">
         <div
           className={`${colors.fill} h-3 rounded-full transition-all duration-1000 ease-out`}
           style={{ width: `${normalizedValue}%` }}
         ></div>
       </div>
-      
+
       {subtitle && (
         <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
       )}
@@ -246,8 +246,8 @@ export function SimpleStatus({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className={`w-3 h-3 rounded-full ${config.bg}`}></div>
-      <span className={`text-sm font-medium ${config.color}`}>
+      <div className={`w-3 h-3 rounded-full ${config?.bg || 'bg-gray-200'}`}></div>
+      <span className={`text-sm font-medium ${config?.color || 'text-gray-600'}`}>
         {title}
       </span>
       {count !== undefined && (

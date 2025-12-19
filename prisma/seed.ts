@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 
-// Charger les variables d'environnement AVANT l'importation de Prisma
+// Charger les variables d'environnement
 dotenv.config();
+dotenv.config({ path: '.env.local' });
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -13,22 +14,50 @@ async function main() {
 
   // Nettoyer les données existantes
   console.log('🧹 Nettoyage des données existantes...');
+
+  // Supprimer les entrées dépendantes d'autres entités d'abord
   await prisma.blacklistedToken.deleteMany();
   await prisma.fuelEntry.deleteMany();
   await prisma.chargingEntry.deleteMany();
+  await prisma.expenseEntry.deleteMany();
+  await prisma.serviceEntryPart.deleteMany();
+  await prisma.serviceTaskEntry.deleteMany();
   await prisma.serviceEntry.deleteMany();
+  await prisma.comment.deleteMany();
+  await prisma.issueImage.deleteMany();
   await prisma.issue.deleteMany();
+  await prisma.serviceReminder.deleteMany();
+  await prisma.meterEntry.deleteMany();
+  await prisma.vehicleAssignment.deleteMany();
+  await prisma.programVehicle.deleteMany();
+  await prisma.vehicleRenewal.deleteMany();
+  await prisma.inspectionResult.deleteMany();
+  await prisma.inspectionItem.deleteMany();
+  await prisma.inspection.deleteMany();
+  await prisma.inspectionTemplateItem.deleteMany();
+  await prisma.inspectionTemplate.deleteMany();
+  await prisma.reportShare.deleteMany();
+  await prisma.reportSchedule.deleteMany();
+  await prisma.report.deleteMany();
+  await prisma.document.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.userSession.deleteMany();
+  await prisma.userPreferences.deleteMany();
+  await prisma.securitySettings.deleteMany();
+  await prisma.companySettings.deleteMany();
+  await prisma.systemSettings.deleteMany();
+  await prisma.integration.deleteMany();
+
+  // Supprimer les entités principales
   await prisma.vehicle.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.company.deleteMany();
   await prisma.contact.deleteMany();
   await prisma.vendor.deleteMany();
   await prisma.part.deleteMany();
-  await prisma.serviceReminder.deleteMany();
   await prisma.serviceTask.deleteMany();
+  await prisma.serviceProgram.deleteMany();
   await prisma.place.deleteMany();
-  await prisma.report.deleteMany();
-  await prisma.document.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.company.deleteMany();
 
   // Hasher les mots de passe
   const adminPassword = await bcrypt.hash('testpassword123', 10);
@@ -204,7 +233,7 @@ async function main() {
         vehicleId: vehicles[0].id,
         userId: adminUser.id,
         date: new Date('2024-12-10T08:30:00'),
-        vendor: 'Total Antsahavola',
+        vendorName: 'Total Antsahavola',
         usage: 12.5,
         volume: 50.0,
         cost: 150000.0, // En Ariary
@@ -216,7 +245,7 @@ async function main() {
         vehicleId: vehicles[1].id,
         userId: fleetManager.id,
         date: new Date('2024-12-11T14:15:00'),
-        vendor: 'Shell Ivato',
+        vendorName: 'Shell Ivato',
         usage: 11.8,
         volume: 45.0,
         cost: 135000.0,
@@ -228,7 +257,7 @@ async function main() {
         vehicleId: vehicles[4].id,
         userId: taxiDriver.id,
         date: new Date('2024-12-12T07:45:00'),
-        vendor: 'Evo Energy Behoririka',
+        vendorName: 'Evo Energy Behoririka',
         usage: 7.2,
         volume: 35.0,
         cost: 105000.0,
@@ -331,6 +360,63 @@ async function main() {
         compliance: 92.3,
       },
     }),
+  ]);
+
+  // Créer des templates d'inspection
+  console.log('📝 Création des templates d\'inspection...');
+  const inspectionTemplate = await prisma.inspectionTemplate.create({
+    data: {
+      name: 'Inspection Quotidienne Sécurité',
+      category: 'Sécurité',
+      description: 'Vérification de routine des éléments de sécurité du véhicule',
+      items: {
+        create: [
+          { name: 'Freins', category: 'Mécanique', description: 'Vérifier l\'état des plaquettes et le liquide', isRequired: true, sortOrder: 1 },
+          { name: 'Pneus', category: 'Extérieur', description: 'Vérifier la pression et l\'usure', isRequired: true, sortOrder: 2 },
+          { name: 'Phares', category: 'Électricité', description: 'Vérifier le fonctionnement de tous les feux', isRequired: true, sortOrder: 3 },
+          { name: 'Niveaux', category: 'Fluides', description: 'Huile, lave-glace, liquide de refroidissement', isRequired: false, sortOrder: 4 },
+        ]
+      }
+    },
+    include: { items: true }
+  });
+
+  // Créer des inspections de test
+  console.log('🔍 Création des inspections de test...');
+  await Promise.all([
+    prisma.inspection.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        userId: adminUser.id,
+        inspectionTemplateId: inspectionTemplate.id,
+        title: 'Inspection Toyota Hilux - Hebdomadaire',
+        status: 'SCHEDULED',
+        scheduledDate: new Date('2024-12-25'),
+        inspectorName: 'Jean Rakoto',
+      }
+    }),
+    prisma.inspection.create({
+      data: {
+        vehicleId: vehicles[1].id,
+        userId: adminUser.id,
+        inspectionTemplateId: inspectionTemplate.id,
+        title: 'Inspection Nissan Pathfinder - Mensuelle',
+        status: 'DRAFT',
+        scheduledDate: new Date('2024-12-28'),
+        inspectorName: 'Jean Rakoto',
+      }
+    }),
+    prisma.inspection.create({
+      data: {
+        vehicleId: vehicles[2].id,
+        userId: adminUser.id,
+        inspectionTemplateId: inspectionTemplate.id,
+        title: 'Inspection Mitsubishi L200 - Sécurité',
+        status: 'SCHEDULED',
+        scheduledDate: new Date('2024-12-20'),
+        inspectorName: 'Jean Rakoto',
+      }
+    })
   ]);
 
   console.log('✅ Seeding terminé avec succès!');

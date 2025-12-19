@@ -82,13 +82,16 @@ class AuthAPI {
 
   setToken(token: string): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('fleetmada_token', token);
+      localStorage.setItem('authToken', token);
+      // Optionnel: aussi le mettre dans un cookie pour la compatibilité SSR si nécessaire
+      document.cookie = `authToken=${token}; path=/; max-age=86400; SameSite=Lax`;
     }
   }
 
   removeToken(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('fleetmada_token');
+      localStorage.removeItem('authToken');
+      document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
   }
 

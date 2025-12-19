@@ -3,10 +3,10 @@ import { useAuthToken } from '@/lib/hooks/useAuthToken'
 // Fonction utilitaire pour récupérer le token d'authentification
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null
-  
-  return localStorage.getItem('authToken') || 
-         document.cookie.match(/authToken=([^;]*)/)?.[1] ||
-         null
+
+  return localStorage.getItem('authToken') ||
+    document.cookie.match(/authToken=([^;]*)/)?.[1] ||
+    null
 }
 
 // Types pour les Inspections
@@ -220,31 +220,31 @@ export interface InspectionTemplatesResponse {
 
 class InspectionsAPI {
   private async makeRequest<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<{ success: boolean; data?: T; error?: string; message?: string }> {
     const token = getAuthToken()
-    
+
     // Pour éviter l'erreur dans les tests E2E où le localStorage n'est pas accessible de la même manière
     if (!token && typeof window !== 'undefined') {
-        const cookieToken = document.cookie.match(/authToken=([^;]*)/)?.[1];
-        if (!cookieToken) {
-             console.warn('Token d\'authentification manquant dans makeRequest');
-        }
+      const cookieToken = document.cookie.match(/authToken=([^;]*)/)?.[1];
+      if (!cookieToken) {
+        console.warn('Token d\'authentification manquant dans makeRequest');
+      }
     }
 
     const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...options.headers,
+      'Content-Type': 'application/json',
+      ...options.headers,
     };
 
     if (token) {
-        (headers as any)['Authorization'] = `Bearer ${token}`;
+      (headers as any)['Authorization'] = `Bearer ${token}`;
     } else if (typeof window !== 'undefined') {
-        const cookieToken = document.cookie.match(/authToken=([^;]*)/)?.[1];
-        if (cookieToken) {
-            (headers as any)['Authorization'] = `Bearer ${cookieToken}`;
-        }
+      const cookieToken = document.cookie.match(/authToken=([^;]*)/)?.[1];
+      if (cookieToken) {
+        (headers as any)['Authorization'] = `Bearer ${cookieToken}`;
+      }
     }
 
     const config: RequestInit = {
@@ -254,14 +254,29 @@ class InspectionsAPI {
 
     try {
       const response = await fetch(endpoint, config)
-      const result = await response.json()
+
+      // Vérifier le type de contenu
+      const contentType = response.headers.get("content-type");
+      let result: any;
+
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        console.error(`[InspectionsAPI] Réponse non-JSON reçue de ${endpoint}:`, text.slice(0, 200));
+        throw new Error(`Le serveur a renvoyé une réponse invalide (non-JSON) de ${endpoint}. Statut: ${response.status}`);
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Erreur API')
+        throw new Error(result.error || result.message || `Erreur API (${response.status})`)
       }
 
       return result
     } catch (error) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.error(`[InspectionsAPI] Échec de la connexion à ${endpoint}. Le serveur est-il en cours d'exécution?`);
+        throw new Error(`Impossible de contacter le serveur (${endpoint}). Veuillez vérifier votre connexion.`);
+      }
       console.error('Erreur API Inspections:', error)
       throw error
     }
@@ -270,7 +285,7 @@ class InspectionsAPI {
   // GET /api/inspections - Liste des inspections avec filtres et pagination
   async getInspections(filters: InspectionFilters = {}): Promise<InspectionsResponse> {
     const params = new URLSearchParams()
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.append(key, String(value))
@@ -279,11 +294,11 @@ class InspectionsAPI {
 
     const endpoint = `/api/inspections?${params.toString()}`
     const result = await this.makeRequest<InspectionsResponse>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des inspections')
     }
-    
+
     return result.data!
   }
 
@@ -294,11 +309,11 @@ class InspectionsAPI {
       method: 'POST',
       body: JSON.stringify(inspectionData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la création de l\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -306,11 +321,11 @@ class InspectionsAPI {
   async getInspection(id: string): Promise<Inspection> {
     const endpoint = `/api/inspections/${id}`
     const result = await this.makeRequest<Inspection>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération de l\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -321,11 +336,11 @@ class InspectionsAPI {
       method: 'PUT',
       body: JSON.stringify(updateData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la modification de l\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -335,23 +350,23 @@ class InspectionsAPI {
     const result = await this.makeRequest(endpoint, {
       method: 'DELETE',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la suppression de l\'inspection')
     }
   }
 
-  // POST /api/inspections/[id]/complete - Marquer une inspection comme terminée
+  // POST /api/inspections/[id] - Marquer une inspection comme terminée
   async completeInspection(id: string): Promise<Inspection> {
-    const endpoint = `/api/inspections/${id}/complete`
+    const endpoint = `/api/inspections/${id}`
     const result = await this.makeRequest<Inspection>(endpoint, {
       method: 'POST',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la complétion de l\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -359,11 +374,11 @@ class InspectionsAPI {
   async getInspectionResults(inspectionId: string): Promise<InspectionResult[]> {
     const endpoint = `/api/inspections/${inspectionId}/results`
     const result = await this.makeRequest<InspectionResult[]>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des résultats')
     }
-    
+
     return result.data!
   }
 
@@ -374,18 +389,18 @@ class InspectionsAPI {
       method: 'POST',
       body: JSON.stringify(resultsData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la soumission des résultats')
     }
-    
+
     return result.data!
   }
 
   // GET /api/inspection-templates - Liste des modèles d'inspection avec filtres et pagination
   async getInspectionTemplates(filters: InspectionTemplateFilters = {}): Promise<InspectionTemplatesResponse> {
     const params = new URLSearchParams()
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.append(key, String(value))
@@ -394,11 +409,11 @@ class InspectionsAPI {
 
     const endpoint = `/api/inspection-templates?${params.toString()}`
     const result = await this.makeRequest<InspectionTemplatesResponse>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des modèles d\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -409,11 +424,11 @@ class InspectionsAPI {
       method: 'POST',
       body: JSON.stringify(templateData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la création du modèle d\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -421,11 +436,11 @@ class InspectionsAPI {
   async getInspectionTemplate(id: string): Promise<InspectionTemplate> {
     const endpoint = `/api/inspection-templates/${id}`
     const result = await this.makeRequest<InspectionTemplate>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération du modèle d\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -436,11 +451,11 @@ class InspectionsAPI {
       method: 'PUT',
       body: JSON.stringify(updateData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la modification du modèle d\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -450,7 +465,7 @@ class InspectionsAPI {
     const result = await this.makeRequest(endpoint, {
       method: 'DELETE',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la suppression du modèle d\'inspection')
     }
@@ -462,11 +477,11 @@ class InspectionsAPI {
     const result = await this.makeRequest<Inspection>(endpoint, {
       method: 'POST',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors du démarrage de l\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -476,11 +491,11 @@ class InspectionsAPI {
     const result = await this.makeRequest<Inspection>(endpoint, {
       method: 'POST',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de l\'annulation de l\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -488,11 +503,11 @@ class InspectionsAPI {
   async getInspectionItems(inspectionId: string): Promise<InspectionItem[]> {
     const endpoint = `/api/inspections/${inspectionId}/items`
     const result = await this.makeRequest<InspectionItem[]>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des éléments d\'inspection')
     }
-    
+
     return result.data!
   }
 
@@ -503,11 +518,11 @@ class InspectionsAPI {
       method: 'POST',
       body: JSON.stringify({ name: newName }),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la duplication du modèle')
     }
-    
+
     return result.data!
   }
 
@@ -515,11 +530,11 @@ class InspectionsAPI {
   async getInspectionTemplateItems(templateId: string): Promise<InspectionTemplateItem[]> {
     const endpoint = `/api/inspection-templates/${templateId}/items`
     const result = await this.makeRequest<InspectionTemplateItem[]>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des éléments du modèle')
     }
-    
+
     return result.data!
   }
 }
