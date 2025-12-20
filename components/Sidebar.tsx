@@ -3,23 +3,23 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Car, 
-  Wrench, 
-  ClipboardCheck, 
-  AlertTriangle, 
-  Clock, 
-  Hammer, 
-  Users, 
-  Store, 
-  Fuel, 
-  Box, 
-  MapPin, 
-  FileText, 
-  Grid, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Car,
+  Wrench,
+  ClipboardCheck,
+  AlertTriangle,
+  Clock,
+  Hammer,
+  Users,
+  Store,
+  Fuel,
+  Box,
+  MapPin,
+  FileText,
+  Grid,
+  BarChart3,
+  Settings,
   HelpCircle,
   ChevronDown,
   ChevronRight
@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>(['vehicles', 'service', 'reminders', 'fuel']);
 
   const toggleExpand = (id: string) => {
-    setExpandedItems(prev => 
+    setExpandedItems(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
@@ -58,10 +58,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, href: '/', view: ViewState.DASHBOARD },
-    { 
-      id: 'vehicles', 
-      label: 'Véhicules', 
-      icon: Car, 
+    {
+      id: 'vehicles',
+      label: 'Véhicules',
+      icon: Car,
       href: null,
       subItems: [
         { label: 'Liste des véhicules', href: '/vehicles', view: ViewState.VEHICLES_LIST },
@@ -73,10 +73,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
     { id: 'tools', label: 'Outils', icon: Wrench, href: '/tools', view: undefined },
     { id: 'inspections', label: 'Inspections', icon: ClipboardCheck, href: '/inspections', view: ViewState.INSPECTIONS_LIST },
     { id: 'issues', label: 'Problèmes', icon: AlertTriangle, href: '/issues', view: ViewState.ISSUES_LIST },
-    { 
-      id: 'reminders', 
-      label: 'Rappels', 
-      icon: Clock, 
+    {
+      id: 'reminders',
+      label: 'Rappels',
+      icon: Clock,
       href: null,
       subItems: [
         { label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS },
@@ -84,10 +84,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
         { label: 'Renouvellements contacts', href: '/reminders/contact', view: ViewState.CONTACT_RENEWALS },
       ]
     },
-    { 
-      id: 'service', 
-      label: 'Entretien', 
-      icon: Hammer, 
+    {
+      id: 'service',
+      label: 'Entretien',
+      icon: Hammer,
       href: null,
       subItems: [
         { label: 'Historique d\'entretien', href: '/service/history', view: ViewState.SERVICE_HISTORY },
@@ -98,10 +98,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
     },
     { id: 'contacts', label: 'Contacts', icon: Users, href: '/contacts', view: ViewState.CONTACTS_LIST },
     { id: 'vendors', label: 'Fournisseurs', icon: Store, href: '/vendors', view: ViewState.VENDORS_LIST },
-    { 
-      id: 'fuel', 
-      label: 'Carburant & Énergie', 
-      icon: Fuel, 
+    {
+      id: 'fuel',
+      label: 'Carburant & Énergie',
+      icon: Fuel,
       href: null,
       subItems: [
         { label: 'Historique carburant', href: '/fuel/history', view: ViewState.FUEL_HISTORY },
@@ -116,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
   ];
 
   return (
-    <div className="w-64 bg-[#0f4c3a] text-white flex flex-col h-screen fixed left-0 top-0 overflow-y-auto z-10 scrollbar-thin scrollbar-thumb-green-700">
+    <div className="sidebar w-64 bg-[#0f4c3a] text-white flex flex-col h-screen fixed left-0 top-0 overflow-y-auto z-10 scrollbar-thin scrollbar-thumb-green-700">
       <div className="p-4 flex items-center gap-2 border-b border-[#1b6a50] sticky top-0 bg-[#0f4c3a] z-20">
         <Car className="h-8 w-8 text-white" />
         <span className="text-xl font-bold tracking-tight">FleetMada</span>
@@ -126,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
         <div className="px-4 mb-2 text-xs font-semibold text-green-200 uppercase tracking-wider">
           Commencer
         </div>
-        
+
         {menuItems.map((item) => {
           const isExpanded = expandedItems.includes(item.id);
           const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -137,11 +137,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
               {hasSubItems ? (
                 <button
                   onClick={() => toggleExpand(item.id)}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? 'bg-[#1b9a59] text-white border-l-4 border-white' 
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${active
+                      ? 'bg-[#1b9a59] text-white border-l-4 border-white'
                       : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon size={18} />
@@ -153,11 +152,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                 setView && item.view !== undefined ? (
                   <button
                     onClick={() => setView(item.view!)}
-                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-[#1b9a59] text-white border-l-4 border-white' 
+                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${active
+                        ? 'bg-[#1b9a59] text-white border-l-4 border-white'
                         : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <item.icon size={18} />
@@ -167,11 +165,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                 ) : (
                   <Link
                     href={item.href || '#'}
-                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-[#1b9a59] text-white border-l-4 border-white' 
+                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${active
+                        ? 'bg-[#1b9a59] text-white border-l-4 border-white'
                         : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <item.icon size={18} />
@@ -180,7 +177,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                   </Link>
                 )
               )}
-              
+
               {hasSubItems && isExpanded && (
                 <div className="bg-[#0b3d2e] py-1">
                   {item.subItems?.map((subItem) => (
@@ -188,11 +185,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                       <button
                         key={subItem.label}
                         onClick={() => setView(subItem.view!)}
-                        className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors text-left ${
-                          isActive(subItem.href, subItem.view)
+                        className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors text-left ${isActive(subItem.href, subItem.view)
                             ? 'text-white font-semibold'
                             : 'text-gray-400 hover:text-white'
-                        }`}
+                          }`}
                       >
                         {subItem.label}
                       </button>
@@ -200,11 +196,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                       <Link
                         key={subItem.label}
                         href={subItem.href}
-                        className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors ${
-                          isActive(subItem.href, subItem.view)
+                        className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors ${isActive(subItem.href, subItem.view)
                             ? 'text-white font-semibold'
                             : 'text-gray-400 hover:text-white'
-                        }`}
+                          }`}
                       >
                         {subItem.label}
                       </Link>
@@ -217,23 +212,23 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
         })}
 
         <div className="mt-8 border-t border-[#1b6a50] pt-4 px-2">
-           {setView ? (
-             <button
+          {setView ? (
+            <button
               onClick={() => setView(ViewState.SETTINGS_GENERAL)}
               className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-[#1b6a50] hover:text-white rounded"
-             >
+            >
               <Settings size={18} />
               Paramètres
-             </button>
-           ) : (
-             <Link
+            </button>
+          ) : (
+            <Link
               href="/settings/general"
               className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-[#1b6a50] hover:text-white rounded"
             >
               <Settings size={18} />
               Paramètres
             </Link>
-           )}
+          )}
           <button
             className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-[#1b6a50] hover:text-white rounded"
           >

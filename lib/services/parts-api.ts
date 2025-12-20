@@ -33,7 +33,7 @@ export interface CreatePartData {
   measurementUnit?: string
 }
 
-export interface UpdatePartData extends Partial<CreatePartData> {}
+export interface UpdatePartData extends Partial<CreatePartData> { }
 
 export interface PartsQuery {
   page?: number
@@ -113,12 +113,12 @@ export interface StockMovement {
 
 class PartsAPI {
   private baseURL = '/api/parts'
-  
+
   private async getAuthHeaders(): Promise<Record<string, string>> {
     // Récupérer le token depuis localStorage ou cookie
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token') || 
-                   document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]
+      const token = localStorage.getItem('authToken') ||
+        document.cookie.split('; ').find(row => row.startsWith('authToken='))?.split('=')[1]
       return Promise.resolve({
         'Authorization': `Bearer ${token || ''}`,
         'Content-Type': 'application/json'
@@ -129,7 +129,7 @@ class PartsAPI {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const headers = await this.getAuthHeaders()
-    
+
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       ...options,
       headers: {
@@ -149,7 +149,7 @@ class PartsAPI {
   // Récupération des pièces avec filtres
   async getParts(query: PartsQuery = {}): Promise<{ success: boolean; data: PartsResponse }> {
     const params = new URLSearchParams()
-    
+
     Object.entries(query).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, String(value))

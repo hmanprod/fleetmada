@@ -9,7 +9,7 @@ import { UpdatePartData } from '@/lib/services/parts-api';
 export default function PartEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { part, loading, error, updatePart } = usePartDetails(params.id);
-    
+
     const [formData, setFormData] = useState<UpdatePartData>({
         number: '',
         description: '',
@@ -22,7 +22,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
         minimumStock: 0,
         measurementUnit: 'pieces'
     });
-    
+
     const [saving, setSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -118,16 +118,17 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                     <h1 className="text-2xl font-bold text-gray-900">Edit Part</h1>
                 </div>
                 <div className="flex gap-3">
-            <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Annuler</button>
-            <button 
-                onClick={handleSave} 
-                className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                disabled={saving || !formData.number || !formData.description}
-            >
-                {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-                {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
-            </button>
-        </div>
+                    <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Annuler</button>
+                    <button
+                        onClick={handleSave}
+                        data-testid="save-changes-button"
+                        className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        disabled={saving || !formData.number || !formData.description}
+                    >
+                        {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                        {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
+                    </button>
+                </div>
             </div>
 
             <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
@@ -154,6 +155,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                                 value={formData.description}
                                 onChange={(e) => handleInputChange('description', e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                data-testid="part-description"
                             ></textarea>
                         </div>
 
@@ -182,6 +184,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                                 value={formData.category}
                                 onChange={(e) => handleInputChange('category', e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
+                                data-testid="part-category"
                             >
                                 <option value="">Please select</option>
                                 <option value="engine">Engine Parts</option>
@@ -237,6 +240,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                                         value={formData.cost || ''}
                                         onChange={(e) => handleInputChange('cost', parseFloat(e.target.value) || 0)}
                                         className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                        data-testid="part-cost"
                                     />
                                     <div className="absolute right-3 top-2 flex flex-col items-center">
                                         <ChevronDown size={12} className="rotate-180 text-gray-400" />

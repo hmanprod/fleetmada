@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test'
 
 test.describe('Module Parts - Tests E2E', () => {
+  const randomSuffix = Math.floor(Math.random() * 10000).toString();
   let authToken: string
 
   test.setTimeout(90000);
@@ -61,7 +62,7 @@ test.describe('Module Parts - Tests E2E', () => {
     await expect(page).toHaveURL('/parts/create')
 
     // Remplir le formulaire
-    await page.fill('[data-testid="part-number"]', 'TEST-001')
+    await page.fill('[data-testid="part-number"]', `TEST-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', 'Pièce de test pour les tests E2E')
     await page.selectOption('[data-testid="part-category"]', 'engine')
     await page.selectOption('[data-testid="part-manufacturer"]', 'bosch')
@@ -77,14 +78,14 @@ test.describe('Module Parts - Tests E2E', () => {
     await expect(page.locator('text=Pièce créée avec succès')).toBeVisible()
 
     // Vérifier que la pièce apparaît dans la liste
-    await expect(page.locator('text=TEST-001')).toBeVisible()
+    await expect(page.locator(`text=TEST-${randomSuffix}-001`)).toBeVisible()
     await expect(page.locator('text=Pièce de test pour les tests E2E')).toBeVisible()
   })
 
   test('Devrait afficher les détails d\'une pièce', async () => {
     // Créer d'abord une pièce pour les tests
     await page.click('[data-testid="add-part-button"]')
-    await page.fill('[data-testid="part-number"]', 'DETAIL-001')
+    await page.fill('[data-testid="part-number"]', `DETAIL-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', 'Pièce pour test détails')
     await page.selectOption('[data-testid="part-category"]', 'filters')
     await page.fill('[data-testid="part-cost"]', '25000')
@@ -92,12 +93,12 @@ test.describe('Module Parts - Tests E2E', () => {
     await page.click('[data-testid="save-part-button"]')
 
     // Cliquer sur la pièce pour voir les détails
-    await page.click('text=DETAIL-001')
+    await page.click(`text=DETAIL-${randomSuffix}-001`)
     await expect(page).toHaveURL('/parts/')
 
     // Vérifier les détails de la pièce
     await expect(page.locator('text=Détails')).toBeVisible()
-    await expect(page.locator('text=DETAIL-001')).toBeVisible()
+    await expect(page.locator(`text=DETAIL-${randomSuffix}-001`)).toBeVisible()
     await expect(page.locator('text=Pièce pour test détails')).toBeVisible()
     await expect(page.locator('text=État du stock')).toBeVisible()
     await expect(page.locator('text=5')).toBeVisible() // Quantité
@@ -109,12 +110,12 @@ test.describe('Module Parts - Tests E2E', () => {
   test('Devrait éditer une pièce existante', async () => {
     // Créer d'abord une pièce
     await page.click('[data-testid="add-part-button"]')
-    await page.fill('[data-testid="part-number"]', 'EDIT-001')
+    await page.fill('[data-testid="part-number"]', `EDIT-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', 'Pièce pour test édition')
     await page.click('[data-testid="save-part-button"]')
 
     // Aller aux détails et cliquer sur Edit
-    await page.click('text=EDIT-001')
+    await page.click(`text=EDIT-${randomSuffix}-001`)
     await page.click('[data-testid="edit-part-button"]')
     await expect(page).toHaveURL(/\/parts\/.*\/edit/)
 
@@ -138,14 +139,14 @@ test.describe('Module Parts - Tests E2E', () => {
   test('Devrait gérer le stock avec ajustements', async () => {
     // Créer une pièce avec stock
     await page.click('[data-testid="add-part-button"]')
-    await page.fill('[data-testid="part-number"]', 'STOCK-001')
+    await page.fill('[data-testid="part-number"]', `STOCK-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', 'Pièce pour test stock')
     await page.fill('[data-testid="part-quantity"]', '5')
     await page.fill('[data-testid="part-minimum-stock"]', '10') // Stock minimum supérieur au stock actuel
     await page.click('[data-testid="save-part-button"]')
 
     // Aller aux détails
-    await page.click('text=STOCK-001')
+    await page.click(`text=STOCK-${randomSuffix}-001`)
 
     // Vérifier l'état du stock faible
     await expect(page.locator('text=Stock faible')).toBeVisible()
@@ -165,9 +166,9 @@ test.describe('Module Parts - Tests E2E', () => {
   test('Devrait filtrer les pièces par catégorie', async () => {
     // Créer plusieurs pièces avec différentes catégories
     const pieces = [
-      { number: 'FILTER-001', category: 'filters', description: 'Filtre à huile' },
-      { number: 'BRAKE-001', category: 'brakes', description: 'Plaquettes de frein' },
-      { number: 'ENGINE-001', category: 'engine', description: 'Joint de culasse' }
+      { number: `FILTER-${randomSuffix}-001`, category: 'filters', description: 'Filtre à huile' },
+      { number: `BRAKE-${randomSuffix}-001`, category: 'brakes', description: 'Plaquettes de frein' },
+      { number: `ENGINE-${randomSuffix}-001`, category: 'engine', description: 'Joint de culasse' }
     ]
 
     for (const piece of pieces) {
@@ -184,16 +185,16 @@ test.describe('Module Parts - Tests E2E', () => {
     await page.selectOption('[data-testid="category-filter"]', 'filters')
 
     // Vérifier que seul le filtre apparaît
-    await expect(page.locator('text=FILTER-001')).toBeVisible()
-    await expect(page.locator('text=BRAKE-001')).not.toBeVisible()
-    await expect(page.locator('text=ENGINE-001')).not.toBeVisible()
+    await expect(page.locator(`text=FILTER-${randomSuffix}-001`)).toBeVisible()
+    await expect(page.locator(`text=BRAKE-${randomSuffix}-001`)).not.toBeVisible()
+    await expect(page.locator(`text=ENGINE-${randomSuffix}-001`)).not.toBeVisible()
   })
 
   test('Devrait rechercher des pièces', async () => {
     // Créer des pièces
     const pieces = [
-      { number: 'SEARCH-001', description: 'Pièce moteur' },
-      { number: 'SEARCH-002', description: 'Pièce freins' }
+      { number: `SEARCH-${randomSuffix}-001`, description: 'Pièce moteur' },
+      { number: `SEARCH-${randomSuffix}-002`, description: 'Pièce freins' }
     ]
 
     for (const piece of pieces) {
@@ -209,15 +210,15 @@ test.describe('Module Parts - Tests E2E', () => {
     await page.press('[data-testid="search-input"]', 'Enter')
 
     // Vérifier les résultats de recherche
-    await expect(page.locator('text=SEARCH-001')).toBeVisible()
+    await expect(page.locator(`text=SEARCH-${randomSuffix}-001`)).toBeVisible()
     await expect(page.locator('text=Pièce moteur')).toBeVisible()
-    await expect(page.locator('text=SEARCH-002')).not.toBeVisible()
+    await expect(page.locator(`text=SEARCH-${randomSuffix}-002`)).not.toBeVisible()
   })
 
   test('Devrait afficher les onglets All et Low Stock', async () => {
     // Créer une pièce avec stock faible
     await page.click('[data-testid="add-part-button"]')
-    await page.fill('[data-testid="part-number"]', 'LOW-STOCK-001')
+    await page.fill('[data-testid="part-number"]', `LOW-STOCK-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', 'Pièce stock faible')
     await page.fill('[data-testid="part-quantity"]', '2')
     await page.fill('[data-testid="part-minimum-stock"]', '10')
@@ -240,21 +241,21 @@ test.describe('Module Parts - Tests E2E', () => {
     // Créer plusieurs pièces pour tester la pagination
     for (let i = 1; i <= 15; i++) {
       await page.click('[data-testid="add-part-button"]')
-      await page.fill('[data-testid="part-number"]', `PAG-${i.toString().padStart(3, '0')}`)
+      await page.fill('[data-testid="part-number"]', `PAG-${randomSuffix}-${i.toString().padStart(3, '0')}`)
       await page.fill('[data-testid="part-description"]', `Pièce ${i} pour pagination`)
       await page.click('[data-testid="save-part-button"]')
       await page.goto('/parts')
     }
 
     // Vérifier la première page
-    await expect(page.locator('text=PAG-001')).toBeVisible()
-    await expect(page.locator('text=PAG-010')).toBeVisible()
-    await expect(page.locator('text=PAG-011')).not.toBeVisible()
+    await expect(page.locator(`text=PAG-${randomSuffix}-001`)).toBeVisible()
+    await expect(page.locator(`text=PAG-${randomSuffix}-010`)).toBeVisible()
+    await expect(page.locator(`text=PAG-${randomSuffix}-011`)).not.toBeVisible()
 
     // Tester la pagination
     await page.click('[data-testid="next-page"]')
-    await expect(page.locator('text=PAG-011')).toBeVisible()
-    await expect(page.locator('text=PAG-001')).not.toBeVisible()
+    await expect(page.locator(`text=PAG-${randomSuffix}-011`)).toBeVisible()
+    await expect(page.locator(`text=PAG-${randomSuffix}-001`)).not.toBeVisible()
 
     // Retour à la page précédente
     await page.click('[data-testid="prev-page"]')
@@ -264,8 +265,8 @@ test.describe('Module Parts - Tests E2E', () => {
   test('Devrait afficher les statistiques en bas de page', async () => {
     // Créer des pièces avec coûts
     const pieces = [
-      { number: 'STAT-001', cost: '10000' },
-      { number: 'STAT-002', cost: '20000' }
+      { number: `STAT-${randomSuffix}-001`, cost: '10000' },
+      { number: `STAT-${randomSuffix}-002`, cost: '20000' }
     ]
 
     for (const piece of pieces) {
@@ -297,7 +298,7 @@ test.describe('Module Parts - Tests E2E', () => {
     await expect(page.locator('text=Le numéro et la description de la pièce sont requis')).toBeVisible()
 
     // Essayer avec un numéro mais sans description
-    await page.fill('[data-testid="part-number"]', 'ERROR-001')
+    await page.fill('[data-testid="part-number"]', `ERROR-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', '')
     await page.click('[data-testid="save-part-button"]')
 
@@ -314,11 +315,11 @@ test.describe('Module Parts - Tests E2E', () => {
 
     // Test navigation : Liste -> Détails -> Édition -> Détails -> Liste
     await page.click('[data-testid="add-part-button"]')
-    await page.fill('[data-testid="part-number"]', 'NAV-001')
+    await page.fill('[data-testid="part-number"]', `NAV-${randomSuffix}-001`)
     await page.fill('[data-testid="part-description"]', 'Pièce navigation')
     await page.click('[data-testid="save-part-button"]')
 
-    await page.click('text=NAV-001')
+    await page.click(`text=NAV-${randomSuffix}-001`)
     await expect(page).toHaveURL(/\/parts\/.*/)
 
     await page.click('[data-testid="edit-part-button"]')

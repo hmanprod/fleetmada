@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-    ArrowLeft, Save, Edit, Camera, MessageSquare, AlertTriangle, 
+import {
+    ArrowLeft, Save, Edit, Camera, MessageSquare, AlertTriangle,
     CheckCircle, X, Upload, Star, Award, TrendingUp, Calendar,
     User, MapPin, FileText, Clock, BarChart3
 } from 'lucide-react';
@@ -21,12 +21,12 @@ interface InspectionResultExecution {
 
 export default function InspectionEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    
+
     // Hooks
-    const { inspections, loading, error, fetchInspections, updateInspection, submitInspectionResults } = useInspections();
+    const { loading, error, fetchInspectionById, updateInspection, submitInspectionResults } = useInspections();
     const { getTemplateItems } = useInspectionTemplates();
     const [inspection, setInspection] = useState<any>(null);
-    
+
     // États pour l'édition
     const [formData, setFormData] = useState({
         title: '',
@@ -36,76 +36,69 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
         notes: '',
         scheduledDate: ''
     });
-    
+
     // États pour les résultats
     const [results, setResults] = useState<InspectionResultExecution[]>([]);
     const [templateItems, setTemplateItems] = useState<any[]>([]);
     const [generalNotes, setGeneralNotes] = useState('');
     const [overallScore, setOverallScore] = useState(0);
-    
+
     // États d'interface
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'details' | 'results'>('details');
-    const [photoUploads, setPhotoUploads] = useState<{[key: string]: string}>({});
+    const [photoUploads, setPhotoUploads] = useState<{ [key: string]: string }>({});
 
     // Charger l'inspection
     useEffect(() => {
         const loadInspection = async () => {
             try {
-                await fetchInspections();
+                const foundInspection = await fetchInspectionById(params.id);
+                setInspection(foundInspection);
+
+                if (foundInspection) {
+                    // Pré-remplir le formulaire
+                    setFormData({
+                        title: foundInspection.title || '',
+                        description: foundInspection.description || '',
+                        inspectorName: foundInspection.inspectorName || '',
+                        location: foundInspection.location || '',
+                        notes: foundInspection.notes || '',
+                        scheduledDate: foundInspection.scheduledDate ?
+                            new Date(foundInspection.scheduledDate).toISOString().slice(0, 16) : ''
+                    });
+
+                    setGeneralNotes(foundInspection.notes || '');
+                    setOverallScore(foundInspection.overallScore || 0);
+
+                    // Charger les items du template
+                    if (foundInspection.inspectionTemplateId) {
+                        loadTemplateItems(foundInspection.inspectionTemplateId);
+                    }
+
+                    // Charger les résultats existants
+                    if (foundInspection.results && foundInspection.results.length > 0) {
+                        const existingResults = foundInspection.results.map((result: any) => ({
+                            inspectionItemId: result.inspectionItemId,
+                            resultValue: result.resultValue,
+                            isCompliant: result.isCompliant,
+                            notes: result.notes || '',
+                            imageUrl: result.imageUrl
+                        }));
+                        setResults(existingResults);
+                    }
+                }
             } catch (err) {
                 console.error('Erreur lors du chargement:', err);
             }
         };
         loadInspection();
-    }, [params.id, fetchInspections]);
-
-    // Trouver l'inspection et charger les données
-    useEffect(() => {
-        if (inspections.length > 0) {
-            const foundInspection = inspections.find((insp: any) => insp.id === params.id);
-            setInspection(foundInspection);
-            
-            if (foundInspection) {
-                // Pré-remplir le formulaire
-                setFormData({
-                    title: foundInspection.title || '',
-                    description: foundInspection.description || '',
-                    inspectorName: foundInspection.inspectorName || '',
-                    location: foundInspection.location || '',
-                    notes: foundInspection.notes || '',
-                    scheduledDate: foundInspection.scheduledDate ? 
-                        new Date(foundInspection.scheduledDate).toISOString().slice(0, 16) : ''
-                });
-                
-                setGeneralNotes(foundInspection.notes || '');
-                setOverallScore(foundInspection.overallScore || 0);
-                
-                // Charger les items du template
-                if (foundInspection.inspectionTemplateId) {
-                    loadTemplateItems(foundInspection.inspectionTemplateId);
-                }
-                
-                // Charger les résultats existants
-                if (foundInspection.results && foundInspection.results.length > 0) {
-                    const existingResults = foundInspection.results.map((result: any) => ({
-                        inspectionItemId: result.inspectionItemId,
-                        resultValue: result.resultValue,
-                        isCompliant: result.isCompliant,
-                        notes: result.notes || '',
-                        imageUrl: result.imageUrl
-                    }));
-                    setResults(existingResults);
-                }
-            }
-        }
-    }, [inspections, params.id]);
+    }, [params.id, fetchInspectionById]);
 
     const loadTemplateItems = async (templateId: string) => {
         try {
             const items = await getTemplateItems(templateId);
             setTemplateItems(items);
-            
+
             // Initialiser les résultats pour les nouveaux items
             const newResults = items.map((item: any) => {
                 const existingResult = results.find(r => r.inspectionItemId === item.id);
@@ -132,12 +125,12 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
     };
 
     const handleResultChange = (itemId: string, field: keyof InspectionResultExecution, value: any) => {
-        setResults(prev => prev.map(result => 
-            result.inspectionItemId === itemId 
+        setResults(prev => prev.map(result =>
+            result.inspectionItemId === itemId
                 ? { ...result, [field]: value }
                 : result
         ));
-        
+
         // Recalculer le score si le statut de conformité change
         if (field === 'isCompliant') {
             calculateScore();
@@ -146,13 +139,13 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
 
     const calculateScore = () => {
         if (results.length === 0) return;
-        
+
         const completedResults = results.filter(r => r.resultValue || r.notes);
         if (completedResults.length === 0) {
             setOverallScore(0);
             return;
         }
-        
+
         const compliantCount = completedResults.filter(r => r.isCompliant).length;
         const score = Math.round((compliantCount / completedResults.length) * 100);
         setOverallScore(score);
@@ -163,7 +156,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
             // TODO: Implémenter l'upload d'image via API
             const imageUrl = URL.createObjectURL(file);
             setPhotoUploads(prev => ({ ...prev, [itemId]: imageUrl }));
-            
+
             handleResultChange(itemId, 'imageUrl', imageUrl);
         } catch (err) {
             console.error('Erreur lors de l\'upload:', err);
@@ -173,20 +166,20 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
     const handleSave = async () => {
         try {
             setSaving(true);
-            
+
             // Mettre à jour les données de base
             await updateInspection(params.id, formData);
-            
+
             // Soumettre les résultats modifiés
             if (results.length > 0) {
                 await submitInspectionResults(params.id, {
                     results: results
                 });
             }
-            
+
             // Rediriger vers la page de détails
             router.push(`/inspections/${params.id}`);
-            
+
         } catch (err) {
             console.error('Erreur lors de la sauvegarde:', err);
         } finally {
@@ -201,8 +194,8 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
     };
 
     const getComplianceIcon = (isCompliant: boolean) => {
-        return isCompliant ? 
-            <CheckCircle className="text-green-600" size={16} /> : 
+        return isCompliant ?
+            <CheckCircle className="text-green-600" size={16} /> :
             <AlertTriangle className="text-red-600" size={16} />;
     };
 
@@ -225,8 +218,8 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
                     <AlertTriangle className="text-red-600" size={20} />
                     <span className="text-red-700">{error}</span>
-                    <button 
-                        onClick={() => fetchInspections()}
+                    <button
+                        onClick={() => fetchInspectionById(params.id)}
                         className="ml-auto text-red-600 hover:text-red-800"
                     >
                         Réessayer
@@ -242,7 +235,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                 <div className="text-center py-12">
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Inspection non trouvée</h2>
                     <p className="text-gray-500 mb-4">L'inspection demandée n'existe pas ou a été supprimée.</p>
-                    <button 
+                    <button
                         onClick={handleBack}
                         className="px-4 py-2 bg-[#008751] text-white rounded hover:bg-[#007043]"
                     >
@@ -266,7 +259,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                 </div>
 
                 <div className="flex gap-2">
-                    <button 
+                    <button
                         onClick={handleSave}
                         disabled={saving}
                         className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
@@ -290,21 +283,19 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                 <div className="flex border-b border-gray-200 mb-6">
                     <button
                         onClick={() => setActiveTab('details')}
-                        className={`px-4 py-2 font-medium text-sm ${
-                            activeTab === 'details' 
-                                ? 'text-[#008751] border-b-2 border-[#008751]' 
-                                : 'text-gray-500 hover:text-gray-700'
-                        }`}
+                        className={`px-4 py-2 font-medium text-sm ${activeTab === 'details'
+                            ? 'text-[#008751] border-b-2 border-[#008751]'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
                     >
                         Informations Générales
                     </button>
                     <button
                         onClick={() => setActiveTab('results')}
-                        className={`px-4 py-2 font-medium text-sm ${
-                            activeTab === 'results' 
-                                ? 'text-[#008751] border-b-2 border-[#008751]' 
-                                : 'text-gray-500 hover:text-gray-700'
-                        }`}
+                        className={`px-4 py-2 font-medium text-sm ${activeTab === 'results'
+                            ? 'text-[#008751] border-b-2 border-[#008751]'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
                     >
                         Résultats & Évaluation
                     </button>
@@ -325,7 +316,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-                                            <input 
+                                            <input
                                                 type="text"
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                                 value={formData.title}
@@ -333,10 +324,10 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                 placeholder="Titre de l'inspection"
                                             />
                                         </div>
-                                        
+
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Inspecteur</label>
-                                            <input 
+                                            <input
                                                 type="text"
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                                 value={formData.inspectorName}
@@ -348,7 +339,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                        <textarea 
+                                        <textarea
                                             rows={3}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                             value={formData.description}
@@ -360,7 +351,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
-                                            <input 
+                                            <input
                                                 type="text"
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                                 value={formData.location}
@@ -368,10 +359,10 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                 placeholder="Lieu de l'inspection"
                                             />
                                         </div>
-                                        
+
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Date Programmée</label>
-                                            <input 
+                                            <input
                                                 type="datetime-local"
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                                 value={formData.scheduledDate}
@@ -382,7 +373,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Notes Générales</label>
-                                        <textarea 
+                                        <textarea
                                             rows={4}
                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                             value={generalNotes}
@@ -422,7 +413,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                     notes: '',
                                                     imageUrl: undefined
                                                 };
-                                                
+
                                                 return (
                                                     <div key={item.id} className="border border-gray-200 rounded-lg p-4">
                                                         <div className="flex items-start justify-between mb-3">
@@ -462,7 +453,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                         {/* Valeur mesurée */}
                                                         <div className="mb-3">
                                                             <label className="block text-sm font-medium text-gray-700 mb-1">Valeur</label>
-                                                            <input 
+                                                            <input
                                                                 type="text"
                                                                 className="w-full p-2 border border-gray-300 rounded text-sm"
                                                                 value={result.resultValue}
@@ -477,22 +468,20 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                             <div className="flex gap-2">
                                                                 <button
                                                                     onClick={() => handleResultChange(item.id, 'isCompliant', true)}
-                                                                    className={`px-3 py-1 text-xs rounded border ${
-                                                                        result.isCompliant
-                                                                            ? 'bg-green-100 border-green-300 text-green-700'
-                                                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                                                                    }`}
+                                                                    className={`px-3 py-1 text-xs rounded border ${result.isCompliant
+                                                                        ? 'bg-green-100 border-green-300 text-green-700'
+                                                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                                        }`}
                                                                 >
                                                                     <CheckCircle size={14} className="inline mr-1" />
                                                                     Conforme
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleResultChange(item.id, 'isCompliant', false)}
-                                                                    className={`px-3 py-1 text-xs rounded border ${
-                                                                        !result.isCompliant
-                                                                            ? 'bg-red-100 border-red-300 text-red-700'
-                                                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                                                                    }`}
+                                                                    className={`px-3 py-1 text-xs rounded border ${!result.isCompliant
+                                                                        ? 'bg-red-100 border-red-300 text-red-700'
+                                                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                                        }`}
                                                                 >
                                                                     <AlertTriangle size={14} className="inline mr-1" />
                                                                     Non-Conforme
@@ -503,7 +492,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                         {/* Notes */}
                                                         <div className="mb-3">
                                                             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                                            <textarea 
+                                                            <textarea
                                                                 rows={2}
                                                                 className="w-full p-2 border border-gray-300 rounded text-sm"
                                                                 value={result.notes}
@@ -517,8 +506,8 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                                             <div className="mt-3">
                                                                 <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
                                                                 <div className="relative inline-block">
-                                                                    <img 
-                                                                        src={result.imageUrl || photoUploads[item.id]} 
+                                                                    <img
+                                                                        src={result.imageUrl || photoUploads[item.id]}
                                                                         alt="Photo de l'élément"
                                                                         className="w-32 h-32 object-cover rounded border"
                                                                     />
@@ -631,14 +620,14 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                 <h3 className="font-bold text-gray-900">Actions</h3>
                             </div>
                             <div className="p-4 space-y-2">
-                                <button 
+                                <button
                                     onClick={handleSave}
                                     disabled={saving}
                                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#008751] hover:bg-[#007043] text-white rounded text-sm font-medium disabled:opacity-50"
                                 >
                                     <Save size={16} /> Sauvegarder
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleBack}
                                     className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm font-medium"
                                 >

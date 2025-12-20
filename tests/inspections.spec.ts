@@ -271,7 +271,8 @@ test.describe('Module Inspections - Tests E2E', () => {
       await page.waitForURL('**/inspections/**/edit');
 
       // Modifier le titre
-      await page.fill('input[name="title"], input[placeholder*="titre"]', 'Inspection Modifiée E2E');
+      await page.waitForSelector('input[name="title"]', { state: 'visible' });
+      await page.fill('input[name="title"]', 'Inspection Modifiée E2E');
 
       // Changer l'inspecteur
       await page.fill('input[name="inspectorName"], input[placeholder*="inspecteur"]', 'Marie Martin');
@@ -293,9 +294,11 @@ test.describe('Module Inspections - Tests E2E', () => {
     test('Changement de statut (démarrer, compléter, annuler)', async () => {
       await page.goto('/inspections');
 
-      // Sélectionner une inspection
-      const inspectionLink = page.locator('a[href*="/inspections/"]').first();
-      await inspectionLink.click();
+      // Sélectionner une inspection (en mode liste)
+      // On utilise la même logique que pour la modification pour être sûr de cliquer sur une ligne
+      const row = page.locator('tbody tr').first();
+      await expect(row).toBeVisible();
+      await row.click();
       await page.waitForURL('**/inspections/**');
 
       // Test démarrage inspection
@@ -416,7 +419,8 @@ test.describe('Module Inspections - Tests E2E', () => {
 
       // Vérifier la navigation mobile
       // Vérifier la navigation mobile (sidebar ou menu)
-      const navMenu = page.locator('.sidebar, .mobile-nav, nav, [role="navigation"]').first();
+      // La sidebar a maintenant la classe .sidebar
+      const navMenu = page.locator('.sidebar').first();
       await expect(navMenu).toBeVisible();
 
       // Vérifier que les éléments s'affichent correctement en mobile
@@ -468,7 +472,8 @@ test.describe('Module Inspections - Tests E2E', () => {
       await page.goto('/inspections/create');
 
       // Vérifier que la liste des véhicules se charge
-      const vehicleSelect = page.locator('select').first();
+      // Vérifier que la liste des véhicules se charge
+      const vehicleSelect = page.locator('select[name="vehicleId"]');
       await expect(vehicleSelect).toBeVisible();
 
       // Vérifier que les options contiennent des véhicules
@@ -477,9 +482,13 @@ test.describe('Module Inspections - Tests E2E', () => {
 
       // Vérifier que les options contiennent des véhicules
       const options = page.locator('select[name="vehicleId"] option');
-      const optionCount = await options.count();
-      expect(optionCount).toBeGreaterThan(1); // Au moins une option vide + des véhicules
+      // Attendre que les véhicules soient chargés (option > 1 car placeholder)
+      await expect(async () => {
+        const count = await options.count();
+        expect(count).toBeGreaterThan(1);
+      }).toPass({ timeout: 15000 });
 
+      // Sélectionner un véhicule
       // Sélectionner un véhicule
       await vehicleSelect.selectOption({ index: 1 });
 

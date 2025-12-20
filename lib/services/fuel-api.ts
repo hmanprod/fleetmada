@@ -13,7 +13,7 @@ const API_BASE = '/api/fuel/entries'
 // Fonction token d'authentification
 const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token')
+    return localStorage.getItem('authToken')
   }
   return null
 }
@@ -30,19 +30,19 @@ const getAuthHeaders = (): HeadersInit => {
 // Gestion des erreurs API
 const handleApiError = (error: any): never => {
   console.error('Fuel API Error:', error)
-  
+
   if (error.response?.status === 401) {
     throw new Error('Token d\'authentification invalide')
   }
-  
+
   if (error.response?.status === 403) {
     throw new Error('Accès refusé')
   }
-  
+
   if (error.response?.status === 404) {
     throw new Error('Ressource non trouvée')
   }
-  
+
   const message = error.response?.data?.error || error.message || 'Erreur inconnue'
   throw new Error(message)
 }
@@ -55,7 +55,7 @@ export class FuelApiService {
   static async getEntries(filters: FuelEntryFilters = {}): Promise<PaginatedFuelEntries> {
     try {
       const params = new URLSearchParams()
-      
+
       // Ajouter les filtres à la query string
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -239,7 +239,7 @@ export class FuelApiService {
   static async exportData(filters: FuelEntryFilters = {}): Promise<Blob> {
     try {
       const params = new URLSearchParams()
-      
+
       // Ajouter les filtres à la query string
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {

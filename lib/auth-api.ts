@@ -13,7 +13,7 @@ class AuthAPI {
 
   getToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('fleetmada_token');
+      return localStorage.getItem('authToken');
     }
     return null;
   }

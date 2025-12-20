@@ -24,7 +24,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
             alert('Veuillez entrer une quantité à ajuster.');
             return;
         }
-        
+
         try {
             await adjustStock(adjustmentData);
             setShowStockAdjustment(false);
@@ -50,7 +50,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
 
     const getStockStatus = () => {
         if (!part) return null;
-        
+
         if (isOutOfStock) {
             return { status: 'Rupture de stock', color: 'text-red-600', bg: 'bg-red-50', icon: AlertTriangle };
         } else if (isLowStock) {
@@ -80,7 +80,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
 
                 <div className="flex gap-2">
                     <button className="p-2 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50"><MoreHorizontal size={20} /></button>
-                    <button onClick={handleEdit} className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
+                    <button onClick={handleEdit} data-testid="edit-part-button" className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
                         <Edit size={16} /> Edit
                     </button>
                 </div>
@@ -128,6 +128,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                     <h2 className="text-lg font-bold text-gray-900">État du stock</h2>
                                     <button
                                         onClick={() => setShowStockAdjustment(true)}
+                                        data-testid="adjust-stock-button"
                                         className="text-[#008751] text-sm font-medium hover:underline"
                                     >
                                         + Ajuster le stock
@@ -236,19 +237,18 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                             {stockHistory.map((movement) => (
                                                 <div key={movement.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                                            movement.type === 'in' ? 'bg-green-100 text-green-600' :
-                                                            movement.type === 'out' ? 'bg-red-100 text-red-600' :
-                                                            'bg-blue-100 text-blue-600'
-                                                        }`}>
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${movement.type === 'in' ? 'bg-green-100 text-green-600' :
+                                                                movement.type === 'out' ? 'bg-red-100 text-red-600' :
+                                                                    'bg-blue-100 text-blue-600'
+                                                            }`}>
                                                             {movement.type === 'in' ? <TrendingUp size={16} /> :
-                                                             movement.type === 'out' ? <TrendingDown size={16} /> :
-                                                             <RefreshCw size={16} />}
+                                                                movement.type === 'out' ? <TrendingDown size={16} /> :
+                                                                    <RefreshCw size={16} />}
                                                         </div>
                                                         <div>
                                                             <div className="font-medium text-gray-900">
                                                                 {movement.type === 'in' ? 'Entrée' :
-                                                                 movement.type === 'out' ? 'Sortie' : 'Ajustement'}
+                                                                    movement.type === 'out' ? 'Sortie' : 'Ajustement'}
                                                             </div>
                                                             <div className="text-sm text-gray-500">
                                                                 {formatDate(movement.createdAt)}
@@ -287,6 +287,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                             value={adjustmentData.type}
                                             onChange={(e) => setAdjustmentData(prev => ({ ...prev, type: e.target.value as 'add' | 'remove' | 'set' }))}
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                            data-testid="adjustment-type"
                                         >
                                             <option value="add">Ajouter</option>
                                             <option value="remove">Retirer</option>
@@ -301,6 +302,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                             onChange={(e) => setAdjustmentData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                             placeholder="0"
+                                            data-testid="adjustment-quantity"
                                         />
                                     </div>
                                     <div>
@@ -311,6 +313,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                             rows={3}
                                             placeholder="Ex: Commande reçue, casse, etc."
+                                            data-testid="adjustment-reason"
                                         />
                                     </div>
                                 </div>
@@ -323,6 +326,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                     </button>
                                     <button
                                         onClick={handleStockAdjustment}
+                                        data-testid="confirm-adjustment-button"
                                         className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded"
                                     >
                                         Ajuster
