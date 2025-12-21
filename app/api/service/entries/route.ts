@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
       vendor,
       notes,
       priority,
-      assignedTo,
+      assignedToContactId,
       isWorkOrder = false,
       tasks = [],
       parts: serviceParts = []
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
           vendor,
           notes,
           priority,
-          assignedTo,
+          assignedToContactId,
           isWorkOrder,
           tasks: {
             create: tasks.map((taskId: string) => ({

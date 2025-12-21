@@ -10,13 +10,16 @@ export default function VendorDetailPage({ params }: { params: { id: string } })
 
   // Mock vendor data - in real app, this would come from API/database
   const vendor: Vendor = {
-    id: parseInt(params.id),
+    id: params.id,
     name: 'Chevron',
     address: '2751 N Monroe St, Tallahassee, FL',
     phone: '850-385-2974',
     website: 'https://www.chevron.com',
     contactName: 'Jamie McDonald',
-    labels: ['Sample', 'Fuel']
+    labels: ['Sample', 'Fuel'],
+    classification: ['Fuel Station'],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   const handleBack = () => {

@@ -226,6 +226,12 @@ export async function GET(request: NextRequest) {
                 make: true,
                 model: true
               }
+            },
+            vendor: {
+              select: {
+                id: true,
+                name: true
+              }
             }
           },
           orderBy: {
@@ -296,7 +302,7 @@ export async function GET(request: NextRequest) {
       const recentEntriesWithDetails = recentEntries.map(entry => ({
         id: entry.id,
         date: entry.date,
-        vendor: entry.vendor,
+        vendor: entry.vendor?.name || null,
         volume: entry.volume,
         cost: entry.cost,
         mpg: entry.mpg,

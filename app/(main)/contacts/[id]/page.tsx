@@ -11,15 +11,17 @@ export default function ContactDetailPage({ params }: { params: { id: string } }
 
   // Mock contact data - in real app, this would come from API/database
   const contact: Contact = {
-    id: parseInt(params.id),
+    id: params.id,
     firstName: 'John',
     lastName: 'Doe',
     email: 'john.doe@example.com',
-    status: 'No Access',
+    status: 'ACTIVE',
     classifications: ['Employee', 'Operator'],
     group: 'Atlanta',
     phone: '(404) 555-0123',
-    jobTitle: 'Driver'
+    jobTitle: 'Driver',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   const handleBack = () => {

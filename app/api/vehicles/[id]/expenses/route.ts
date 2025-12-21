@@ -238,7 +238,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         vehicleId: expense.vehicleId,
         date: expense.date,
         type: expense.type,
-        vendor: expense.vendor,
+        vendorId: expense.vendorId,
+        vendorName: expense.vendorName,
         source: expense.source,
         amount: expense.amount,
         currency: expense.currency,
@@ -444,8 +445,17 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       // Création de la nouvelle dépense
       const newExpense = await prisma.expenseEntry.create({
         data: {
-          ...expenseData,
-          date: new Date(expenseData.date)
+          vehicleId: expenseData.vehicleId,
+          date: new Date(expenseData.date),
+          type: expenseData.type,
+          vendorName: expenseData.vendor,
+          source: expenseData.source,
+          amount: expenseData.amount,
+          currency: expenseData.currency,
+          notes: expenseData.notes,
+          status: expenseData.status,
+          docs: expenseData.docs,
+          photos: expenseData.photos
         }
       })
 
@@ -464,7 +474,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             vehicleId: newExpense.vehicleId,
             date: newExpense.date,
             type: newExpense.type,
-            vendor: newExpense.vendor,
+            vendorId: newExpense.vendorId,
+            vendorName: newExpense.vendorName,
             source: newExpense.source,
             amount: newExpense.amount,
             currency: newExpense.currency,

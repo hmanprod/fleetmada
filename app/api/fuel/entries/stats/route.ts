@@ -158,8 +158,8 @@ export async function GET(request: NextRequest) {
       
       // Coût par vendor
       prisma.fuelEntry.groupBy({
-        by: ['vendor'],
-        where: { ...where, vendor: { not: null } },
+        by: ['vendorId'],
+        where: { ...where, vendorId: { not: null } },
         _sum: { cost: true, volume: true },
         _count: { id: true }
       }),
@@ -189,14 +189,24 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Récupération des informations des vendors pour le coût par vendor
+    const vendorIds = costByVendor.map(item => item.vendorId).filter(Boolean) as string[]
+    const vendors = await prisma.vendor.findMany({
+      where: { id: { in: vendorIds } },
+      select: { id: true, name: true }
+    })
+
     // Formatage des coûts par vendor
     const formattedCostByVendor = costByVendor
-      .filter(item => item.vendor)
-      .map(item => ({
-        vendor: item.vendor!,
-        cost: (item._sum as any).cost || 0,
-        volume: (item._sum as any).volume || 0
-      }))
+      .filter(item => item.vendorId)
+      .map(item => {
+        const vendor = vendors.find(v => v.id === item.vendorId)
+        return {
+          vendor: vendor?.name || 'Fournisseur inconnu',
+          cost: (item._sum as any).cost || 0,
+          volume: (item._sum as any).volume || 0
+        }
+      })
       .sort((a, b) => b.cost - a.cost)
 
     // Formatage des tendances mensuelles

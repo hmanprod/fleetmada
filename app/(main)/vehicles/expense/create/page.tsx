@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Upload, Calendar } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Calendar, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { MOCK_VEHICLES, MOCK_EXPENSE_ENTRIES, ExpenseEntry } from '../../types';
 

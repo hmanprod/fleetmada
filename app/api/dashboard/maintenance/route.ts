@@ -197,28 +197,32 @@ export async function GET(request: NextRequest) {
       ])
 
       // Transformation des données de rappels à venir
-      const upcomingDetails = upcomingReminderDetails.map(reminder => ({
-        id: reminder.id,
-        task: reminder.task,
-        vehicleName: reminder.vehicle.name,
-        vehicleMake: reminder.vehicle.make,
-        vehicleModel: reminder.vehicle.model,
-        nextDue: reminder.nextDue,
-        daysUntilDue: Math.ceil((reminder.nextDue.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
-        compliance: reminder.compliance
-      }))
+      const upcomingDetails = upcomingReminderDetails
+        .filter(reminder => reminder.nextDue !== null)
+        .map(reminder => ({
+          id: reminder.id,
+          task: reminder.task,
+          vehicleName: reminder.vehicle.name,
+          vehicleMake: reminder.vehicle.make,
+          vehicleModel: reminder.vehicle.model,
+          nextDue: reminder.nextDue,
+          daysUntilDue: Math.ceil((reminder.nextDue!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+          compliance: reminder.compliance
+        }))
 
       // Transformation des données de rappels en retard
-      const overdueDetails = overdueReminderDetails.map(reminder => ({
-        id: reminder.id,
-        task: reminder.task,
-        vehicleName: reminder.vehicle.name,
-        vehicleMake: reminder.vehicle.make,
-        vehicleModel: reminder.vehicle.model,
-        nextDue: reminder.nextDue,
-        daysOverdue: Math.ceil((new Date().getTime() - reminder.nextDue.getTime()) / (1000 * 60 * 60 * 24)),
-        compliance: reminder.compliance
-      }))
+      const overdueDetails = overdueReminderDetails
+        .filter(reminder => reminder.nextDue !== null)
+        .map(reminder => ({
+          id: reminder.id,
+          task: reminder.task,
+          vehicleName: reminder.vehicle.name,
+          vehicleMake: reminder.vehicle.make,
+          vehicleModel: reminder.vehicle.model,
+          nextDue: reminder.nextDue,
+          daysOverdue: Math.ceil((new Date().getTime() - reminder.nextDue!.getTime()) / (1000 * 60 * 60 * 24)),
+          compliance: reminder.compliance
+        }))
 
       // Calcul du taux de conformité
       const complianceRate = totalReminders > 0 ? 

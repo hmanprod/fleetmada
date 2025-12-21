@@ -97,7 +97,7 @@ export async function GET(
       // Récupérer les transactions du vendor
       const [serviceEntries, fuelEntries, expenseEntries] = await Promise.all([
         prisma.serviceEntry.findMany({
-          where: { vendor: vendor.name },
+          where: { vendorId: vendor.id },
           include: {
             vehicle: {
               select: {
@@ -112,7 +112,7 @@ export async function GET(
           take: 10
         }),
         prisma.fuelEntry.findMany({
-          where: { vendor: vendor.name },
+          where: { vendorId: vendor.id },
           include: {
             vehicle: {
               select: {
@@ -127,7 +127,7 @@ export async function GET(
           take: 10
         }),
         prisma.expenseEntry.findMany({
-          where: { vendor: vendor.name },
+          where: { vendorId: vendor.id },
           include: {
             vehicle: {
               select: {
@@ -361,13 +361,13 @@ export async function DELETE(
       // Vérifier les références dans les tables de transaction
       const [serviceCount, fuelCount, expenseCount] = await Promise.all([
         prisma.serviceEntry.count({
-          where: { vendor: existingVendor.name }
+          where: { vendorId: existingVendor.id }
         }),
         prisma.fuelEntry.count({
-          where: { vendor: existingVendor.name }
+          where: { vendorId: existingVendor.id }
         }),
         prisma.expenseEntry.count({
-          where: { vendor: existingVendor.name }
+          where: { vendorId: existingVendor.id }
         })
       ])
 
