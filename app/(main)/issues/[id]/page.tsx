@@ -9,25 +9,25 @@ import type { IssueCommentData } from '@/lib/services/issues-api';
 
 export default function IssueDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    
+
     // Hooks pour les données
-    const { 
-        issue, 
-        loading, 
-        error, 
-        fetchIssue, 
-        updateIssueStatus, 
-        clearError 
+    const {
+        issue,
+        loading,
+        error,
+        fetchIssue,
+        updateIssueStatus,
+        clearError
     } = useIssueDetails(params.id);
-    
-    const { 
-        comments, 
-        loading: commentsLoading, 
-        fetchComments, 
-        addComment, 
-        clearError: clearCommentsError 
+
+    const {
+        comments,
+        loading: commentsLoading,
+        fetchComments,
+        addComment,
+        clearError: clearCommentsError
     } = useIssueComments(params.id);
-    
+
     // État pour l'ajout de commentaires
     const [newComment, setNewComment] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -48,10 +48,10 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
     const handleEdit = () => {
         router.push(`/issues/${params.id}/edit`);
     };
-    
+
     const handleResolve = async () => {
         if (!issue) return;
-        
+
         try {
             setResolving(true);
             await updateIssueStatus(params.id, 'RESOLVED');
@@ -61,17 +61,17 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             setResolving(false);
         }
     };
-    
+
     const handleAddComment = async () => {
         if (!newComment.trim() || !issue) return;
-        
+
         try {
             setSubmittingComment(true);
             const commentData: IssueCommentData = {
                 author: 'Utilisateur actuel', // TODO: Récupérer depuis le contexte d'auth
                 content: newComment.trim()
             };
-            
+
             await addComment(params.id, commentData);
             setNewComment('');
         } catch (err) {
@@ -80,24 +80,24 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             setSubmittingComment(false);
         }
     };
-    
+
     const formatDate = (date: Date | string) => {
         const d = new Date(date);
-        return d.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
+        return d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
         });
     };
-    
+
     const formatDateRelative = (date: Date | string) => {
         const d = new Date(date);
         const now = new Date();
         const diffMs = now.getTime() - d.getTime();
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays === 0) return 'Today';
         if (diffDays === 1) return 'Yesterday';
         if (diffDays < 7) return `${diffDays} days ago`;
@@ -105,7 +105,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
         return `${Math.floor(diffDays / 365)} years ago`;
     };
-    
+
     const getPriorityColor = (priority: string) => {
         switch (priority) {
             case 'CRITICAL': return 'text-red-600';
@@ -115,7 +115,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             default: return 'text-gray-600';
         }
     };
-    
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'OPEN': return 'bg-yellow-400 text-yellow-900';
@@ -125,7 +125,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             default: return 'bg-gray-200 text-gray-800';
         }
     };
-    
+
     // État de chargement
     if (loading) {
         return (
@@ -139,7 +139,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             </div>
         );
     }
-    
+
     // État d'erreur
     if (error) {
         return (
@@ -147,7 +147,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
                     <AlertCircle className="text-red-600" size={20} />
                     <span className="text-red-700">{error}</span>
-                    <button 
+                    <button
                         onClick={() => {
                             clearError();
                             clearCommentsError();
@@ -162,7 +162,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             </div>
         );
     }
-    
+
     // Issue non trouvée
     if (!issue) {
         return (
@@ -170,7 +170,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                 <div className="text-center py-12">
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Problème non trouvé</h2>
                     <p className="text-gray-500 mb-4">Le problème demandé n'existe pas ou a été supprimé.</p>
-                    <button 
+                    <button
                         onClick={handleBack}
                         className="px-4 py-2 bg-[#008751] text-white rounded hover:bg-[#007043]"
                     >
@@ -208,7 +208,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     <button onClick={handleEdit} className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
                         <Edit size={16} /> Edit
                     </button>
-                    <button 
+                    <button
                         onClick={handleResolve}
                         disabled={resolving || issue.status === 'RESOLVED' || issue.status === 'CLOSED'}
                         className="px-3 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm"
@@ -238,7 +238,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
                                     <div className="text-sm text-gray-500">Status</div>
-                                    <div><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(issue.status)}`}>{issue.status}</span></div>
+                                    <div><span data-testid="issue-status" className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(issue.status)}`}>{issue.status}</span></div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
@@ -249,13 +249,13 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
                                     <div className="text-sm text-gray-500">Priority</div>
                                     <div className="flex items-center gap-2">
-                                        <div className={`font-bold text-sm ${getPriorityColor(issue.priority)}`}>! {issue.priority}</div>
+                                        <div data-testid="issue-priority" className={`font-bold text-sm ${getPriorityColor(issue.priority)}`}>! {issue.priority}</div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
                                     <div className="text-sm text-gray-500">Vehicle</div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2" data-testid="issue-vehicle">
                                         {issue.vehicle ? (
                                             <>
                                                 <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
@@ -357,9 +357,9 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                     <p>Aucun commentaire</p>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
+                                <div className="space-y-4" data-testid="comments-list">
                                     {comments.map(comment => (
-                                        <div key={comment.id} className="flex gap-3">
+                                        <div key={comment.id} className="flex gap-3" data-testid="comment-item">
                                             <div className="w-8 h-8 rounded-full bg-purple-400 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">
                                                 {comment.author.charAt(0).toUpperCase()}
                                             </div>
@@ -368,7 +368,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                                     <span className="font-bold text-[#008751] text-sm">{comment.author}</span>
                                                     <span className="text-xs text-gray-500">{formatDateRelative(comment.createdAt)}</span>
                                                 </div>
-                                                <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
+                                                <p className="text-sm text-gray-700 mt-1" data-testid="comment-content">{comment.content}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -376,19 +376,21 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                             )}
                         </div>
 
-                                <div className="p-4 border-t border-gray-200 flex gap-3">
+                        <div className="p-4 border-t border-gray-200 flex gap-3">
                             <div className="w-8 h-8 rounded-full bg-purple-400 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">U</div>
                             <div className="flex-1 flex gap-2">
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     placeholder="Add a Comment"
+                                    data-testid="comment-input"
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                                     className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751]"
                                 />
-                                <button 
+                                <button
                                     onClick={handleAddComment}
+                                    data-testid="send-comment-button"
                                     disabled={!newComment.trim() || submittingComment}
                                     className="px-3 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white rounded text-sm flex items-center gap-1"
                                 >

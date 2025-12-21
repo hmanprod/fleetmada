@@ -16,6 +16,7 @@ interface MetricCardProps {
   color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'gray';
   loading?: boolean;
   className?: string;
+  'data-testid'?: string;
 }
 
 const colorClasses = {
@@ -71,7 +72,8 @@ export default function MetricCard({
   trend,
   color = 'blue',
   loading = false,
-  className = ''
+  className = '',
+  'data-testid': dataTestId
 }: MetricCardProps) {
   const colors = colorClasses[color];
 
@@ -92,8 +94,8 @@ export default function MetricCard({
   const getTrendIcon = () => {
     if (!trend) return null;
     if (trend.isPositive === undefined) return <Minus size={16} className="text-gray-500" />;
-    return trend.isPositive ? 
-      <TrendingUp size={16} className="text-green-600" /> : 
+    return trend.isPositive ?
+      <TrendingUp size={16} className="text-green-600" /> :
       <TrendingDown size={16} className="text-red-600" />;
   };
 
@@ -118,25 +120,28 @@ export default function MetricCard({
   }
 
   return (
-    <div className={`${colors.bg} ${colors.border} border rounded-lg p-6 hover:shadow-md transition-shadow ${className}`}>
+    <div
+      data-testid={dataTestId}
+      className={`${colors.bg} ${colors.border} border rounded-lg p-6 hover:shadow-md transition-shadow ${className}`}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className={`text-sm font-medium ${colors.text}`}>{title}</h3>
         {Icon && <Icon size={24} className={colors.icon} />}
       </div>
-      
+
       <div className="mb-2">
         <span className={`text-3xl font-bold ${colors.value}`}>
           {formatValue(value)}
         </span>
       </div>
-      
+
       <div className="flex items-center justify-between">
         {subtitle && (
           <span className={`text-sm ${colors.text} opacity-75`}>
             {subtitle}
           </span>
         )}
-        
+
         {trend && (
           <div className="flex items-center gap-1">
             {getTrendIcon()}

@@ -93,19 +93,18 @@ export default function Dashboard() {
                 Vue d'ensemble de votre flotte en temps réel
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {/* Indicateur de statut */}
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  fleetOverview.isHealthy ? 'bg-green-500' : 
-                  fleetOverview.hasIssues ? 'bg-yellow-500' : 'bg-red-500'
-                }`}></div>
+                <div className={`w-3 h-3 rounded-full ${fleetOverview.isHealthy ? 'bg-green-500' :
+                    fleetOverview.hasIssues ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}></div>
                 <span className="text-sm text-gray-600">
                   {fleetOverview.isHealthy ? 'Système opérationnel' : 'Attention requise'}
                 </span>
               </div>
-              
+
               {/* Bouton refresh */}
               <button
                 onClick={handleRefresh}
@@ -115,7 +114,7 @@ export default function Dashboard() {
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                 Actualiser
               </button>
-              
+
               {/* Notifications */}
               <button className="relative p-2 text-gray-600 hover:text-gray-900">
                 <Bell className="w-6 h-6" />
@@ -125,7 +124,7 @@ export default function Dashboard() {
                   </span>
                 )}
               </button>
-              
+
               {/* Settings */}
               <button className="p-2 text-gray-600 hover:text-gray-900">
                 <Settings className="w-6 h-6" />
@@ -173,11 +172,11 @@ export default function Dashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.id
+                  data-testid={`dashboard-${tab.id}-tab`}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
                       ? 'border-[#008751] text-[#008751]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
@@ -207,7 +206,7 @@ export default function Dashboard() {
                   isPositive: fleetOverview.healthScore >= 80
                 }}
               />
-              
+
               <MetricCard
                 title="Coûts (30j)"
                 value={`${(costAnalysis.data?.summary.totalCosts || 0).toLocaleString()}€`}
@@ -216,7 +215,7 @@ export default function Dashboard() {
                 loading={costAnalysis.loading}
                 subtitle="Carburant + Entretien"
               />
-              
+
               <MetricCard
                 title="Maintenance"
                 value={maintenanceStatus.data?.summary.overdueReminders || 0}
@@ -225,7 +224,7 @@ export default function Dashboard() {
                 loading={maintenanceStatus.loading}
                 subtitle="En retard"
               />
-              
+
               <MetricCard
                 title="Taux d'Utilisation"
                 value={`${fleetOverview.data?.utilizationRate || 0}%`}
@@ -245,7 +244,7 @@ export default function Dashboard() {
               <div className="lg:col-span-1">
                 <AlertSummary alerts={systemAlerts} />
               </div>
-              
+
               {/* Graphique des coûts */}
               <div className="lg:col-span-2">
                 {costAnalysis.data ? (

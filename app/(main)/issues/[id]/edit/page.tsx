@@ -10,22 +10,22 @@ import type { IssueUpdateData } from '@/lib/services/issues-api';
 
 export default function IssueEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    
+
     // Hooks pour les données
-    const { 
-        issue, 
-        loading, 
-        error, 
-        fetchIssue, 
-        updateIssue, 
-        clearError 
+    const {
+        issue,
+        loading,
+        error,
+        fetchIssue,
+        updateIssue,
+        clearError
     } = useIssueDetails(params.id);
-    
+
     const { updateIssue: updateIssueInList } = useIssues();
-    
+
     // Récupération des véhicules via la vraie API
     const { vehicles, loading: vehiclesLoading, error: vehiclesError } = useVehicles();
-    
+
     // États du formulaire
     const [formData, setFormData] = useState<IssueUpdateData>({
         summary: '',
@@ -33,19 +33,19 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
         labels: [],
         assignedTo: ''
     });
-    
+
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState(false);
-    
+
     // Données mockées temporaires pour utilisateurs (à remplacer par API Users plus tard)
-    
+
     const mockUsers = [
         { id: 'user-1', name: 'Hery RABOTOVAO' },
         { id: 'user-2', name: 'John Doe' },
         { id: 'user-3', name: 'Jane Smith' }
     ];
-    
+
     const mockLabels = ['Electrical', 'Mechanical', 'Body', 'Safety', 'Recall'];
 
     // Charger l'issue au montage
@@ -54,7 +54,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
             fetchIssue(params.id);
         }
     }, [params.id, fetchIssue]);
-    
+
     // Mettre à jour le formulaire quand l'issue est chargée
     useEffect(() => {
         if (issue) {
@@ -73,27 +73,27 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
 
     const handleSave = async () => {
         if (!issue) return;
-        
+
         try {
             setLoadingSubmit(true);
             setSubmitError(null);
-            
+
             const updatedIssue = await updateIssue(params.id, formData);
-            
+
             // Mettre à jour aussi dans la liste (si elle est ouverte)
             try {
                 await updateIssueInList(params.id, formData);
             } catch (listError) {
                 console.warn('Impossible de mettre à jour la liste:', listError);
             }
-            
+
             setSubmitSuccess(true);
-            
+
             // Redirection après un court délai
             setTimeout(() => {
                 router.push(`/issues/${params.id}`);
             }, 1500);
-            
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la sauvegarde';
             setSubmitError(errorMessage);
@@ -101,12 +101,12 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
             setLoadingSubmit(false);
         }
     };
-    
+
     const handleInputChange = (field: keyof IssueUpdateData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setSubmitError(null);
     };
-    
+
     const handleAddLabel = (label: string) => {
         if (label && !formData.labels?.includes(label)) {
             setFormData(prev => ({
@@ -115,7 +115,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
             }));
         }
     };
-    
+
     const handleRemoveLabel = (labelToRemove: string) => {
         setFormData(prev => ({
             ...prev,
@@ -134,7 +134,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-                    <button 
+                    <button
                         onClick={handleSave}
                         disabled={loadingSubmit || !issue}
                         className="px-4 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold rounded shadow-sm"
@@ -150,7 +150,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
                         <AlertCircle className="text-red-600" size={20} />
                         <span className="text-red-700">{submitError}</span>
-                        <button 
+                        <button
                             onClick={() => setSubmitError(null)}
                             className="ml-auto text-red-600 hover:text-red-800"
                         >
@@ -158,14 +158,14 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                         </button>
                     </div>
                 )}
-                
+
                 {submitSuccess && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
                         <CheckCircle className="text-green-600" size={20} />
-                        <span className="text-green-700">Issue modifié avec succès !</span>
+                        <span className="text-green-700" data-testid="success-message">Issue modifié avec succès !</span>
                     </div>
                 )}
-                
+
                 {/* État de chargement */}
                 {loading && (
                     <div className="flex justify-center items-center h-64">
@@ -175,13 +175,13 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                         </div>
                     </div>
                 )}
-                
+
                 {/* État d'erreur de chargement */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
                         <AlertCircle className="text-red-600" size={20} />
                         <span className="text-red-700">{error}</span>
-                        <button 
+                        <button
                             onClick={() => {
                                 clearError();
                                 fetchIssue(params.id);
@@ -192,7 +192,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                         </button>
                     </div>
                 )}
-                
+
                 {/* Formulaire */}
                 {!loading && !error && issue && (
                     <>
@@ -212,8 +212,8 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                             </div>
                                         </div>
                                     ) : (
-                                        <select 
-                                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white" 
+                                        <select
+                                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                                             value={issue.vehicleId || ''}
                                             disabled
                                         >
@@ -227,6 +227,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                                     <div className="relative">
                                         <select
+                                            data-testid="priority-select"
                                             value={formData.priority}
                                             onChange={e => handleInputChange('priority', e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL')}
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white appearance-none pl-10"
@@ -244,6 +245,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Summary <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
+                                        data-testid="summary-input"
                                         value={formData.summary}
                                         onChange={e => handleInputChange('summary', e.target.value)}
                                         className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
@@ -255,7 +257,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Labels</label>
                                     <div className="space-y-2">
-                                        <select 
+                                        <select
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                                             onChange={(e) => {
                                                 if (e.target.value) {
@@ -269,16 +271,16 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                                 <option key={label} value={label}>{label}</option>
                                             ))}
                                         </select>
-                                        
+
                                         {formData.labels && formData.labels.length > 0 && (
                                             <div className="flex flex-wrap gap-2">
                                                 {formData.labels.map((label, index) => (
-                                                    <span 
+                                                    <span
                                                         key={index}
                                                         className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
                                                     >
                                                         {label}
-                                                        <button 
+                                                        <button
                                                             type="button"
                                                             onClick={() => handleRemoveLabel(label)}
                                                             className="text-blue-600 hover:text-blue-800"
@@ -289,14 +291,14 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                                 ))}
                                             </div>
                                         )}
-                                        
+
                                         <p className="text-xs text-gray-500 mt-1">Use labels to categorize, group and more.</p>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                                    <select 
+                                    <select
                                         className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                                         value={formData.assignedTo || ''}
                                         onChange={(e) => handleInputChange('assignedTo', e.target.value)}
@@ -318,21 +320,21 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                         <span className="ml-auto text-xs text-gray-500">Cannot be changed</span>
                                     </div>
                                 </div>
-                                
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Reported Date</label>
                                     <div className="flex gap-2">
-                                        <input 
-                                            type="date" 
+                                        <input
+                                            type="date"
                                             value={new Date(issue.reportedDate).toISOString().split('T')[0]}
                                             disabled
-                                            className="flex-1 p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500" 
+                                            className="flex-1 p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                                         />
-                                        <input 
-                                            type="time" 
+                                        <input
+                                            type="time"
                                             value={new Date(issue.reportedDate).toTimeString().split(' ')[0].slice(0, 5)}
                                             disabled
-                                            className="flex-1 p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500" 
+                                            className="flex-1 p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                                         />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">Reported date cannot be changed</p>
@@ -343,8 +345,9 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                         <div className="flex justify-end pt-4">
                             <div className="flex gap-3">
                                 <button onClick={handleCancel} className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-bold bg-white hover:bg-gray-50">Cancel</button>
-                                <button 
+                                <button
                                     onClick={handleSave}
+                                    data-testid="save-button"
                                     disabled={loadingSubmit || !issue}
                                     className="px-4 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold rounded shadow-sm"
                                 >

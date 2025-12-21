@@ -143,7 +143,7 @@ export default function IssuesStatus({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-6 ${className}`} data-testid="issues-status">
       {/* Métriques principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
@@ -152,24 +152,27 @@ export default function IssuesStatus({
           icon={Bug}
           color="blue"
           subtitle="Issues ouvertes"
+          data-testid="issues-total"
         />
-        
+
         <MetricCard
           title="En Cours"
           value={summary.inProgressIssues}
           icon={Clock}
           color="yellow"
           subtitle="En traitement"
+          data-testid="issues-in-progress"
         />
-        
+
         <MetricCard
           title="Critiques"
           value={summary.criticalIssues}
           icon={AlertTriangle}
           color="red"
           subtitle="Action urgente"
+          data-testid="issues-critical"
         />
-        
+
         <MetricCard
           title="Temps Moyen"
           value={formatTime(summary.averageResolutionTime)}
@@ -187,7 +190,7 @@ export default function IssuesStatus({
           {status.warning && <Clock className="text-yellow-500" size={24} />}
           {status.critical && <AlertTriangle className="text-red-500" size={24} />}
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <StatusGauge
@@ -198,7 +201,7 @@ export default function IssuesStatus({
               size="lg"
             />
           </div>
-          
+
           <div className="space-y-3">
             <SimpleStatus
               status="healthy"
@@ -216,7 +219,7 @@ export default function IssuesStatus({
               count={summary.openIssues}
             />
           </div>
-          
+
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 mb-2">
               {summary.issuesThisMonth}
@@ -244,7 +247,7 @@ export default function IssuesStatus({
               </span>
             </div>
           </div>
-          
+
           <div className="p-6">
             {criticalIssues.length === 0 ? (
               <div className="text-center py-8">
@@ -281,7 +284,7 @@ export default function IssuesStatus({
                     </div>
                   </div>
                 ))}
-                
+
                 {criticalIssues.length > 5 && (
                   <div className="text-center pt-2">
                     <button className="text-sm text-blue-600 hover:text-blue-800">
@@ -295,7 +298,7 @@ export default function IssuesStatus({
         </div>
 
         {/* Problèmes récents */}
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-white rounded-lg border border-gray-200" data-testid="recent-issues">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -307,7 +310,7 @@ export default function IssuesStatus({
               </span>
             </div>
           </div>
-          
+
           <div className="p-6">
             {recentIssues.length === 0 ? (
               <div className="text-center py-8">
@@ -350,7 +353,7 @@ export default function IssuesStatus({
                     </div>
                   </div>
                 ))}
-                
+
                 {recentIssues.length > 5 && (
                   <div className="text-center pt-2">
                     <button className="text-sm text-blue-600 hover:text-blue-800">
@@ -371,7 +374,7 @@ export default function IssuesStatus({
             <Bug className="mr-2" size={20} />
             Actions Recommandées
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {status.critical && (
               <div className="flex items-start">
@@ -386,7 +389,7 @@ export default function IssuesStatus({
                 </div>
               </div>
             )}
-            
+
             {status.warning && (
               <div className="flex items-start">
                 <Clock className="text-yellow-500 mr-3 mt-1" size={16} />
@@ -400,7 +403,7 @@ export default function IssuesStatus({
                 </div>
               </div>
             )}
-            
+
             <div className="flex items-start">
               <CheckCircle className="text-green-500 mr-3 mt-1" size={16} />
               <div>

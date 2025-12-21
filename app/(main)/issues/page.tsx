@@ -8,16 +8,16 @@ import type { IssueFilters } from '@/lib/services/issues-api';
 
 export default function IssuesPage() {
   const router = useRouter();
-  
+
   // Initialiser les filtres depuis l'URL si nécessaire (dans une vraie app)
   // Pour l'instant on garde l'état local mais on mettra à jour l'URL
-  const [filters, setFilters] = useState<IssueFilters>({ 
-    page: 1, 
+  const [filters, setFilters] = useState<IssueFilters>({
+    page: 1,
     limit: 20,
     status: 'OPEN'
   });
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const {
     issues,
     loading,
@@ -40,12 +40,12 @@ export default function IssuesPage() {
     const newFilters = { ...filters, search: query || undefined };
     setFilters(newFilters);
     fetchIssues(newFilters);
-    
+
     // Mettre à jour l'URL
     const params = new URLSearchParams();
     if (filters.status) params.set('status', filters.status);
     if (query) params.set('search', query);
-    
+
     router.replace(`/issues?${params.toString()}`);
   };
 
@@ -53,23 +53,23 @@ export default function IssuesPage() {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
     fetchIssues(updatedFilters);
-    
+
     // Mettre à jour l'URL pour refléter les filtres (utile pour les tests et le partage)
     const params = new URLSearchParams();
     if (updatedFilters.status) params.set('status', updatedFilters.status);
     if (updatedFilters.search) params.set('search', updatedFilters.search);
     if (updatedFilters.priority) params.set('priority', updatedFilters.priority);
-    
+
     // Utiliser replace pour ne pas empiler l'historique à chaque frappe
     router.replace(`/issues?${params.toString()}`);
   };
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
-    return d.toLocaleDateString('en-US', { 
-      month: '2-digit', 
-      day: '2-digit', 
-      year: 'numeric' 
+    return d.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
     });
   };
 
@@ -135,6 +135,7 @@ export default function IssuesPage() {
           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
           <button
             onClick={handleAdd}
+            data-testid="add-issue-button"
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
           >
             <Plus size={20} /> Add Issue
@@ -145,9 +146,9 @@ export default function IssuesPage() {
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
         <button className={`pb-3 border-b-2 ${filters.status === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'} flex items-center gap-1`} onClick={() => handleFilterChange({ status: undefined })}>All <MoreHorizontal size={14} /></button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'OPEN' })}>Open</button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-OPEN" onClick={() => handleFilterChange({ status: 'OPEN' })}>Open</button>
         <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">Overdue</button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Resolved</button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-RESOLVED" onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Resolved</button>
         <button className={`pb-3 border-b-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'CLOSED' })}>Closed</button>
         <button className="pb-3 border-b-2 border-transparent hover:text-green-700 text-[#008751] flex items-center gap-1"><Plus size={14} /> Add Tab</button>
       </div>
@@ -157,7 +158,7 @@ export default function IssuesPage() {
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
           <AlertCircle className="text-red-600" size={20} />
           <span className="text-red-700">{error}</span>
-          <button 
+          <button
             onClick={clearError}
             className="ml-auto text-red-600 hover:text-red-800"
           >
@@ -170,10 +171,11 @@ export default function IssuesPage() {
       <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <input 
-            type="text" 
-            placeholder="Search" 
-            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+          <input
+            type="text"
+            placeholder="Search"
+            data-testid="search-input"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-[#008751] focus:border-[#008751] text-sm"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
           />
@@ -192,13 +194,13 @@ export default function IssuesPage() {
           {pagination ? `${pagination.page * pagination.limit - pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} of ${pagination.totalCount}` : '0'}
         </div>
         <div className="flex gap-1 ml-auto">
-          <button 
+          <button
             className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"
             disabled={!pagination?.hasPrev}
           >
             <ChevronRight className="rotate-180" size={16} />
           </button>
-          <button 
+          <button
             className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"
             disabled={!pagination?.hasNext}
           >

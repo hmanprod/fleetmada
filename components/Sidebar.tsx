@@ -137,9 +137,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
               {hasSubItems ? (
                 <button
                   onClick={() => toggleExpand(item.id)}
+                  data-testid={`sidebar-${item.id}`}
                   className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${active
-                      ? 'bg-[#1b9a59] text-white border-l-4 border-white'
-                      : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
+                    ? 'bg-[#1b9a59] text-white border-l-4 border-white'
+                    : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -152,9 +153,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                 setView && item.view !== undefined ? (
                   <button
                     onClick={() => setView(item.view!)}
+                    data-testid={`sidebar-${item.id}`}
                     className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${active
-                        ? 'bg-[#1b9a59] text-white border-l-4 border-white'
-                        : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
+                      ? 'bg-[#1b9a59] text-white border-l-4 border-white'
+                      : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
                       }`}
                   >
                     <div className="flex items-center gap-3">
@@ -165,9 +167,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                 ) : (
                   <Link
                     href={item.href || '#'}
+                    data-testid={`sidebar-${item.id}`}
                     className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors ${active
-                        ? 'bg-[#1b9a59] text-white border-l-4 border-white'
-                        : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
+                      ? 'bg-[#1b9a59] text-white border-l-4 border-white'
+                      : 'text-gray-300 hover:bg-[#1b6a50] hover:text-white'
                       }`}
                   >
                     <div className="flex items-center gap-3">
@@ -185,9 +188,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                       <button
                         key={subItem.label}
                         onClick={() => setView(subItem.view!)}
+                        data-testid={`sidebar-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
                         className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors text-left ${isActive(subItem.href, subItem.view)
-                            ? 'text-white font-semibold'
-                            : 'text-gray-400 hover:text-white'
+                          ? 'text-white font-semibold'
+                          : 'text-gray-400 hover:text-white'
                           }`}
                       >
                         {subItem.label}
@@ -196,9 +200,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                       <Link
                         key={subItem.label}
                         href={subItem.href}
+                        data-testid={`sidebar-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
                         className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors ${isActive(subItem.href, subItem.view)
-                            ? 'text-white font-semibold'
-                            : 'text-gray-400 hover:text-white'
+                          ? 'text-white font-semibold'
+                          : 'text-gray-400 hover:text-white'
                           }`}
                       >
                         {subItem.label}
