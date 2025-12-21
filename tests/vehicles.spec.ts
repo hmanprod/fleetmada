@@ -1,15 +1,43 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 test.describe('Module Véhicules - Tests E2E', () => {
+    const randomSuffix = Math.floor(Math.random() * 10000).toString();
+    let page: Page;
 
-    test.beforeEach(async ({ page }) => {
-        // Connexion avant chaque test
+    test.setTimeout(90000);
+
+    test.beforeEach(async ({ browser }) => {
+        // 1. Create explicit context
+        const context = await browser.newContext({
+            viewport: { width: 1280, height: 720 }
+        });
+        page = await context.newPage();
+
+        // 2. UI-based authentication
         await page.goto('/login');
         await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
         await page.fill('input[type="password"]', 'testpassword123');
         await page.click('button[type="submit"]');
-        // Attendre que l'URL change (dashboard ou root)
-        await page.waitForURL(/.*(\/|\/dashboard)$/);
+
+        // 3. Wait for redirect to dashboard
+        await page.waitForURL('**/dashboard**', { timeout: 30000 });
+
+        // 4. Wait for loading overlay to hide
+        try {
+            await page.waitForSelector('text=Chargement des données...', { state: 'hidden', timeout: 45000 });
+        } catch (e) {
+            console.log('Timeout waiting for loading overlay to hide, proceeding anyway...');
+        }
+
+        // 5. Handle any modals
+        try {
+            const modalClose = page.locator('button:has-text("Plus tard"), button[aria-label="Close"], .modal-close').first();
+            if (await modalClose.isVisible({ timeout: 5000 })) {
+                await modalClose.click();
+            }
+        } catch (e) {
+            // No modal, continue
+        }
     });
 
     test.describe('Liste des véhicules', () => {

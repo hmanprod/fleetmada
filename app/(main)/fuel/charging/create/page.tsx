@@ -9,7 +9,7 @@ import { CreateChargingEntryData } from '@/types/fuel';
 export default function ChargingEntryCreatePage() {
     const router = useRouter();
     const { createEntry, loading, error } = useCreateChargingEntry();
-    
+
     const [formData, setFormData] = useState<CreateChargingEntryData>({
         vehicleId: '',
         date: '',
@@ -42,7 +42,7 @@ export default function ChargingEntryCreatePage() {
                 ...formData,
                 energyPrice: parseFloat(energyPrice) || undefined
             };
-            
+
             const newEntry = await createEntry(entryData);
             if (newEntry) {
                 router.push('/fuel/charging');
@@ -68,7 +68,15 @@ export default function ChargingEntryCreatePage() {
     };
 
     const durationMinutes = calculateDuration();
-    
+
+    // Sync formData.date from startDate and startTime
+    React.useEffect(() => {
+        if (startDate && startTime) {
+            const dateTimeString = `${startDate}T${startTime}`;
+            setFormData(prev => ({ ...prev, date: dateTimeString }));
+        }
+    }, [startDate, startTime]);
+
     // Auto-calculer le coût total
     React.useEffect(() => {
         if (formData.energyKwh && energyPrice) {
@@ -88,9 +96,10 @@ export default function ChargingEntryCreatePage() {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-                    <button 
-                        onClick={handleSave} 
+                    <button
+                        onClick={handleSave}
                         disabled={loading}
+                        data-testid="save-button"
                         className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
                         {loading && <Loader2 size={16} className="animate-spin" />}
@@ -115,6 +124,7 @@ export default function ChargingEntryCreatePage() {
                         <select
                             value={formData.vehicleId}
                             onChange={e => handleInputChange('vehicleId', e.target.value)}
+                            data-testid="vehicle-select"
                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                         >
                             <option value="">Please select</option>
@@ -134,6 +144,7 @@ export default function ChargingEntryCreatePage() {
                             <select
                                 value={formData.vendor || ''}
                                 onChange={e => handleInputChange('vendor', e.target.value)}
+                                data-testid="vendor-select"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                             >
                                 <option value="">Please select</option>
@@ -149,20 +160,20 @@ export default function ChargingEntryCreatePage() {
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                        <input 
-                                            type="date" 
-                                            value={startDate} 
-                                            onChange={e => setStartDate(e.target.value)} 
-                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
+                                        <input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={e => setStartDate(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
                                     <div className="relative flex-1">
                                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                        <input 
-                                            type="time" 
-                                            value={startTime} 
-                                            onChange={e => setStartTime(e.target.value)} 
-                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
+                                        <input
+                                            type="time"
+                                            value={startTime}
+                                            onChange={e => setStartTime(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
                                 </div>
@@ -172,20 +183,20 @@ export default function ChargingEntryCreatePage() {
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                        <input 
-                                            type="date" 
-                                            value={endDate} 
-                                            onChange={e => setEndDate(e.target.value)} 
-                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
+                                        <input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={e => setEndDate(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
                                     <div className="relative flex-1">
                                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                        <input 
-                                            type="time" 
-                                            value={endTime} 
-                                            onChange={e => setEndTime(e.target.value)} 
-                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]" 
+                                        <input
+                                            type="time"
+                                            value={endTime}
+                                            onChange={e => setEndTime(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
                                 </div>
@@ -193,12 +204,12 @@ export default function ChargingEntryCreatePage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Charging Duration</label>
                                 <div className="relative">
-                                    <input 
-                                        type="text" 
-                                        readOnly 
-                                        value={durationMinutes > 0 ? `${durationMinutes} min` : ''} 
-                                        placeholder="Auto-calculated" 
-                                        className="w-24 p-2.5 border border-gray-300 rounded-md bg-gray-50" 
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={durationMinutes > 0 ? `${durationMinutes} min` : ''}
+                                        placeholder="Auto-calculated"
+                                        className="w-24 p-2.5 border border-gray-300 rounded-md bg-gray-50"
                                     />
                                 </div>
                             </div>
@@ -212,6 +223,7 @@ export default function ChargingEntryCreatePage() {
                                         type="number"
                                         value={formData.energyKwh || ''}
                                         onChange={e => handleInputChange('energyKwh', parseFloat(e.target.value) || 0)}
+                                        data-testid="energy-input"
                                         className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                     />
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">kWh</div>
@@ -225,6 +237,7 @@ export default function ChargingEntryCreatePage() {
                                         type="number"
                                         value={energyPrice}
                                         onChange={e => setEnergyPrice(e.target.value)}
+                                        data-testid="price-input"
                                         className="w-full pl-12 pr-12 p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                     />
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">/ kWh</div>
@@ -238,6 +251,7 @@ export default function ChargingEntryCreatePage() {
                                         type="number"
                                         value={formData.cost || ''}
                                         onChange={e => handleInputChange('cost', parseFloat(e.target.value) || 0)}
+                                        data-testid="cost-input"
                                         className="w-full pl-12 p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                     />
                                 </div>

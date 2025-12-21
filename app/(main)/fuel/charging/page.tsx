@@ -10,7 +10,7 @@ export default function ChargingHistoryPage() {
     const router = useRouter();
     const [filters, setFilters] = React.useState<ChargingEntryFilters>({});
     const [searchQuery, setSearchQuery] = React.useState('');
-    
+
     const { entries, loading, error, pagination, updateFilters, changePage, refresh } = useChargingEntries(filters);
 
     const handleAdd = () => {
@@ -70,12 +70,12 @@ export default function ChargingHistoryPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-gray-900">Charging History</h1>
                 <div className="flex gap-2">
-                    <button 
+                    <button
                         onClick={handleRefresh}
                         disabled={loading}
-                        className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                        className="bg-green-100 border border-transparent px-3 py-1.5 rounded text-sm font-medium text-green-800 flex items-center gap-2 disabled:opacity-50"
                     >
-                        <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
                     </button>
                     <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
                     <button
@@ -91,12 +91,12 @@ export default function ChargingHistoryPage() {
             <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
                 <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    <input 
-                        type="text" 
-                        placeholder="Search" 
+                    <input
+                        type="text"
+                        placeholder="Search"
                         value={searchQuery}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" 
+                        className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                     />
                 </div>
                 <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
@@ -118,15 +118,15 @@ export default function ChargingHistoryPage() {
                     )}
                 </div>
                 <div className="flex gap-1">
-                    <button 
-                        onClick={() => changePage(pagination.page - 1)} 
+                    <button
+                        onClick={() => changePage(pagination.page - 1)}
                         disabled={!pagination.hasPrev || loading}
                         className="p-1 border border-gray-300 rounded text-gray-400 bg-white disabled:opacity-50"
                     >
                         <ChevronRight size={16} className="rotate-180" />
                     </button>
-                    <button 
-                        onClick={() => changePage(pagination.page + 1)} 
+                    <button
+                        onClick={() => changePage(pagination.page + 1)}
                         disabled={!pagination.hasNext || loading}
                         className="p-1 border border-gray-300 rounded text-gray-400 bg-white disabled:opacity-50"
                     >

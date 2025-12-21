@@ -1,0 +1,195 @@
+
+> fleetmada-next@0.1.0 test:e2e
+> playwright test tests/fuel.spec.ts --reporter=line
+
+
+Running 20 tests using 7 workers
+
+[1A[2K[1/20] [chromium] › tests/fuel.spec.ts:44:9 › Module Fuel E2E Tests › Fuel History Page › should display fuel history page
+[1A[2K[2/20] [chromium] › tests/fuel.spec.ts:65:9 › Module Fuel E2E Tests › Fuel History Page › should filter fuel entries by search
+[1A[2K[3/20] [chromium] › tests/fuel.spec.ts:55:9 › Module Fuel E2E Tests › Fuel History Page › should navigate to create fuel entry page
+[1A[2K[4/20] [chromium] › tests/fuel.spec.ts:113:9 › Module Fuel E2E Tests › Fuel Entry Creation › should validate required fields
+[1A[2K[5/20] [chromium] › tests/fuel.spec.ts:96:9 › Module Fuel E2E Tests › Fuel Entry Creation › should create new fuel entry
+[1A[2K[6/20] [chromium] › tests/fuel.spec.ts:78:9 › Module Fuel E2E Tests › Fuel History Page › should refresh fuel entries
+[1A[2K[7/20] [chromium] › tests/fuel.spec.ts:126:9 › Module Fuel E2E Tests › Fuel Entry Creation › should cancel fuel entry creation
+[1A[2K[8/20] [chromium] › tests/fuel.spec.ts:138:9 › Module Fuel E2E Tests › Charging History Page › should display charging history page
+[1A[2K[9/20] [chromium] › tests/fuel.spec.ts:149:9 › Module Fuel E2E Tests › Charging History Page › should navigate to create charging entry page
+[1A[2K  1) [chromium] › tests/fuel.spec.ts:96:9 › Module Fuel E2E Tests › Fuel Entry Creation › should create new fuel entry 
+
+    Error: page.fill: Error: Malformed value
+    Call log:
+    [2m  - waiting for locator('input[data-testid="date-input"]')[22m
+    [2m    - locator resolved to <input value="" type="datetime-local" data-testid="date-input" class="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"/>[22m
+    [2m    - fill("2024-12-17T10:30:00")[22m
+    [2m  - attempting fill action[22m
+    [2m    - waiting for element to be visible, enabled and editable[22m
+
+
+       99 |       // Remplir le formulaire
+      100 |       await page.selectOption('select[data-testid="vehicle-select"]', 'MV112TRNS');
+    > 101 |       await page.fill('input[data-testid="date-input"]', '2024-12-17T10:30:00');
+          |                  ^
+      102 |       await page.selectOption('select[data-testid="vendor-select"]', 'Chevron');
+      103 |       await page.fill('input[data-testid="volume-input"]', '50.5');
+      104 |       await page.fill('input[data-testid="cost-input"]', '150.25');
+        at /Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/tests/fuel.spec.ts:101:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fuel-Module-Fuel-E2E-Tests-be072-hould-create-new-fuel-entry-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fuel-Module-Fuel-E2E-Tests-be072-hould-create-new-fuel-entry-chromium/error-context.md
+
+
+[1A[2K[2m[WebServer] [22m[Fuel Entries API] GET Error: PrismaClientValidationError: 
+[2m[WebServer] [22mInvalid `prisma.fuelEntry.findMany()` invocation:
+[2m[WebServer] [22m
+[2m[WebServer] [22m{
+[2m[WebServer] [22m  where: {
+[2m[WebServer] [22m    userId: "cmjf8qkxx000412vwfh2a6mys",
+[2m[WebServer] [22m    OR: [
+[2m[WebServer] [22m      {
+[2m[WebServer] [22m        vendor: {
+[2m[WebServer] [22m          contains: "Test Vehicle",
+[2m[WebServer] [22m          mode: "insensitive"
+[2m[WebServer] [22m        }
+[2m[WebServer] [22m      },
+[2m[WebServer] [22m      {
+[2m[WebServer] [22m        vehicle: {
+[2m[WebServer] [22m          name: {
+[2m[WebServer] [22m            contains: "Test Vehicle",
+[2m[WebServer] [22m            mode: "insensitive"
+[2m[WebServer] [22m          }
+[2m[WebServer] [22m        }
+[2m[WebServer] [22m      }
+[2m[WebServer] [22m    ]
+[2m[WebServer] [22m  },
+[2m[WebServer] [22m  include: {
+[2m[WebServer] [22m    vehicle: {
+[2m[WebServer] [22m      select: {
+[2m[WebServer] [22m        id: true,
+[2m[WebServer] [22m        name: true,
+[2m[WebServer] [22m        vin: true,
+[2m[WebServer] [22m        make: true,
+[2m[WebServer] [22m        model: true,
+[2m[WebServer] [22m        year: true,
+[2m[WebServer] [22m        type: true,
+[2m[WebServer] [22m        status: true
+[2m[WebServer] [22m      }
+[2m[WebServer] [22m    }
+[2m[WebServer] [22m  },
+[2m[WebServer] [22m  orderBy: {
+[2m[WebServer] [22m    createdAt: "desc"
+[2m[WebServer] [22m  },
+[2m[WebServer] [22m  skip: 0,
+[2m[WebServer] [22m  take: 20
+[2m[WebServer] [22m}
+[2m[WebServer] [22m
+[2m[WebServer] [22mUnknown argument `contains`. Available options are marked with ?.
+[2m[WebServer] [22m    at wn [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4m@prisma[24m/client/runtime/library.js:29:1363[90m)[39m
+[2m[WebServer] [22m    at $n.handleRequestError [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4m@prisma[24m/client/runtime/library.js:121:6958[90m)[39m
+[2m[WebServer] [22m    at $n.handleAndLogRequestError [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4m@prisma[24m/client/runtime/library.js:121:6623[90m)[39m
+[2m[WebServer] [22m    at $n.request [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4m@prisma[24m/client/runtime/library.js:121:6307[90m)[39m
+[2m[WebServer] [22m    at async l [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4m@prisma[24m/client/runtime/library.js:130:9633[90m)[39m
+[2m[WebServer] [22m    at async Promise.all (index 0)
+[2m[WebServer] [22m    at async GET (webpack-internal:///(rsc)/./app/api/fuel/entries/route.ts:165:34)
+[2m[WebServer] [22m    at async [90m/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/compiled/next-server/app-route.runtime.dev.js:6:63809
+[2m[WebServer] [22m    at async eU.execute [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/compiled/next-server/app-route.runtime.dev.js:6:53964[90m)[39m
+[2m[WebServer] [22m    at async eU.handle [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/compiled/next-server/app-route.runtime.dev.js:6:65062[90m)[39m
+[2m[WebServer] [22m    at async doRender [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:1333:42[90m)[39m
+[2m[WebServer] [22m    at async cacheEntry.responseCache.get.routeKind [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:1555:28[90m)[39m
+[2m[WebServer] [22m    at async DevServer.renderToResponseWithComponentsImpl [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:1463:28[90m)[39m
+[2m[WebServer] [22m    at async DevServer.renderPageComponent [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:1856:24[90m)[39m
+[2m[WebServer] [22m    at async DevServer.renderToResponseImpl [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:1894:32[90m)[39m
+[2m[WebServer] [22m    at async DevServer.pipeImpl [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:911:25[90m)[39m
+[2m[WebServer] [22m    at async NextNodeServer.handleCatchallRenderRequest [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/next-server.js:271:17[90m)[39m
+[2m[WebServer] [22m    at async DevServer.handleRequestImpl [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/base-server.js:807:17[90m)[39m
+[2m[WebServer] [22m    at async [90m/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/dev/next-dev-server.js:331:20
+[2m[WebServer] [22m    at async Span.traceAsyncFn [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/trace/trace.js:151:20[90m)[39m
+[2m[WebServer] [22m    at async DevServer.handleRequest [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/dev/next-dev-server.js:328:24[90m)[39m
+[2m[WebServer] [22m    at async invokeRender [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/lib/router-server.js:163:21[90m)[39m
+[2m[WebServer] [22m    at async handleRequest [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/lib/router-server.js:342:24[90m)[39m
+[2m[WebServer] [22m    at async requestHandlerImpl [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/lib/router-server.js:366:13[90m)[39m
+[2m[WebServer] [22m    at async Server.requestListener [90m(/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/[39mnode_modules/[4mnext[24m/dist/server/lib/start-server.js:140:13[90m)[39m {
+[2m[WebServer] [22m  clientVersion: [32m'5.22.0'[39m
+[2m[WebServer] [22m}
+
+[1A[2K[10/20] [chromium] › tests/fuel.spec.ts:171:9 › Module Fuel E2E Tests › Charging Entry Creation › should create new charging entry
+[1A[2K[11/20] [chromium] › tests/fuel.spec.ts:159:9 › Module Fuel E2E Tests › Charging History Page › should display charging statistics
+[1A[2K[12/20] [chromium] › tests/fuel.spec.ts:197:9 › Module Fuel E2E Tests › Charging Entry Creation › should calculate charging duration automatically
+[1A[2K[13/20] [chromium] › tests/fuel.spec.ts:228:9 › Module Fuel E2E Tests › Charging Entry Creation › should calculate total cost automatically
+[1A[2K[14/20] [chromium] › tests/fuel.spec.ts:242:9 › Module Fuel E2E Tests › Navigation and UI › should navigate between fuel pages
+[1A[2K[15/20] [chromium] › tests/fuel.spec.ts:255:9 › Module Fuel E2E Tests › Navigation and UI › should handle responsive design
+[1A[2K[16/20] [chromium] › tests/fuel.spec.ts:268:9 › Module Fuel E2E Tests › Navigation and UI › should handle empty states
+[1A[2K[17/20] [chromium] › tests/fuel.spec.ts:302:9 › Module Fuel E2E Tests › Error Handling › should handle API errors gracefully
+[1A[2K[18/20] [chromium] › tests/fuel.spec.ts:316:9 › Module Fuel E2E Tests › Error Handling › should handle loading states
+[1A[2K[19/20] [chromium] › tests/fuel.spec.ts:334:9 › Module Fuel E2E Tests › Form Validation › should validate fuel entry form
+[1A[2K[20/20] [chromium] › tests/fuel.spec.ts:350:9 › Module Fuel E2E Tests › Form Validation › should validate charging entry form
+[1A[2K  2) [chromium] › tests/fuel.spec.ts:197:9 › Module Fuel E2E Tests › Charging Entry Creation › should calculate charging duration automatically 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveValue[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('input[placeholder="Auto-calculated"]')
+    Expected: [32m"[7m60[27m min"[39m
+    Received: [31m"[7m520819[27m min"[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveValue" with timeout 5000ms[22m
+    [2m  - waiting for locator('input[placeholder="Auto-calculated"]')[22m
+    [2m    9 × locator resolved to <input readonly type="text" value="520819 min" placeholder="Auto-calculated" class="w-24 p-2.5 border border-gray-300 rounded-md bg-gray-50"/>[22m
+    [2m      - unexpected value "520819 min"[22m
+
+
+      223 |       // Vérifier que la durée est calculée automatiquement
+      224 |       const durationField = page.locator('input[placeholder="Auto-calculated"]');
+    > 225 |       await expect(durationField).toHaveValue('60 min');
+          |                                   ^
+      226 |     });
+      227 |
+      228 |     test('should calculate total cost automatically', async () => {
+        at /Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/tests/fuel.spec.ts:225:35
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fuel-Module-Fuel-E2E-Tests-c96c9-ging-duration-automatically-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fuel-Module-Fuel-E2E-Tests-c96c9-ging-duration-automatically-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fuel-Module-Fuel-E2E-Tests-c96c9-ging-duration-automatically-chromium/error-context.md
+
+
+[1A[2K  3) [chromium] › tests/fuel.spec.ts:171:9 › Module Fuel E2E Tests › Charging Entry Creation › should create new charging entry 
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "/fuel/charging" until "load"
+    ============================================================
+
+      192 |
+      193 |       // V\u00e9rifier la redirection vers la liste (wait longer for API call)
+    > 194 |       await page.waitForURL('/fuel/charging', { timeout: 10000 });
+          |                  ^
+      195 |     });
+      196 |
+      197 |     test('should calculate charging duration automatically', async () => {
+        at /Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/tests/fuel.spec.ts:194:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fuel-Module-Fuel-E2E-Tests-a9a05-d-create-new-charging-entry-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fuel-Module-Fuel-E2E-Tests-a9a05-d-create-new-charging-entry-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fuel-Module-Fuel-E2E-Tests-a9a05-d-create-new-charging-entry-chromium/error-context.md
+
+
+[1A[2K  3 failed
+    [chromium] › tests/fuel.spec.ts:96:9 › Module Fuel E2E Tests › Fuel Entry Creation › should create new fuel entry 
+    [chromium] › tests/fuel.spec.ts:171:9 › Module Fuel E2E Tests › Charging Entry Creation › should create new charging entry 
+    [chromium] › tests/fuel.spec.ts:197:9 › Module Fuel E2E Tests › Charging Entry Creation › should calculate charging duration automatically 
+  17 passed (21.9s)
