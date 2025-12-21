@@ -2,7 +2,6 @@ import { test, expect, Page } from '@playwright/test'
 
 test.describe('Module Parts - Tests E2E', () => {
   const randomSuffix = Math.floor(Math.random() * 10000).toString();
-  let authToken: string
 
   test.setTimeout(90000);
   let page: Page;
