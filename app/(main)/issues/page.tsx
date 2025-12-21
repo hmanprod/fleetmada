@@ -168,7 +168,7 @@ export default function IssuesPage() {
       )}
 
       {/* Filters Bar */}
-      <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
+      <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center" data-testid="issues-filters">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           <input
@@ -217,7 +217,7 @@ export default function IssuesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden" data-testid="issues-list">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-white border-b border-gray-200">
             <tr>

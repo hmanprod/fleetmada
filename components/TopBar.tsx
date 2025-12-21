@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Menu } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 
 const TopBar: React.FC = () => {
@@ -22,11 +22,17 @@ const TopBar: React.FC = () => {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
+          <button
+            data-testid="mobile-menu-button"
+            className="md:hidden mr-4 p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+          >
+            <Menu size={20} />
+          </button>
           <h1 className="text-xl font-semibold text-gray-900">
             Bonjour, {user.firstName} !
           </h1>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           <div className="relative">
             <button
@@ -48,7 +54,7 @@ const TopBar: React.FC = () => {
                   <p className="font-medium">{user.firstName} {user.lastName}</p>
                   <p className="text-gray-500">{user.email}</p>
                 </div>
-                
+
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
@@ -60,7 +66,7 @@ const TopBar: React.FC = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Paramètres du profil
                 </button>
-                
+
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
@@ -76,7 +82,7 @@ const TopBar: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Overlay pour fermer le dropdown */}
       {isDropdownOpen && (
         <div

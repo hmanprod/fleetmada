@@ -163,7 +163,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         )
       }
 
-      logAction('GET Issue Detail - Success', userId, { 
+      logAction('GET Issue Detail - Success', userId, {
         issueId,
         hasComments: issue.comments.length,
         hasImages: issue.images.length
@@ -260,7 +260,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const updateData = IssueUpdateSchema.parse(body)
 
-    logAction('PUT Issue', userId, { 
+    logAction('PUT Issue', userId, {
       issueId,
       updateFields: Object.keys(updateData)
     })
@@ -311,7 +311,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         }
       })
 
-      logAction('PUT Issue - Success', userId, { 
+      logAction('PUT Issue - Success', userId, {
         issueId,
         updatedFields: Object.keys(updateData)
       })
@@ -339,7 +339,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('PUT Issue - Validation error', userId, {
@@ -468,168 +468,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     logAction('DELETE Issue - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
-    return NextResponse.json(
-      { success: false, error: 'Erreur serveur interne' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST /api/issues/[id]/status - Changer le statut d'un problème
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('POST Issue Status - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('POST Issue Status - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
-
-    if (!tokenPayload) {
-      logAction('POST Issue Status - Invalid token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token invalide ou expiré' },
-        { status: 401 }
-      )
-    }
-
-    const userId = tokenPayload.userId
-    const issueId = params.id
-
-    if (!userId) {
-      logAction('POST Issue Status - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
-
-    if (!issueId) {
-      logAction('POST Issue Status - Missing issue ID', userId, {})
-      return NextResponse.json(
-        { success: false, error: 'ID du problème manquant' },
-        { status: 400 }
-      )
-    }
-
-    // Extraction et validation des données
-    const body = await request.json()
-    const statusData = IssueStatusUpdateSchema.parse(body)
-
-    logAction('POST Issue Status', userId, { 
-      issueId,
-      newStatus: statusData.status
-    })
-
-    try {
-      // Vérifier que le problème existe et appartient à l'utilisateur
-      const existingIssue = await prisma.issue.findFirst({
-        where: {
-          id: issueId,
-          userId
-        }
-      })
-
-      if (!existingIssue) {
-        logAction('POST Issue Status - Issue not found', userId, { issueId })
-        return NextResponse.json(
-          { success: false, error: 'Problème non trouvé' },
-          { status: 404 }
-        )
-      }
-
-      // Mise à jour du statut
-      const updatedIssue = await prisma.issue.update({
-        where: {
-          id: issueId
-        },
-        data: {
-          status: statusData.status,
-          updatedAt: new Date()
-        },
-        include: {
-          vehicle: {
-            select: {
-              id: true,
-              name: true,
-              vin: true,
-              make: true,
-              model: true
-            }
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        }
-      })
-
-      logAction('POST Issue Status - Success', userId, { 
-        issueId,
-        oldStatus: existingIssue.status,
-        newStatus: statusData.status
-      })
-
-      return NextResponse.json(
-        {
-          success: true,
-          data: updatedIssue,
-          message: `Statut modifié vers "${statusData.status}"`
-        },
-        { status: 200 }
-      )
-
-    } catch (dbError) {
-      logAction('POST Issue Status - Database error', userId, {
-        issueId,
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      })
-
-      return NextResponse.json(
-        { success: false, error: 'Erreur lors de la modification du statut' },
-        { status: 500 }
-      )
-    }
-
-  } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown'
-    
-    // Gestion des erreurs de validation
-    if (error instanceof Error && error.name === 'ZodError') {
-      logAction('POST Issue Status - Validation error', userId, {
-        error: error.message
-      })
-
-      return NextResponse.json(
-        { success: false, error: 'Données invalides', details: error.message },
-        { status: 400 }
-      )
-    }
-
-    logAction('POST Issue Status - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
       stack: error instanceof Error ? error.stack : undefined
     })
