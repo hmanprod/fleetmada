@@ -147,19 +147,20 @@ export default function ServiceProgramsPage() {
                     />
                 </div>
                 <div className="flex gap-2">
-                    <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <button data-testid="filter-vehicle-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                         Vehicle <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
                     </button>
-                    <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <button data-testid="filter-vehicle-group-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                         Vehicle Group <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
                     </button>
-                    <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <button data-testid="filter-oem-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                         OEM Service Program <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
                     </button>
-                    <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <button data-testid="filter-filters-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                         <Filter size={14} /> Filters
                     </button>
                 </div>
+
                 <div className="flex-1 text-right text-sm text-gray-500">
                     1 - 1 of 1
                 </div>
@@ -167,6 +168,53 @@ export default function ServiceProgramsPage() {
                     <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} className="rotate-180" /></button>
                     <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} /></button>
                     <button className="p-1 border border-gray-300 rounded text-gray-700 bg-white ml-2"><MoreHorizontal size={16} /></button>
+                </div>
+            </div>
+
+            <div data-testid="program-stats-row" className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div data-testid="stat-total-programs" className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded">
+                            <Wrench className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">Total Programmes</p>
+                            <p className="text-xl font-bold text-gray-900">{totalPrograms}</p>
+                        </div>
+                    </div>
+                </div>
+                <div data-testid="stat-active-programs" className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded">
+                            <Calendar className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">Programmes Actifs</p>
+                            <p className="text-xl font-bold text-gray-900">{activePrograms}</p>
+                        </div>
+                    </div>
+                </div>
+                <div data-testid="stat-upcoming-programs" className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-yellow-100 rounded">
+                            <AlertCircle className="w-5 h-5 text-yellow-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">Échéances Proches</p>
+                            <p className="text-xl font-bold text-gray-900">{upcomingDuePrograms}</p>
+                        </div>
+                    </div>
+                </div>
+                <div data-testid="stat-total-vehicles" className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 rounded">
+                            <ChevronRight className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">Véhicules Total</p>
+                            <p className="text-xl font-bold text-gray-900">{totalVehiclesInPrograms}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -184,63 +232,18 @@ export default function ServiceProgramsPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {/* Statistiques */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-blue-100 rounded">
-                                        <Wrench className="w-5 h-5 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Total Programmes</p>
-                                        <p className="text-xl font-bold text-gray-900">{totalPrograms}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-green-100 rounded">
-                                        <Calendar className="w-5 h-5 text-green-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Programmes Actifs</p>
-                                        <p className="text-xl font-bold text-gray-900">{activePrograms}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-yellow-100 rounded">
-                                        <AlertCircle className="w-5 h-5 text-yellow-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Échéances Proches</p>
-                                        <p className="text-xl font-bold text-gray-900">{upcomingDuePrograms}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg border border-gray-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-purple-100 rounded">
-                                        <ChevronRight className="w-5 h-5 text-purple-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Véhicules Total</p>
-                                        <p className="text-xl font-bold text-gray-900">{totalVehiclesInPrograms}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Message d'erreur */}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
-                                <div className="flex items-center gap-2">
-                                    <AlertCircle className="w-5 h-5 text-red-600" />
-                                    <p className="text-red-800">{error}</p>
-                                </div>
-                            </div>
+                            <tr>
+                                <td colSpan={5} className="bg-red-50 border border-red-200 px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="w-5 h-5 text-red-600" />
+                                        <p className="text-red-800">{error}</p>
+                                    </div>
+                                </td>
+                            </tr>
                         )}
+
 
                         {programs.length === 0 && !loading ? (
                             <tr>

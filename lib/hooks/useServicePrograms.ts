@@ -84,7 +84,7 @@ export function useServicePrograms(options: UseServiceProgramsOptions = {}): Use
 
       // Ajouter le nouveau programme à la liste
       setPrograms(prev => [newProgram, ...prev])
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -132,7 +132,7 @@ export function useServicePrograms(options: UseServiceProgramsOptions = {}): Use
 
       // Supprimer le programme de la liste
       setPrograms(prev => prev.filter(program => program.id !== id))
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -157,10 +157,10 @@ export function useServicePrograms(options: UseServiceProgramsOptions = {}): Use
 
     try {
       await serviceAPI.addVehicleToProgram(programId, vehicleId)
-      
+
       // Rafraîchir les programmes pour obtenir les données mises à jour
       await fetchPrograms()
-      
+
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'ajout du véhicule au programme')

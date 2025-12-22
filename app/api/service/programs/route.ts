@@ -107,7 +107,8 @@ export async function GET(request: NextRequest) {
     const [programs, total] = await Promise.all([
       prisma.serviceProgram.findMany({
         where,
-        orderBy: { name: 'asc' },
+        orderBy: { createdAt: 'desc' },
+
         skip,
         take: limit,
         include: {

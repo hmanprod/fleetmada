@@ -176,16 +176,17 @@ export default function ServiceHistoryPage() {
           />
         </div>
         <div className="flex gap-2">
-          <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+          <button data-testid="filter-vehicle-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
             Vehicle <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
           </button>
-          <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+          <button data-testid="filter-vehicle-group-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
             Vehicle Group <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
           </button>
-          <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+          <button data-testid="filter-filters-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
             <Filter size={14} /> Filters
           </button>
         </div>
+
         <div className="flex-1 text-right text-sm text-gray-500">
           {pagination ? `${((pagination.page - 1) * pagination.limit) + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total}` : '0 - 0 sur 0'}
         </div>
@@ -194,6 +195,40 @@ export default function ServiceHistoryPage() {
           <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} /></button>
         </div>
       </div>
+
+      {/* Statistiques */}
+      <div data-testid="history-stats-row" className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="text-center" data-testid="stat-total-entries">
+            <div className="text-2xl font-bold text-gray-900">{totalEntries}</div>
+            <div className="text-sm text-gray-600">Total Entrées</div>
+          </div>
+          <div className="text-center" data-testid="stat-completed-entries">
+            <div className="text-2xl font-bold text-green-600">{completedEntries}</div>
+            <div className="text-sm text-gray-600">Terminées</div>
+          </div>
+          <div className="text-center" data-testid="stat-in-progress-entries">
+            <div className="text-2xl font-bold text-yellow-600">{inProgressEntries}</div>
+            <div className="text-sm text-gray-600">En cours</div>
+          </div>
+          <div className="text-center" data-testid="stat-scheduled-entries">
+            <div className="text-2xl font-bold text-blue-600">{scheduledEntries}</div>
+            <div className="text-sm text-gray-600">Programmées</div>
+          </div>
+          <div className="text-center" data-testid="stat-total-cost">
+            <div className="text-2xl font-bold text-purple-600">{formatCurrency(totalCost)}</div>
+            <div className="text-sm text-gray-600">Coût Total</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Message d'erreur */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 p-4 mb-4 rounded-lg flex items-center gap-2 shadow-sm">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <p className="text-red-800 font-medium">{error}</p>
+        </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -217,43 +252,8 @@ export default function ServiceHistoryPage() {
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coût Total</th>
             </tr>
           </thead>
-          {/* Statistiques */}
-          <div className="bg-gray-50 p-4 border-b border-gray-200">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{totalEntries}</div>
-                <div className="text-sm text-gray-600">Total Entrées</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{completedEntries}</div>
-                <div className="text-sm text-gray-600">Terminées</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{inProgressEntries}</div>
-                <div className="text-sm text-gray-600">En cours</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{scheduledEntries}</div>
-                <div className="text-sm text-gray-600">Programmées</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{formatCurrency(totalCost)}</div>
-                <div className="text-sm text-gray-600">Coût Total</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Message d'erreur */}
-          {error && (
-            <div className="bg-red-50 border-b border-red-200 p-4">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-                <p className="text-red-800">{error}</p>
-              </div>
-            </div>
-          )}
-
           <tbody className="bg-white divide-y divide-gray-200">
+
             {entries.length === 0 && !loading ? (
               <tr>
                 <td colSpan={9} className="px-6 py-12 text-center">
@@ -357,7 +357,7 @@ export default function ServiceHistoryPage() {
             )}
           </tbody>
         </table>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

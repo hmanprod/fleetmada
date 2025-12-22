@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, AlertCircle } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 
 export default function ServiceProgramCreatePage() {
@@ -11,24 +12,58 @@ export default function ServiceProgramCreatePage() {
   const [secondaryMeter, setSecondaryMeter] = useState(false);
   const [template, setTemplate] = useState('');
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleBack = () => {
     router.push('/service/programs');
   };
 
-  const handleSave = () => {
-    console.log('Saving service program:', {
-      name,
-      primaryMeter,
-      secondaryMeter,
-      template
-    });
-    // TODO: Implement save logic
-    router.push('/service/programs');
+  const handleSave = async () => {
+    if (!name) {
+      setError('Name is required');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/service/programs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          name,
+          frequency: '10000 km', // Default frequency as it's required by API
+          description: `Template: ${template}`,
+          active: true,
+          tasks: [] // Could be extended to select tasks
+        })
+      });
+
+
+      const result = await response.json();
+
+      if (result.success) {
+        router.push('/service/programs');
+      } else {
+        setError(result.error || 'Failed to save program');
+      }
+    } catch (err) {
+      setError('An error occurred while saving');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
     router.push('/service/programs');
   };
+
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -40,13 +75,33 @@ export default function ServiceProgramCreatePage() {
           <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">New Service Program</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-[#008751] font-medium hover:underline">Cancel</button>
-          <button onClick={handleSave} data-testid="save-button" className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Program</button>
+          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-[#008751] font-medium hover:underline" disabled={loading}>Cancel</button>
+          <button
+            onClick={handleSave}
+            data-testid="save-button"
+            className={`px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm flex items-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </>
+            ) : 'Save Service Program'}
+          </button>
         </div>
+
       </div>
 
       <div className="max-w-3xl mx-auto py-8 px-4">
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-center gap-2">
+            <AlertCircle size={20} />
+            {error}
+          </div>
+        )}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 space-y-6">
+
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-1">Name <span className="text-red-500">*</span></label>
             <input
@@ -145,9 +200,16 @@ export default function ServiceProgramCreatePage() {
         </div>
 
         <div className="mt-6 flex justify-between items-center">
-          <button onClick={handleCancel} className="text-[#008751] font-medium hover:underline">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Program</button>
+          <button onClick={handleCancel} className="text-[#008751] font-medium hover:underline" disabled={loading}>Cancel</button>
+          <button
+            onClick={handleSave}
+            className={`px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : 'Save Service Program'}
+          </button>
         </div>
+
       </div>
     </div>
   );

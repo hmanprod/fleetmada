@@ -124,6 +124,7 @@ export default function WorkOrderCreatePage() {
                                     type="text"
                                     value={formData.issueDate}
                                     onChange={(e) => handleInputChange('issueDate', e.target.value)}
+                                    data-testid="issue-date-input"
                                     className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 />
                             </div>
@@ -133,6 +134,7 @@ export default function WorkOrderCreatePage() {
                                     type="text"
                                     value={formData.issueTime}
                                     onChange={(e) => handleInputChange('issueTime', e.target.value)}
+                                    data-testid="issue-time-input"
                                     className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 />
                             </div>
@@ -144,9 +146,11 @@ export default function WorkOrderCreatePage() {
                                 type="text"
                                 value={formData.issuedBy}
                                 onChange={(e) => handleInputChange('issuedBy', e.target.value)}
+                                data-testid="issued-by-input"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
                         </div>
+
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>

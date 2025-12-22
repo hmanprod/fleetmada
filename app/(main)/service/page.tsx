@@ -137,11 +137,12 @@ export default function ServicePage() {
       </div>
 
       {/* Statistiques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div data-testid="service-stats-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => {
           const IconComponent = stat.icon;
           return (
-            <div key={index} className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+            <div key={index} data-testid={`stat-card-${stat.title.toLowerCase().replace(/\s+/g, '-')}`} className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.title}</p>
@@ -169,8 +170,10 @@ export default function ServicePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={handleViewHistory}
+            data-testid="quick-action-history"
             className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
+
             <div className="p-2 bg-blue-100 rounded">
               <Calendar className="w-5 h-5 text-blue-600" />
             </div>
@@ -234,9 +237,10 @@ export default function ServicePage() {
               <span>Erreur lors du chargement</span>
             </div>
           ) : recentEntries.length > 0 ? (
-            <div className="space-y-3">
+            <div data-testid="recent-activity-list" className="space-y-3">
               {recentEntries.slice(0, 5).map((entry) => (
-                <div key={entry.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={entry.id} data-testid={`activity-item-${entry.id}`} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+
                   <div className="p-2 bg-green-100 rounded">
                     <Activity className="w-4 h-4 text-green-600" />
                   </div>
@@ -291,8 +295,8 @@ export default function ServicePage() {
                     </p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded ${reminder.isOverdue
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-yellow-100 text-yellow-800'
                     }`}>
                     {reminder.isOverdue ? 'En retard' : 'Bientôt dû'}
                   </span>
