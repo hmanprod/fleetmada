@@ -70,9 +70,9 @@ export function useVehicleRenewals(options: UseVehicleRenewalsOptions = {}): Use
     try {
       setLoading(true)
       setError(null)
-      
+
       const response = await remindersApi.getVehicleRenewals(options)
-      
+
       if (response) {
         setRenewals(response.renewals)
         setPagination(response.pagination)
@@ -105,7 +105,7 @@ export function useVehicleRenewals(options: UseVehicleRenewalsOptions = {}): Use
   }): Promise<VehicleRenewal> => {
     try {
       const renewal = await remindersApi.createVehicleRenewal(data)
-      
+
       if (renewal) {
         // Rafraîchir la liste après création
         await fetchRenewals()
@@ -135,10 +135,10 @@ export function useVehicleRenewals(options: UseVehicleRenewalsOptions = {}): Use
   }): Promise<VehicleRenewal> => {
     try {
       const renewal = await remindersApi.updateVehicleRenewal(id, data)
-      
+
       if (renewal) {
         // Mettre à jour la liste locale
-        setRenewals(prev => prev.map(item => 
+        setRenewals(prev => prev.map(item =>
           item.id === id ? renewal : item
         ))
         return renewal
@@ -155,7 +155,7 @@ export function useVehicleRenewals(options: UseVehicleRenewalsOptions = {}): Use
   const deleteRenewal = async (id: string): Promise<void> => {
     try {
       const success = await remindersApi.deleteVehicleRenewal(id)
-      
+
       if (success) {
         // Retirer de la liste locale
         setRenewals(prev => prev.filter(renewal => renewal.id !== id))
@@ -178,10 +178,10 @@ export function useVehicleRenewals(options: UseVehicleRenewalsOptions = {}): Use
   }): Promise<VehicleRenewal> => {
     try {
       const renewal = await remindersApi.completeVehicleRenewal(id, data)
-      
+
       if (renewal) {
-        setRenewals(prev => prev.map(renewal => 
-          renewal.id === id ? renewal : renewal
+        setRenewals(prev => prev.map(item =>
+          item.id === id ? renewal : item
         ))
         return renewal
       } else {

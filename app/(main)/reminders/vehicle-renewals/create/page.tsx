@@ -4,10 +4,14 @@ import React, { useState } from 'react';
 import { ArrowLeft, ChevronDown, Lock, Calendar, HelpCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useVehicleRenewals } from '@/lib/hooks/useVehicleRenewals';
+import { useVehicles } from '@/lib/hooks/useVehicles';
 
 export default function CreateVehicleRenewalPage() {
     const router = useRouter();
-    const { createRenewal, loading } = useVehicleRenewals();
+    const { createRenewal, loading: createLoading } = useVehicleRenewals();
+    const { vehicles, loading: vehiclesLoading } = useVehicles();
+
+    const loading = createLoading || vehiclesLoading;
     const [formData, setFormData] = useState({
         vehicle: '',
         renewalType: '',
@@ -36,7 +40,7 @@ export default function CreateVehicleRenewalPage() {
                 vehicleId: formData.vehicle,
                 type: formData.renewalType,
                 title: formData.renewalType === 'emission_test' ? 'Test d\'émission' :
-                      formData.renewalType === 'registration' ? 'Renouvellement immatriculation' : 'Renouvellement',
+                    formData.renewalType === 'registration' ? 'Renouvellement immatriculation' : 'Renouvellement',
                 dueDate: formData.dueDate,
                 priority: 'HIGH',
                 notes: formData.comment
@@ -73,7 +77,7 @@ export default function CreateVehicleRenewalPage() {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Vehicle Renewal Reminder</button>
+                    <button onClick={handleSave} data-testid="save-renewal" className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Vehicle Renewal Reminder</button>
                 </div>
             </div>
 
@@ -87,12 +91,14 @@ export default function CreateVehicleRenewalPage() {
                             <label className="block text-sm font-bold text-gray-900 mb-1">Vehicle <span className="text-red-500">*</span></label>
                             <select
                                 value={formData.vehicle}
+                                data-testid="vehicle-select"
                                 onChange={(e) => handleInputChange('vehicle', e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                             >
                                 <option value="">Please select</option>
-                                <option value="AC101">AC101 (Sample)</option>
-                                <option value="HF109">HF109 (Sample)</option>
+                                {vehicles.map(v => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                ))}
                             </select>
                         </div>
 
@@ -103,6 +109,7 @@ export default function CreateVehicleRenewalPage() {
                             </div>
                             <select
                                 value={formData.renewalType}
+                                data-testid="renewal-type-select"
                                 onChange={(e) => handleInputChange('renewalType', e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                             >
@@ -119,6 +126,7 @@ export default function CreateVehicleRenewalPage() {
                             <div className="relative">
                                 <input
                                     type="text"
+                                    data-testid="due-date-input"
                                     value={formData.dueDate}
                                     onChange={(e) => handleInputChange('dueDate', e.target.value)}
                                     className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"

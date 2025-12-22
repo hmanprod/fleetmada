@@ -26,10 +26,16 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
         }
 
         try {
-            await adjustStock(adjustmentData);
+            // Ajuster la quantité si c'est un retrait
+            const finalData = {
+                ...adjustmentData,
+                quantity: adjustmentData.type === 'remove' ? -Math.abs(adjustmentData.quantity) : adjustmentData.quantity
+            };
+            await adjustStock(finalData);
             setShowStockAdjustment(false);
             setAdjustmentData({ quantity: 0, reason: '', type: 'add' });
         } catch (err) {
+
             console.error('Erreur lors de l\'ajustement du stock:', err);
         }
     };
@@ -65,7 +71,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-1">
-                    <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium mr-4">
+                    <button onClick={handleBack} data-testid="back-button" className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium mr-4">
                         <ArrowLeft size={16} /> Parts
                     </button>
                     <div className="flex items-center gap-3">
@@ -73,8 +79,10 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                             <Package size={20} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">WF-10902 <span className="text-gray-400 font-normal">Fuel Filter</span></h1>
+                            <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">{part?.number} <span className="text-gray-400 font-normal">{part?.description}</span></h1>
                         </div>
+
+
                     </div>
                 </div>
 
@@ -137,11 +145,11 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                 <div className="p-6">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="text-center">
-                                            <div className="text-3xl font-bold text-gray-900 mb-2">{part.quantity || 0}</div>
+                                            <div data-testid="stock-quantity" className="text-3xl font-bold text-gray-900 mb-2">{part.quantity || 0}</div>
                                             <div className="text-sm text-gray-500">Quantité en stock</div>
                                         </div>
                                         <div className="text-center">
-                                            <div className="text-3xl font-bold text-yellow-600 mb-2">{part.minimumStock || 0}</div>
+                                            <div data-testid="stock-min" className="text-3xl font-bold text-yellow-600 mb-2">{part.minimumStock || 0}</div>
                                             <div className="text-sm text-gray-500">Stock minimum</div>
                                         </div>
                                         <div className="text-center">
@@ -150,7 +158,7 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                                     {React.createElement(getStockStatus()?.icon || Package, { size: 24, className: getStockStatus()?.color })}
                                                 </div>
                                             </div>
-                                            <div className={`text-sm font-medium ${getStockStatus()?.color}`}>
+                                            <div data-testid="stock-status-text" className={`text-sm font-medium ${getStockStatus()?.color}`}>
                                                 {getStockStatus()?.status}
                                             </div>
                                             {isLowStock && !isOutOfStock && (
@@ -238,8 +246,8 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                                                 <div key={movement.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${movement.type === 'in' ? 'bg-green-100 text-green-600' :
-                                                                movement.type === 'out' ? 'bg-red-100 text-red-600' :
-                                                                    'bg-blue-100 text-blue-600'
+                                                            movement.type === 'out' ? 'bg-red-100 text-red-600' :
+                                                                'bg-blue-100 text-blue-600'
                                                             }`}>
                                                             {movement.type === 'in' ? <TrendingUp size={16} /> :
                                                                 movement.type === 'out' ? <TrendingDown size={16} /> :

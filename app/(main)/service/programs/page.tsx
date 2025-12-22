@@ -50,7 +50,7 @@ export default function ServiceProgramsPage() {
             frequency: 'monthly',
             active: true
         });
-        
+
         if (newProgram) {
             router.push(`/service/programs/${newProgram.id}/edit`);
         }
@@ -74,15 +74,15 @@ export default function ServiceProgramsPage() {
         if (!program.active) {
             return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">Inactif</span>;
         }
-        
+
         if (program.nextDue && new Date(program.nextDue) < new Date()) {
             return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">En retard</span>;
         }
-        
+
         if (program.nextDue && new Date(program.nextDue) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)) {
             return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Bientôt dû</span>;
         }
-        
+
         return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Actif</span>;
     };
 
@@ -90,13 +90,14 @@ export default function ServiceProgramsPage() {
         <div className="p-6 max-w-[1600px] mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-3xl font-bold text-gray-900">Service Programs</h1>
+                    <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Service Programs</h1>
                     <button className="text-[#008751] hover:underline text-sm font-medium flex items-center gap-1">
                         Learn More <span className="transform -rotate-45">➜</span>
                     </button>
                 </div>
                 <button
                     onClick={handleAddProgram}
+                    data-testid="add-program-button"
                     className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                 >
                     <Plus size={20} /> Add Service Program
@@ -141,6 +142,7 @@ export default function ServiceProgramsPage() {
                         placeholder="Search"
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
+                        data-testid="search-input"
                         className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                     />
                 </div>
@@ -262,6 +264,7 @@ export default function ServiceProgramsPage() {
                             programs.map((program) => (
                                 <tr
                                     key={program.id}
+                                    data-testid={`program-row-${program.id}`}
                                     className="hover:bg-gray-50 cursor-pointer"
                                     onClick={() => handleProgramClick(program.id)}
                                 >
@@ -303,7 +306,7 @@ export default function ServiceProgramsPage() {
                                 </tr>
                             ))
                         )}
-                        
+
                         {/* Indicateur de chargement */}
                         {loading && (
                             <tr>

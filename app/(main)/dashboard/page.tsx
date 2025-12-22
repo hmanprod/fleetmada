@@ -88,7 +88,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard FleetMada</h1>
+              <h1 data-testid="dashboard-title" className="text-3xl font-bold text-gray-900">Dashboard FleetMada</h1>
               <p className="text-gray-600 mt-1">
                 Vue d'ensemble de votre flotte en temps réel
               </p>
@@ -98,7 +98,7 @@ export default function Dashboard() {
               {/* Indicateur de statut */}
               <div className="flex items-center space-x-2">
                 <div className={`w-3 h-3 rounded-full ${fleetOverview.isHealthy ? 'bg-green-500' :
-                    fleetOverview.hasIssues ? 'bg-yellow-500' : 'bg-red-500'
+                  fleetOverview.hasIssues ? 'bg-yellow-500' : 'bg-red-500'
                   }`}></div>
                 <span className="text-sm text-gray-600">
                   {fleetOverview.isHealthy ? 'Système opérationnel' : 'Attention requise'}
@@ -109,6 +109,7 @@ export default function Dashboard() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
+                data-testid="refresh-button"
                 className="flex items-center px-4 py-2 bg-[#008751] text-white rounded-lg hover:bg-[#007043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
@@ -116,10 +117,10 @@ export default function Dashboard() {
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-gray-900">
+              <button data-testid="notification-button" className="relative p-2 text-gray-600 hover:text-gray-900">
                 <Bell className="w-6 h-6" />
                 {systemAlerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span data-testid="notification-badge" className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {systemAlerts.length}
                   </span>
                 )}
@@ -174,8 +175,8 @@ export default function Dashboard() {
                   onClick={() => setActiveTab(tab.id as any)}
                   data-testid={`dashboard-${tab.id}-tab`}
                   className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
-                      ? 'border-[#008751] text-[#008751]'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#008751] text-[#008751]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -195,6 +196,7 @@ export default function Dashboard() {
             {/* Métriques principales */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
+                data-testid="metric-card-total-vehicles"
                 title="Total Véhicules"
                 value={fleetOverview.data?.totalVehicles || 0}
                 icon={TrendingUp}
@@ -208,6 +210,7 @@ export default function Dashboard() {
               />
 
               <MetricCard
+                data-testid="metric-card-total-costs"
                 title="Coûts (30j)"
                 value={`${(costAnalysis.data?.summary.totalCosts || 0).toLocaleString()}€`}
                 icon={TrendingUp}
@@ -217,6 +220,7 @@ export default function Dashboard() {
               />
 
               <MetricCard
+                data-testid="metric-card-maintenance"
                 title="Maintenance"
                 value={maintenanceStatus.data?.summary.overdueReminders || 0}
                 icon={Calendar}
@@ -242,7 +246,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Alertes */}
               <div className="lg:col-span-1">
-                <AlertSummary alerts={systemAlerts} />
+                <AlertSummary data-testid="alert-summary" alerts={systemAlerts} />
               </div>
 
               {/* Graphique des coûts */}
@@ -325,7 +329,7 @@ export default function Dashboard() {
 
       {/* Loading overlay */}
       {(fleetOverview.loading || costAnalysis.loading || maintenanceStatus.loading || dashboardMetrics.loading || issuesStatus.loading) && (
-        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+        <div data-testid="loading-overlay" className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
             <RefreshCw className="w-6 h-6 animate-spin text-[#008751]" />
             <span className="text-gray-900">Chargement des données...</span>

@@ -67,9 +67,9 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
     try {
       setLoading(true)
       setError(null)
-      
+
       const response = await remindersApi.getServiceReminders(options)
-      
+
       if (response) {
         setReminders(response.reminders)
         setPagination(response.pagination)
@@ -105,7 +105,7 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   }): Promise<ServiceReminder> => {
     try {
       const reminder = await remindersApi.createServiceReminder(data)
-      
+
       if (reminder) {
         // Rafraîchir la liste après création
         await fetchReminders()
@@ -136,10 +136,10 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   }): Promise<ServiceReminder> => {
     try {
       const reminder = await remindersApi.updateServiceReminder(id, data)
-      
+
       if (reminder) {
         // Mettre à jour la liste locale
-        setReminders(prev => prev.map(item => 
+        setReminders(prev => prev.map(item =>
           item.id === id ? reminder : item
         ))
         return reminder
@@ -156,7 +156,7 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   const deleteReminder = async (id: string): Promise<void> => {
     try {
       const success = await remindersApi.deleteServiceReminder(id)
-      
+
       if (success) {
         // Retirer de la liste locale
         setReminders(prev => prev.filter(reminder => reminder.id !== id))
@@ -173,10 +173,10 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   const dismissReminder = async (id: string): Promise<ServiceReminder> => {
     try {
       const reminder = await remindersApi.dismissServiceReminder(id)
-      
+
       if (reminder) {
-        setReminders(prev => prev.map(reminder => 
-          reminder.id === id ? reminder : reminder
+        setReminders(prev => prev.map(item =>
+          item.id === id ? reminder : item
         ))
         return reminder
       } else {
@@ -192,10 +192,10 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   const snoozeReminder = async (id: string, data: { snoozeUntil?: string; days?: number }): Promise<ServiceReminder> => {
     try {
       const reminder = await remindersApi.snoozeServiceReminder(id, data)
-      
+
       if (reminder) {
-        setReminders(prev => prev.map(reminder => 
-          reminder.id === id ? reminder : reminder
+        setReminders(prev => prev.map(item =>
+          item.id === id ? reminder : item
         ))
         return reminder
       } else {

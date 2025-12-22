@@ -55,12 +55,12 @@ export default function VehicleRenewalsPage() {
 
   const formatDueDate = (renewal: any) => {
     if (!renewal.dueDate) return '—';
-    
+
     const dueDate = new Date(renewal.dueDate);
     const now = new Date();
     const diffTime = dueDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return `${Math.abs(diffDays)} jours de retard`;
     } else if (diffDays === 0) {
@@ -135,7 +135,7 @@ export default function VehicleRenewalsPage() {
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Vehicle Renewal Reminders</h1>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Vehicle Renewal Reminders</h1>
           <button
             onClick={handleLearnMore}
             className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2"
@@ -147,6 +147,7 @@ export default function VehicleRenewalsPage() {
           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
           <button
             onClick={handleAddVehicleRenewal}
+            data-testid="add-vehicle-renewal"
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
           >
             <Plus size={20} /> Add Vehicle Renewal Reminder
@@ -157,15 +158,17 @@ export default function VehicleRenewalsPage() {
       <div className="flex gap-1 border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab('all')}
+          data-testid="tab-all"
           className={`px-4 py-2 text-sm font-medium border-b-2 ${activeTab === 'all'
-              ? 'border-[#008751] text-[#008751]'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+            ? 'border-[#008751] text-[#008751]'
+            : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
           All
         </button>
         <button
           onClick={() => setActiveTab('due-soon')}
+          data-testid="tab-due-soon"
           className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'due-soon' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
             }`}
         >
@@ -173,6 +176,7 @@ export default function VehicleRenewalsPage() {
         </button>
         <button
           onClick={() => setActiveTab('overdue')}
+          data-testid="tab-overdue"
           className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'overdue' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
             }`}
         >
@@ -186,6 +190,7 @@ export default function VehicleRenewalsPage() {
           <input
             type="text"
             placeholder="Search"
+            data-testid="search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
@@ -206,21 +211,21 @@ export default function VehicleRenewalsPage() {
         <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
           <Filter size={14} /> Filters
         </button>
-        <div className="flex-1 text-right text-sm text-gray-500">
+        <div className="flex-1 text-right text-sm text-gray-500" data-testid="pagination-info">
           {pagination && `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total}`}
         </div>
         <div className="flex gap-1">
-          <button 
+          <button
             className="p-1 border border-gray-300 rounded text-gray-400 bg-white"
             disabled={!pagination?.hasPrev}
-            onClick={() => {/* TODO: Implémenter pagination */}}
+            onClick={() => {/* TODO: Implémenter pagination */ }}
           >
             <ChevronRight size={16} className="rotate-180" />
           </button>
-          <button 
+          <button
             className="p-1 border border-gray-300 rounded text-gray-400 bg-white"
             disabled={!pagination?.hasNext}
-            onClick={() => {/* TODO: Implémenter pagination */}}
+            onClick={() => {/* TODO: Implémenter pagination */ }}
           >
             <ChevronRight size={16} />
           </button>
@@ -228,12 +233,13 @@ export default function VehicleRenewalsPage() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200" data-testid="renewals-table">
           <thead className="bg-gray-50">
             <tr>
               <th className="w-8 px-6 py-3">
                 <input
                   type="checkbox"
+                  data-testid="select-all-checkbox"
                   checked={selectedRenewals.length === renewals.length && renewals.length > 0}
                   onChange={handleSelectAll}
                   className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
@@ -250,12 +256,14 @@ export default function VehicleRenewalsPage() {
             {renewals.map((renewal) => (
               <tr
                 key={renewal.id}
+                data-testid="renewal-row"
                 className="hover:bg-gray-50 cursor-pointer"
                 onClick={() => handleRenewalClick(renewal.id)}
               >
                 <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
+                    data-testid="renewal-checkbox"
                     checked={selectedRenewals.includes(renewal.id)}
                     onChange={() => handleSelectRenewal(renewal.id)}
                     className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
@@ -280,12 +288,12 @@ export default function VehicleRenewalsPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`flex items-center gap-1.5 text-sm font-medium ${getStatusColor(renewal.status, renewal.isOverdue)}`}>
-                    <div className={`w-2 h-2 rounded-full ${getStatusDot(renewal.status, renewal.isOverdue)}`}></div> 
-                    {renewal.status === 'OVERDUE' ? 'Overdue' : 
-                     renewal.status === 'DUE' ? 'Due Soon' :
-                     renewal.status === 'COMPLETED' ? 'Completed' :
-                     renewal.status === 'DISMISSED' ? 'Dismissed' : 
-                     renewal.status}
+                    <div className={`w-2 h-2 rounded-full ${getStatusDot(renewal.status, renewal.isOverdue)}`}></div>
+                    {renewal.status === 'OVERDUE' ? 'Overdue' :
+                      renewal.status === 'DUE' ? 'Due Soon' :
+                        renewal.status === 'COMPLETED' ? 'Completed' :
+                          renewal.status === 'DISMISSED' ? 'Dismissed' :
+                            renewal.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -312,7 +320,7 @@ export default function VehicleRenewalsPage() {
             ))}
           </tbody>
         </table>
-        
+
         {renewals.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             Aucun renouvellement de véhicule trouvé

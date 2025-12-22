@@ -112,12 +112,17 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
         <div className="bg-gray-50 min-h-screen">
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                    <button onClick={handleBack} data-testid="back-button" className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
                         <ArrowLeft size={18} /> Back
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Part</h1>
+                    <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">Edit Part</h1>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
+                    {saveSuccess && (
+                        <span data-testid="success-message" className="text-green-600 font-medium text-sm">
+                            Pièce mise à jour avec succès
+                        </span>
+                    )}
                     <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Annuler</button>
                     <button
                         onClick={handleSave}

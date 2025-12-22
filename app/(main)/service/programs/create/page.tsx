@@ -37,11 +37,11 @@ export default function ServiceProgramCreatePage() {
           <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
             <span className="hover:underline cursor-pointer" onClick={handleBack}>Service Programs</span> <span className="text-gray-300">/</span> New
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">New Service Program</h1>
+          <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">New Service Program</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleCancel} className="px-4 py-2 text-[#008751] font-medium hover:underline">Cancel</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Program</button>
+          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-[#008751] font-medium hover:underline">Cancel</button>
+          <button onClick={handleSave} data-testid="save-button" className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Program</button>
         </div>
       </div>
 
@@ -53,6 +53,7 @@ export default function ServiceProgramCreatePage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              data-testid="program-name"
               className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
             />
           </div>
@@ -62,6 +63,7 @@ export default function ServiceProgramCreatePage() {
             <select
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
+              data-testid="program-template"
               className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
             >
               <option value="">Please select</option>
@@ -92,6 +94,7 @@ export default function ServiceProgramCreatePage() {
                   name="primaryMeter"
                   checked={primaryMeter === 'Miles'}
                   onChange={() => setPrimaryMeter('Miles')}
+                  data-testid="primary-meter-miles"
                   className="text-[#008751] focus:ring-[#008751] w-4 h-4 border-gray-300"
                 />
                 <span className="text-sm text-gray-900 font-medium">Miles</span>

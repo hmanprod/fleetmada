@@ -64,10 +64,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       icon: Car,
       href: null,
       subItems: [
-        { label: 'Liste des véhicules', href: '/vehicles', view: ViewState.VEHICLES_LIST },
-        { label: 'Affectations', href: '/vehicles/assignments', view: ViewState.VEHICLE_ASSIGNMENTS },
-        { label: 'Historique compteur', href: '/vehicles/meter-history', view: ViewState.METER_HISTORY },
-        { label: 'Analyse remplacement', href: '/vehicles/replacement-analysis', view: ViewState.REPLACEMENT_ANALYSIS },
+        { id: 'vehicles-list', label: 'Liste des véhicules', href: '/vehicles', view: ViewState.VEHICLES_LIST },
+        { id: 'vehicle-assignments', label: 'Affectations', href: '/vehicles/assignments', view: ViewState.VEHICLE_ASSIGNMENTS },
+        { id: 'meter-history', label: 'Historique compteur', href: '/vehicles/meter-history', view: ViewState.METER_HISTORY },
+        { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement-analysis', view: ViewState.REPLACEMENT_ANALYSIS },
       ]
     },
     { id: 'tools', label: 'Outils', icon: Wrench, href: '/tools', view: undefined },
@@ -79,9 +79,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       icon: Clock,
       href: null,
       subItems: [
-        { label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS },
-        { label: 'Renouvellements véhicules', href: '/reminders/vehicle', view: ViewState.VEHICLE_RENEWALS },
-        { label: 'Renouvellements contacts', href: '/reminders/contact', view: ViewState.CONTACT_RENEWALS },
+        { id: 'service-reminders', label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS },
+        { id: 'vehicle-renewals', label: 'Renouvellements véhicules', href: '/reminders/vehicle-renewals', view: ViewState.VEHICLE_RENEWALS },
+        { id: 'contact-renewals', label: 'Renouvellements contacts', href: '/reminders/contact', view: ViewState.CONTACT_RENEWALS },
       ]
     },
     {
@@ -90,10 +90,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       icon: Hammer,
       href: null,
       subItems: [
-        { label: 'Historique d\'entretien', href: '/service/history', view: ViewState.SERVICE_HISTORY },
-        { label: 'Ordres de travail', href: '/service/work-orders', view: ViewState.WORK_ORDERS },
-        { label: 'Tâches d\'entretien', href: '/service/tasks', view: ViewState.SERVICE_TASKS },
-        { label: 'Programmes d\'entretien', href: '/service/programs', view: ViewState.SERVICE_PROGRAMS },
+        { id: 'service-history', label: 'Historique d\'entretien', href: '/service/history', view: ViewState.SERVICE_HISTORY },
+        { id: 'work-orders', label: 'Ordres de travail', href: '/service/work-orders', view: ViewState.WORK_ORDERS },
+        { id: 'service-tasks', label: 'Tâches d\'entretien', href: '/service/tasks', view: ViewState.SERVICE_TASKS },
+        { id: 'service-programs', label: 'Programmes d\'entretien', href: '/service/programs', view: ViewState.SERVICE_PROGRAMS },
       ]
     },
     { id: 'contacts', label: 'Contacts', icon: Users, href: '/contacts', view: ViewState.CONTACTS_LIST },
@@ -104,8 +104,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       icon: Fuel,
       href: null,
       subItems: [
-        { label: 'Historique carburant', href: '/fuel/history', view: ViewState.FUEL_HISTORY },
-        { label: 'Historique recharge', href: '/fuel/charging', view: ViewState.CHARGING_HISTORY },
+        { id: 'fuel-history', label: 'Historique carburant', href: '/fuel/history', view: ViewState.FUEL_HISTORY },
+        { id: 'charging-history', label: 'Historique recharge', href: '/fuel/charging', view: ViewState.CHARGING_HISTORY },
       ]
     },
     { id: 'parts', label: 'Pièces', icon: Box, href: '/parts', view: ViewState.PARTS_LIST },
@@ -188,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                       <button
                         key={subItem.label}
                         onClick={() => setView(subItem.view!)}
-                        data-testid={`sidebar-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
+                        data-testid={`sidebar-${subItem.id || subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
                         className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors text-left ${isActive(subItem.href, subItem.view)
                           ? 'text-white font-semibold'
                           : 'text-gray-400 hover:text-white'
@@ -200,7 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                       <Link
                         key={subItem.label}
                         href={subItem.href}
-                        data-testid={`sidebar-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
+                        data-testid={`sidebar-${subItem.id || subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
                         className={`w-full flex items-center pl-12 pr-4 py-2 text-sm transition-colors ${isActive(subItem.href, subItem.view)
                           ? 'text-white font-semibold'
                           : 'text-gray-400 hover:text-white'

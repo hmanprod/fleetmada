@@ -105,20 +105,20 @@ export default function ServiceReminderDetailPage({ params }: { params: { id: st
                             <Clock size={20} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Tire Rotation</h1>
+                            <h1 className="text-2xl font-bold text-gray-900" data-testid="page-title">{reminder.title || 'Service Reminder'}</h1>
                             <div className="text-sm text-gray-500">AP101 (Sample)</div>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex gap-2">
-                    <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleEdit}>
+                    <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleEdit} data-testid="edit-button">
                         <Edit size={16} /> Modifier
                     </button>
-                    <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleSnooze} disabled={actionLoading}>
+                    <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleSnooze} disabled={actionLoading} data-testid="snooze-button">
                         {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />} Reporter
                     </button>
-                    <button className="px-3 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleDismiss} disabled={actionLoading}>
+                    <button className="px-3 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleDismiss} disabled={actionLoading} data-testid="dismiss-button">
                         {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />} Traiter
                     </button>
                 </div>
@@ -131,8 +131,23 @@ export default function ServiceReminderDetailPage({ params }: { params: { id: st
                     {/* Details Card */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-red-50">
-                            <div className="flex items-center gap-2 text-red-700 font-bold">
-                                <div className="w-2.5 h-2.5 bg-red-600 rounded-full"></div> Overdue
+                            <div className="flex items-center gap-2 font-bold" data-testid="reminder-status">
+                                <div className={`w-2.5 h-2.5 rounded-full ${reminder.status === 'DISMISSED' ? 'bg-gray-400' :
+                                        reminder.status === 'COMPLETED' ? 'bg-green-600' :
+                                            reminder.status === 'SNOOZED' || reminder.snoozedUntil ? 'bg-orange-500' :
+                                                reminder.isOverdue ? 'bg-red-600' : 'bg-blue-600'
+                                    }`}></div>
+                                <span className={
+                                    reminder.status === 'DISMISSED' ? 'text-gray-600' :
+                                        reminder.status === 'COMPLETED' ? 'text-green-700' :
+                                            reminder.status === 'SNOOZED' || reminder.snoozedUntil ? 'text-orange-700' :
+                                                reminder.isOverdue ? 'text-red-700' : 'text-blue-700'
+                                }>
+                                    {reminder.status === 'DISMISSED' ? 'Dismissed' :
+                                        reminder.status === 'COMPLETED' ? 'Completed' :
+                                            reminder.status === 'SNOOZED' || reminder.snoozedUntil ? 'Snoozed' :
+                                                reminder.isOverdue ? 'Overdue' : 'Due Soon'}
+                                </span>
                             </div>
                             <div className="text-sm text-red-600">Due 4 months ago</div>
                         </div>
@@ -144,8 +159,7 @@ export default function ServiceReminderDetailPage({ params }: { params: { id: st
                                 </div>
 
                                 <div>
-                                    <div className="text-sm text-gray-500 mb-1">Vehicle</div>
-                                    <div className="text-sm text-[#008751] font-medium hover:underline cursor-pointer">AP101 (Sample)</div>
+                                    <div className="text-sm text-[#008751] font-medium hover:underline cursor-pointer" data-testid="reminder-vehicle">{reminder.vehicleId} (Sample)</div>
                                 </div>
 
                                 <div>

@@ -79,7 +79,7 @@ export function usePartDetails(partId: string, options: UsePartDetailsOptions = 
     try {
       const response = await partsAPI.updatePart(partId, data)
       const updatedPart = response.data
-      
+
       setPart(updatedPart)
       return updatedPart
     } catch (err) {
@@ -98,16 +98,17 @@ export function usePartDetails(partId: string, options: UsePartDetailsOptions = 
 
     try {
       const response = await partsAPI.adjustStock(partId, data)
-      const updatedPart = response.data
-      
+      // La réponse de adjustStock contient { part, stockMovement, adjustment } dans data
+      const updatedPart = (response.data as any).part || response.data
+
       setPart(updatedPart)
-      
+
       // Actualiser l'historique du stock
       if (includeHistory) {
         const historyResponse = await partsAPI.getStockHistory(partId)
         setStockHistory(historyResponse.data)
       }
-      
+
       return updatedPart
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'ajustement du stock')
@@ -151,7 +152,7 @@ export function usePartDetails(partId: string, options: UsePartDetailsOptions = 
   // Calculs dérivés
   const isLowStock = part?.quantity !== undefined && part?.minimumStock !== undefined && part.quantity <= part.minimumStock
   const isOutOfStock = part?.quantity === 0
-  const stockPercentage = part?.quantity !== undefined && part?.minimumStock !== undefined 
+  const stockPercentage = part?.quantity !== undefined && part?.minimumStock !== undefined
     ? Math.min(100, Math.round((part.quantity / Math.max(part.minimumStock, 1)) * 100))
     : 0
 

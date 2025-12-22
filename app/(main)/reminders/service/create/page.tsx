@@ -4,10 +4,16 @@ import React, { useState } from 'react';
 import { ArrowLeft, ChevronDown, Info, HelpCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useServiceReminders } from '@/lib/hooks/useServiceReminders';
+import { useVehicles } from '@/lib/hooks/useVehicles';
+import { useServiceTasks } from '@/lib/hooks/useServiceTasks';
 
 export default function CreateServiceReminderPage() {
     const router = useRouter();
-    const { createReminder, loading } = useServiceReminders();
+    const { createReminder, loading: createLoading } = useServiceReminders();
+    const { vehicles, loading: vehiclesLoading } = useVehicles();
+    const { tasks, loading: tasksLoading } = useServiceTasks();
+
+    const loading = createLoading || vehiclesLoading || tasksLoading;
     const [formData, setFormData] = useState({
         vehicle: '',
         serviceTask: '',
@@ -44,8 +50,8 @@ export default function CreateServiceReminderPage() {
                 nextDue: formData.manualDueDate ? formData.nextDue : undefined,
                 intervalMonths: formData.timeInterval ? parseInt(formData.timeInterval) : undefined,
                 intervalMeter: formData.meterInterval ? parseInt(formData.meterInterval) : undefined,
-                title: formData.serviceTask === 'oil_change' ? 'Changement d\'huile moteur' : 
-                      formData.serviceTask === 'tire_rotation' ? 'Rotation des pneus' : formData.serviceTask,
+                title: formData.serviceTask === 'oil_change' ? 'Changement d\'huile moteur' :
+                    formData.serviceTask === 'tire_rotation' ? 'Rotation des pneus' : formData.serviceTask,
                 description: `Rappel de service programmé automatiquement`
             };
 
@@ -80,7 +86,7 @@ export default function CreateServiceReminderPage() {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Reminder</button>
+                    <button onClick={handleSave} data-testid="save-reminder" className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Reminder</button>
                 </div>
             </div>
 
@@ -101,12 +107,14 @@ export default function CreateServiceReminderPage() {
                                 <label className="block text-sm font-bold text-gray-900 mb-1">Vehicle <span className="text-red-500">*</span></label>
                                 <select
                                     value={formData.vehicle}
+                                    data-testid="vehicle-select"
                                     onChange={(e) => handleInputChange('vehicle', e.target.value)}
                                     className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
                                 >
                                     <option value="">Please select</option>
-                                    <option value="AP101">AP101 (Sample)</option>
-                                    <option value="RP101">RP101 (Sample)</option>
+                                    {vehicles.map(v => (
+                                        <option key={v.id} value={v.id}>{v.name}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -114,12 +122,21 @@ export default function CreateServiceReminderPage() {
                                 <label className="block text-sm font-bold text-gray-900 mb-1">Service Task <span className="text-red-500">*</span></label>
                                 <select
                                     value={formData.serviceTask}
+                                    data-testid="service-task-select"
                                     onChange={(e) => handleInputChange('serviceTask', e.target.value)}
                                     className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
                                 >
                                     <option value="">Please select</option>
-                                    <option value="oil_change">Engine Oil & Filter Replacement</option>
-                                    <option value="tire_rotation">Tire Rotation</option>
+                                    {tasks.map(t => (
+                                        <option key={t.id} value={t.name}>{t.name}</option>
+                                    ))}
+                                    {/* Fallback standard tasks if none available in DB yet */}
+                                    {tasks.length === 0 && (
+                                        <>
+                                            <option value="Engine Oil & Filter Replacement">Engine Oil & Filter Replacement</option>
+                                            <option value="Tire Rotation">Tire Rotation</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
 
@@ -135,12 +152,14 @@ export default function CreateServiceReminderPage() {
                                         <input
                                             type="text"
                                             placeholder="Every"
+                                            data-testid="time-interval-input"
                                             value={formData.timeInterval}
                                             onChange={(e) => handleInputChange('timeInterval', e.target.value)}
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                         <select
                                             value={formData.timeIntervalUnit}
+                                            data-testid="time-interval-unit"
                                             onChange={(e) => handleInputChange('timeIntervalUnit', e.target.value)}
                                             className="w-40 p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
                                         >

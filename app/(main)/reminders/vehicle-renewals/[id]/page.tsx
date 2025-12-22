@@ -1,98 +1,138 @@
 'use client';
 
-import React from 'react';
-import { ArrowLeft, Edit, MoreHorizontal, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Edit, Bell, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useVehicleRenewals } from '@/lib/hooks/useVehicleRenewals';
 
 export default function VehicleRenewalDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { renewals, loading, error, completeRenewal } = useVehicleRenewals();
+    const [renewal, setRenewal] = useState(null as any);
+    const [actionLoading, setActionLoading] = useState(false);
+
+    useEffect(() => {
+        if (renewals.length > 0) {
+            const found = renewals.find(r => r.id === params.id);
+            if (found) {
+                setRenewal(found);
+            }
+        }
+    }, [renewals, params.id]);
 
     const handleBack = () => {
         router.push('/reminders/vehicle-renewals');
     };
 
+    const handleEdit = () => {
+        router.push(`/reminders/vehicle-renewals/${params.id}/edit`);
+    };
+
+    const handleComplete = async () => {
+        if (!renewal) return;
+        setActionLoading(true);
+        try {
+            await completeRenewal(params.id, {
+                completedDate: new Date().toISOString(),
+                cost: 0
+            });
+            // Recharger pour voir le changement de statut
+            window.location.reload();
+        } catch (error) {
+            console.error('Erreur lors de la complétion:', error);
+            alert('Erreur lors de la complétion');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    if (loading && !renewal) {
+        return <div className="p-8 flex justify-center h-screen items-center"><Loader2 className="animate-spin text-[#008751]" size={40} /></div>;
+    }
+
+    if (error) {
+        return <div className="p-8 text-red-500 font-bold">Erreur: {error}</div>;
+    }
+
+    if (!renewal) {
+        return <div className="p-8 text-gray-500 font-medium">Renouvellement non trouvé</div>;
+    }
+
     return (
         <div className="bg-gray-50 min-h-screen pb-12">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
+            <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-1">
-                    <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium mr-2">
-                        Vehicle Renewal (12313354) <ArrowLeft size={12} className="rotate-180" />
+                    <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium mr-4">
+                        <ArrowLeft size={16} /> Vehicle Renewals
                     </button>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center text-blue-600">
+                            <Bell size={20} />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900" data-testid="page-title">{renewal.title || 'Vehicle Renewal'}</h1>
+                            <div className="text-sm text-gray-500">{renewal.vehicleId}</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
-                        <span className="flex items-center gap-1"><Bell size={14} /> Watch</span>
+                    <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm" onClick={handleEdit} data-testid="edit-button">
+                        <Edit size={16} /> Edit
                     </button>
-                    <button className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded text-sm shadow-sm">
-                        X
+                    <button
+                        className="px-3 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm disabled:opacity-50"
+                        onClick={handleComplete}
+                        disabled={actionLoading}
+                        data-testid="complete-button"
+                    >
+                        {actionLoading ? <Loader2 size={16} className="animate-spin" /> : null} Complete
                     </button>
                 </div>
             </div>
 
-            <div className="px-6 py-6 max-w-6xl">
-                <div className="flex justify-between items-start mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Emission Test</h1>
-                    <div className="flex gap-2">
-                        <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
-                            <Edit size={16} /> Edit
-                        </button>
-                        <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded text-sm shadow-sm">
-                            ...
-                        </button>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row gap-8">
-                    <div className="flex-1 space-y-6">
-                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                            <div className="text-sm text-gray-500">Vehicle</div>
-                            <div className="flex items-center gap-2">
-                                <img src="https://source.unsplash.com/random/30x30/?truck" className="w-8 h-8 rounded object-cover" alt="" />
-                                <span className="text-sm font-medium text-[#008751] hover:underline cursor-pointer">AC253</span>
-                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Sample</span>
+            <div className="max-w-[1600px] mx-auto py-6 px-6 flex gap-6 items-start">
+                <div className="flex-1 space-y-6">
+                    <div className="bg-white rounded shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row gap-8">
+                        <div className="flex-1 space-y-6">
+                            <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                                <div className="text-sm text-gray-500">Vehicle</div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-[#008751] hover:underline cursor-pointer" data-testid="reminder-vehicle">{renewal.vehicleId}</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                            <div className="text-sm text-gray-500">Renewal Type</div>
-                            <div className="text-sm text-gray-900">Emission Test</div>
-                        </div>
-
-                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                            <div className="text-sm text-gray-500">Status</div>
-                            <div className="flex items-center gap-1.5 text-sm text-red-600 font-bold">
-                                <div className="w-2.5 h-2.5 bg-red-600 rounded-full"></div> Overdue
+                            <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                                <div className="text-sm text-gray-500">Renewal Type</div>
+                                <div className="text-sm text-gray-900 font-medium">{renewal.type}</div>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                            <div className="text-sm text-gray-500">Due Date</div>
-                            <div className="text-sm text-gray-900 font-medium">
-                                11/11/2025
-                                <div className="text-xs text-red-500 font-normal">1 month ago</div>
+                            <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                                <div className="text-sm text-gray-500">Status</div>
+                                <div className="flex items-center gap-1.5 text-sm font-bold" data-testid="renewal-status">
+                                    <div className={`w-2.5 h-2.5 rounded-full ${renewal.status === 'DISMISSED' ? 'bg-gray-400' :
+                                            renewal.status === 'COMPLETED' ? 'bg-green-600' :
+                                                renewal.isOverdue ? 'bg-red-600' : 'bg-blue-600'
+                                        }`}></div>
+                                    <span className={
+                                        renewal.status === 'DISMISSED' ? 'text-gray-600' :
+                                            renewal.status === 'COMPLETED' ? 'text-green-700' :
+                                                renewal.isOverdue ? 'text-red-700' : 'text-blue-700'
+                                    }>
+                                        {renewal.status === 'DISMISSED' ? 'Dismissed' :
+                                            renewal.status === 'COMPLETED' ? 'Completed' :
+                                                renewal.isOverdue ? 'Overdue' : 'Due Soon'}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                            <div className="text-sm text-gray-500">Due Soon Threshold</div>
-                            <div className="text-sm text-gray-900">3 weeks</div>
-                        </div>
-
-                        <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
-                            <div className="text-sm text-gray-500">Notifications</div>
-                            <div className="text-sm text-green-600 flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full bg-green-500"></div> Active
+                            <div className="grid grid-cols-[150px_1fr] gap-4 items-center">
+                                <div className="text-sm text-gray-500">Due Date</div>
+                                <div className="text-sm text-gray-900 font-medium">
+                                    {renewal.dueDate ? new Date(renewal.dueDate).toLocaleDateString() : 'N/A'}
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 border-l border-gray-100 pl-8">
-                        <h3 className="font-bold text-gray-900 mb-4">Comments</h3>
-                        <div className="flex gap-3 mb-6">
-                            <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">HR</div>
-                            <input type="text" placeholder="Add a Comment..." className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
                         </div>
                     </div>
                 </div>

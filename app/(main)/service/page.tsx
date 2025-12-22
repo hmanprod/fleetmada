@@ -113,26 +113,27 @@ export default function ServicePage() {
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
-         <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Maintenance</h1>
-            <button className="text-[#008751] font-medium flex items-center gap-1 text-sm hover:underline">
-              Vue d'ensemble du service <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            </button>
-         </div>
-         <div className="flex gap-2">
-           <button 
+        <div className="flex items-center gap-4">
+          <h1 data-testid="service-dashboard-title" className="text-3xl font-bold text-gray-900">Dashboard Maintenance</h1>
+          <button className="text-[#008751] font-medium flex items-center gap-1 text-sm hover:underline">
+            Vue d'ensemble du service <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button
             onClick={handleViewTasks}
             className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2 px-4 rounded flex items-center gap-2"
-           >
+          >
             <Wrench size={20} /> Tâches
-           </button>
-           <button 
+          </button>
+          <button
             onClick={handleAdd}
+            data-testid="add-service-program-button"
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
-           >
+          >
             <Plus size={20} /> Nouveau Programme
-           </button>
-         </div>
+          </button>
+        </div>
       </div>
 
       {/* Statistiques principales */}
@@ -146,9 +147,8 @@ export default function ServicePage() {
                   <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                   <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
                   <div className="flex items-center mt-2">
-                    <span className={`text-sm font-medium ${
-                      stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+                      }`}>
                       {stat.change}
                     </span>
                     <span className="text-sm text-gray-500 ml-2">vs mois dernier</span>
@@ -179,9 +179,10 @@ export default function ServicePage() {
               <p className="text-sm text-gray-600">Voir l'historique des interventions</p>
             </div>
           </button>
-          
+
           <button
             onClick={handleViewWorkOrders}
+            data-testid="quick-action-work-orders"
             className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="p-2 bg-green-100 rounded">
@@ -192,9 +193,10 @@ export default function ServicePage() {
               <p className="text-sm text-gray-600">Gérer les work orders</p>
             </div>
           </button>
-          
+
           <button
             onClick={() => router.push('/service/programs')}
+            data-testid="quick-action-programs"
             className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="p-2 bg-purple-100 rounded">
@@ -214,14 +216,14 @@ export default function ServicePage() {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Activité Récente</h2>
-            <button 
+            <button
               onClick={handleViewHistory}
               className="text-[#008751] hover:underline text-sm font-medium"
             >
               Voir tout
             </button>
           </div>
-          
+
           {entriesLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008751]"></div>
@@ -268,7 +270,7 @@ export default function ServicePage() {
               Gérer
             </button>
           </div>
-          
+
           {remindersLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008751]"></div>
@@ -288,11 +290,10 @@ export default function ServicePage() {
                       {reminder.task}
                     </p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    reminder.isOverdue 
-                      ? 'bg-red-100 text-red-800' 
+                  <span className={`text-xs px-2 py-1 rounded ${reminder.isOverdue
+                      ? 'bg-red-100 text-red-800'
                       : 'bg-yellow-100 text-yellow-800'
-                  }`}>
+                    }`}>
                     {reminder.isOverdue ? 'En retard' : 'Bientôt dû'}
                   </span>
                 </div>
@@ -312,7 +313,7 @@ export default function ServicePage() {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Programmes de Service</h2>
-            <button 
+            <button
               onClick={() => router.push('/service/programs')}
               className="text-[#008751] hover:underline text-sm font-medium"
             >
@@ -320,7 +321,7 @@ export default function ServicePage() {
             </button>
           </div>
         </div>
-        
+
         {programsLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008751]"></div>
@@ -328,8 +329,8 @@ export default function ServicePage() {
         ) : activePrograms.length > 0 ? (
           <div className="divide-y divide-gray-200">
             {activePrograms.slice(0, 5).map((program) => (
-              <div 
-                key={program.id} 
+              <div
+                key={program.id}
                 className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => handleSelectProgram(program.id)}
               >

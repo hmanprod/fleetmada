@@ -92,7 +92,7 @@ export default function AlertWidget({
     if (diffMins < 60) return `Il y a ${diffMins} min`;
     if (diffHours < 24) return `Il y a ${diffHours}h`;
     if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-    
+
     return date.toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'short',
@@ -129,11 +129,12 @@ export default function AlertWidget({
         return (
           <div
             key={alert.id}
+            data-testid="alert-item"
             className={`${config.bgColor} ${config.borderColor} border rounded-lg p-4`}
           >
             <div className="flex items-start">
               <Icon className={`${config.iconColor} mr-3 mt-0.5 flex-shrink-0`} size={20} />
-              
+
               <div className="flex-1 min-w-0">
                 <h4 className={`text-sm font-medium ${config.titleColor}`}>
                   {alert.title}
@@ -141,13 +142,13 @@ export default function AlertWidget({
                 <p className={`text-sm ${config.messageColor} mt-1`}>
                   {alert.message}
                 </p>
-                
+
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-xs text-gray-500 flex items-center">
                     <Clock size={12} className="mr-1" />
                     {formatTimestamp(alert.timestamp)}
                   </span>
-                  
+
                   <div className="flex items-center space-x-2">
                     {alert.action && (
                       <button
@@ -157,7 +158,7 @@ export default function AlertWidget({
                         {alert.action.label}
                       </button>
                     )}
-                    
+
                     {alert.dismissible && onDismiss && (
                       <button
                         onClick={() => onDismiss(alert.id)}
@@ -173,7 +174,7 @@ export default function AlertWidget({
           </div>
         );
       })}
-      
+
       {hiddenAlertsCount > 0 && (
         <div className="text-center">
           <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
@@ -189,20 +190,21 @@ export default function AlertWidget({
 interface AlertSummaryProps {
   alerts: Alert[];
   className?: string;
+  'data-testid'?: string;
 }
 
-export function AlertSummary({ alerts, className = '' }: AlertSummaryProps) {
+export function AlertSummary({ alerts, className = '', 'data-testid': dataTestId }: AlertSummaryProps) {
   const alertCounts = alerts.reduce((acc, alert) => {
     acc[alert.type] = (acc[alert.type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const criticalAlerts = alerts.filter(alert => 
+  const criticalAlerts = alerts.filter(alert =>
     alert.type === 'error' || alert.type === 'warning'
   );
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div data-testid={dataTestId} className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Alertes Système</h3>
         <div className="flex items-center space-x-2">
@@ -223,15 +225,14 @@ export function AlertSummary({ alerts, className = '' }: AlertSummaryProps) {
           )}
         </div>
       </div>
-      
+
       <div className="space-y-3">
         {criticalAlerts.slice(0, 3).map((alert) => (
           <div key={alert.id} className="flex items-center text-sm">
-            <AlertTriangle 
-              className={`mr-2 ${
-                alert.type === 'error' ? 'text-red-500' : 'text-yellow-500'
-              }`} 
-              size={16} 
+            <AlertTriangle
+              className={`mr-2 ${alert.type === 'error' ? 'text-red-500' : 'text-yellow-500'
+                }`}
+              size={16}
             />
             <span className="text-gray-900 font-medium">{alert.title}</span>
             <span className="text-gray-500 ml-auto text-xs">
@@ -239,14 +240,14 @@ export function AlertSummary({ alerts, className = '' }: AlertSummaryProps) {
             </span>
           </div>
         ))}
-        
+
         {alerts.length === 0 && (
           <div className="text-center py-4">
             <CheckCircle className="text-green-500 mx-auto mb-2" size={24} />
             <p className="text-sm text-gray-600">Aucune alerte active</p>
           </div>
         )}
-        
+
         {alerts.length > 3 && (
           <div className="text-center pt-2">
             <button className="text-sm text-blue-600 hover:text-blue-800">

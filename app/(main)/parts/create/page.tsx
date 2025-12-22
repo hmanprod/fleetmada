@@ -99,26 +99,22 @@ export default function PartCreatePage() {
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
+          <button onClick={handleBack} data-testid="back-button" className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
             <ArrowLeft size={18} /> Parts
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">New Part</h1>
+          <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">New Part</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Cancel</button>
+          <button data-testid="cancel-button" onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white" disabled={saving}>Cancel</button>
           <button
             onClick={handleSave}
+            data-testid="save-part-button"
             className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             disabled={saving || !formData.number || !formData.description}
           >
             {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
             {saving ? 'Sauvegarde...' : 'Sauvegarder'}
           </button>
-          <button
-            data-testid="save-part-button"
-            className="hidden"
-            onClick={handleSave}
-          ></button>
         </div>
       </div>
 
@@ -178,6 +174,7 @@ export default function PartCreatePage() {
                 value={formData.category || ''}
                 onChange={(e) => handleInputChange('category', e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
+                data-testid="part-category"
               >
                 <option value="">Sélectionner</option>
                 <option value="engine">Moteur</option>
@@ -197,6 +194,7 @@ export default function PartCreatePage() {
                 value={formData.manufacturer || ''}
                 onChange={(e) => handleInputChange('manufacturer', e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
+                data-testid="part-manufacturer"
               >
                 <option value="">Sélectionner</option>
                 <option value="bosch">Bosch</option>
@@ -279,6 +277,7 @@ export default function PartCreatePage() {
                   className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                   placeholder="0"
                   min="0"
+                  data-testid="part-quantity"
                 />
               </div>
               <div>
@@ -290,6 +289,7 @@ export default function PartCreatePage() {
                   className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                   placeholder="0"
                   min="0"
+                  data-testid="part-minimum-stock"
                 />
                 <p className="mt-1 text-xs text-gray-500">Seuil d'alerte pour le réapprovisionnement</p>
               </div>
@@ -351,6 +351,7 @@ export default function PartCreatePage() {
           </button>
           <button
             onClick={handleSave}
+            data-testid="save-changes-button"
             className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={saving || !formData.number || !formData.description}
           >

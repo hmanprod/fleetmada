@@ -108,7 +108,7 @@ export default function ServiceHistoryPage() {
 
   const getPriorityBadge = (priority?: string) => {
     if (!priority) return null;
-    
+
     const priorityConfig = {
       LOW: { color: 'bg-gray-100 text-gray-800' },
       MEDIUM: { color: 'bg-blue-100 text-blue-800' },
@@ -141,13 +141,14 @@ export default function ServiceHistoryPage() {
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Service History</h1>
+          <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Service History</h1>
           <button className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2">Learn</button>
         </div>
         <div className="flex gap-2">
           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
           <button
             onClick={handleAddServiceEntry}
+            data-testid="add-entry-button"
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
           >
             <Plus size={20} /> Add Service Entry
@@ -170,6 +171,7 @@ export default function ServiceHistoryPage() {
             placeholder="Search"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
+            data-testid="search-input"
             className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
           />
         </div>
@@ -341,7 +343,7 @@ export default function ServiceHistoryPage() {
                 </tr>
               ))
             )}
-            
+
             {/* Indicateur de chargement */}
             {loading && (
               <tr>

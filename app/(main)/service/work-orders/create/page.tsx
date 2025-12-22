@@ -50,18 +50,18 @@ export default function WorkOrderCreatePage() {
         <div className="bg-gray-50 min-h-screen pb-12">
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                    <button onClick={handleBack} data-testid="back-button" className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
                         <ArrowLeft size={18} /> Work Orders
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">New Work Order</h1>
+                    <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">New Work Order</h1>
                     <span className="text-sm text-gray-500">1/1</span>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+                    <button onClick={handleBack} data-testid="cancel-button" className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
                     <button className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white border border-gray-300 flex items-center gap-1">
                         Save and ... <ChevronDown size={16} />
                     </button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Work Order</button>
+                    <button onClick={handleSave} data-testid="save-button" className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Work Order</button>
                 </div>
             </div>
 
@@ -76,6 +76,7 @@ export default function WorkOrderCreatePage() {
                             <select
                                 value={formData.vehicle}
                                 onChange={(e) => handleInputChange('vehicle', e.target.value)}
+                                data-testid="vehicle-select"
                                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
                             >
                                 <option value="">Please select</option>
@@ -93,6 +94,7 @@ export default function WorkOrderCreatePage() {
                                         name="status"
                                         checked={formData.status === 'Open'}
                                         onChange={() => handleInputChange('status', 'Open')}
+                                        data-testid="status-open"
                                         className="text-[#008751] focus:ring-[#008751] w-4 h-4"
                                     />
                                     <span className="text-sm text-gray-900">Open</span>

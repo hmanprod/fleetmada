@@ -43,8 +43,8 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
     search,
     category,
     lowStock,
-    sortBy = 'number',
-    sortOrder = 'asc',
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
     enabled = true
   } = options
 
@@ -90,7 +90,7 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
 
       // Ajouter la nouvelle pièce à la liste
       setParts(prev => [newPart, ...prev])
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -138,7 +138,7 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
 
       // Supprimer la pièce de la liste
       setParts(prev => prev.filter(part => part.id !== id))
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -163,7 +163,8 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
 
     try {
       const response = await partsAPI.adjustStock(id, data)
-      const updatedPart = response.data
+      // La réponse de adjustStock contient { part, stockMovement, adjustment } dans data
+      const updatedPart = (response.data as any).part || response.data
 
       // Mettre à jour la pièce dans la liste
       setParts(prev => prev.map(part => part.id === id ? updatedPart : part))

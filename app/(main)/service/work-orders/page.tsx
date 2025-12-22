@@ -57,8 +57,8 @@ export default function WorkOrdersPage() {
   };
 
   const handleSelectOrder = (orderId: string) => {
-    setSelectedOrders(prev => 
-      prev.includes(orderId) 
+    setSelectedOrders(prev =>
+      prev.includes(orderId)
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId]
     );
@@ -85,7 +85,7 @@ export default function WorkOrdersPage() {
 
   const handleBulkApprove = async () => {
     if (selectedOrders.length === 0) return;
-    
+
     const success = await approveMultiple(selectedOrders);
     if (success) {
       setSelectedOrders([]);
@@ -95,7 +95,7 @@ export default function WorkOrdersPage() {
 
   const handleBulkAssign = async (assignedTo: string) => {
     if (selectedOrders.length === 0) return;
-    
+
     const success = await assignMultiple(selectedOrders, assignedTo);
     if (success) {
       setSelectedOrders([]);
@@ -136,7 +136,7 @@ export default function WorkOrdersPage() {
 
   const getPriorityBadge = (priority?: string) => {
     if (!priority) return null;
-    
+
     const priorityConfig = {
       LOW: { color: 'bg-gray-100 text-gray-800', label: 'Faible' },
       MEDIUM: { color: 'bg-blue-100 text-blue-800', label: 'Moyen' },
@@ -156,7 +156,7 @@ export default function WorkOrdersPage() {
 
   const getFilteredOrders = () => {
     let filtered = [...workOrders];
-    
+
     if (activeTab !== 'all') {
       filtered = filtered.filter(order => {
         switch (activeTab) {
@@ -167,7 +167,7 @@ export default function WorkOrdersPage() {
         }
       });
     }
-    
+
     return filtered;
   };
 
@@ -177,7 +177,7 @@ export default function WorkOrdersPage() {
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Ordres de Travail</h1>
+          <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Ordres de Travail</h1>
           <button className="text-[#008751] hover:underline text-sm font-medium">
             Gérer les work orders
           </button>
@@ -188,6 +188,7 @@ export default function WorkOrdersPage() {
           </button>
           <button
             onClick={handleAddWorkOrder}
+            data-testid="add-work-order-button"
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
           >
             <Plus size={20} /> Nouvel Ordre
@@ -319,6 +320,7 @@ export default function WorkOrdersPage() {
             placeholder="Rechercher un ordre de travail"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
+            data-testid="search-input"
             className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
           />
         </div>
@@ -403,6 +405,7 @@ export default function WorkOrdersPage() {
               filteredOrders.map((order) => (
                 <tr
                   key={order.id}
+                  data-testid={`work-order-row-${order.id}`}
                   className="hover:bg-gray-50 cursor-pointer"
                   onClick={() => handleWorkOrderClick(order.id)}
                 >
@@ -470,7 +473,7 @@ export default function WorkOrdersPage() {
                 </tr>
               ))
             )}
-            
+
             {/* Indicateur de chargement */}
             {loading && (
               <tr>

@@ -55,7 +55,7 @@ export default function VehicleOverview({
   loading = false,
   className = ''
 }: VehicleOverviewProps) {
-  
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
@@ -141,7 +141,7 @@ export default function VehicleOverview({
           color="blue"
           subtitle={`${summary.typeBreakdown.length} types`}
         />
-        
+
         <MetricCard
           title="Taux d'Utilisation"
           value={`${summary.utilizationRate}%`}
@@ -152,7 +152,7 @@ export default function VehicleOverview({
             isPositive: summary.utilizationRate >= 80
           }}
         />
-        
+
         <MetricCard
           title="En Maintenance"
           value={summary.statusBreakdown.maintenance}
@@ -160,7 +160,7 @@ export default function VehicleOverview({
           color="yellow"
           subtitle={`${summary.maintenanceRate}% du parc`}
         />
-        
+
         <MetricCard
           title="Coûts Récents"
           value={formatCurrency(
@@ -182,7 +182,7 @@ export default function VehicleOverview({
           height={300}
           showLegend={true}
         />
-        
+
         {/* Répartition par type */}
         <TrendChart
           title="Répartition par Type"
@@ -199,9 +199,9 @@ export default function VehicleOverview({
           <h3 className="text-lg font-semibold text-gray-900">Véhicules Récents</h3>
           <p className="text-sm text-gray-600">Dernières activités et métriques</p>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table data-testid="vehicle-overview-table" className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -226,7 +226,7 @@ export default function VehicleOverview({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {vehicles.slice(0, 10).map((vehicle) => (
-                <tr key={vehicle.id} className="hover:bg-gray-50">
+                <tr key={vehicle.id} data-testid="vehicle-row" className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Car size={16} className="text-gray-400 mr-3" />
@@ -240,17 +240,17 @@ export default function VehicleOverview({
                       </div>
                     </div>
                   </td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap">
                     <SimpleStatus
                       status={vehicle.status.toLowerCase() as any}
                       title={getStatusLabel(vehicle.status)}
                     />
                   </td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {vehicle.meterReading ? 
-                      `${vehicle.meterReading.toLocaleString()} km` : 
+                    {vehicle.meterReading ?
+                      `${vehicle.meterReading.toLocaleString()} km` :
                       'N/A'
                     }
                     {vehicle.lastMeterDate && (
@@ -259,7 +259,7 @@ export default function VehicleOverview({
                       </div>
                     )}
                   </td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="space-y-1">
                       <div className="flex justify-between">
@@ -272,13 +272,13 @@ export default function VehicleOverview({
                       </div>
                     </div>
                   </td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="font-medium">
                       {formatCurrency(vehicle.recentCosts)}
                     </span>
                   </td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
                       {vehicle.metrics.issues > 0 && (
@@ -303,7 +303,7 @@ export default function VehicleOverview({
             </tbody>
           </table>
         </div>
-        
+
         {vehicles.length === 0 && (
           <div className="p-12 text-center">
             <Car size={48} className="text-gray-300 mx-auto mb-4" />

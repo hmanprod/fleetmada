@@ -31,15 +31,9 @@ export default function PartsPage() {
     lowStock: activeTab === 'low-stock'
   });
 
-  // Gestion des changements de filtres
-  useEffect(() => {
-    fetchParts({
-      page: currentPage,
-      search: searchTerm || undefined,
-      category: selectedCategory || undefined,
-      lowStock: activeTab === 'low-stock'
-    });
-  }, [searchTerm, selectedCategory, activeTab, currentPage]);
+  // Gestion des changements de filtres 
+  // Note: redundance supprimée car useParts a déjà un useEffect interne qui réagit aux changements d'options
+
 
   const handleAddPart = () => {
     router.push('/parts/create');
@@ -77,7 +71,7 @@ export default function PartsPage() {
     <div className="p-6 max-w-[1800px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Parts</h1>
+          <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Parts</h1>
           <button
             onClick={handleLearnMore}
             className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2 flex items-center gap-1"
@@ -202,7 +196,7 @@ export default function PartsPage() {
           <thead className="bg-white border-b border-gray-200">
             <tr>
               <th className="w-8 px-4 py-3"><input type="checkbox" className="rounded border-gray-300" /></th>
-              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-900 flex items-center gap-1 cursor-pointer">Part ▲</th>
+              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-900 flex items-center gap-1 cursor-pointer">Part</th>
               <th scope="col" className="px-4 py-3 text-left font-medium text-gray-900">Description</th>
               <th scope="col" className="px-4 py-3 text-left font-medium text-gray-900">Category</th>
               <th scope="col" className="px-4 py-3 text-left font-medium text-gray-900">Manufacturer</th>
@@ -264,7 +258,7 @@ export default function PartsPage() {
               parts.map(part => {
                 const stockStatus = getStockStatus(part);
                 return (
-                  <tr key={part.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/parts/${part.id}`)}>
+                  <tr key={part.id} data-testid="part-row" className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/parts/${part.id}`)}>
                     <td className="w-8 px-4 py-3">
                       <input type="checkbox" className="rounded border-gray-300" />
                     </td>
@@ -373,7 +367,7 @@ export default function PartsPage() {
 
       {/* Summary Stats */}
       {parts.length > 0 && (
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div data-testid="parts-stats" className="bg-gray-50 px-6 py-4 border-t border-gray-200">
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-6">
               <span>Valeur totale: <strong className="text-gray-900">{formatCurrency(totalValue)}</strong></span>

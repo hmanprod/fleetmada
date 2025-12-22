@@ -94,12 +94,22 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       notes
     } = body
 
+    // Mappage des types du frontend vers l'énumération backend
+    let mappedType = type as any;
+    const typeStr = type as any;
+    if (typeStr === 'add' || typeStr === 'remove' || typeStr === 'set') {
+      mappedType = 'ADJUSTMENT';
+    }
+
+
     logAction('Adjust Stock', userId, {
       partId: id,
       quantity,
-      type,
+      type: mappedType,
+      originalType: type,
       reason
     })
+
 
     // Validation
     if (!quantity || quantity === 0) {
@@ -144,8 +154,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         })
 
         return NextResponse.json(
-          { 
-            success: false, 
+          {
+            success: false,
             error: 'Impossible : cela créerait un stock négatif',
             currentStock: previousStock,
             requestedAdjustment: quantity,
@@ -173,8 +183,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         const stockMovement = await tx.stockMovement.create({
           data: {
             partId: id,
-            type: type as any,
+            type: mappedType,
             quantity: quantity, // Peut être négatif
+
             previousStock,
             newStock,
             reason,
