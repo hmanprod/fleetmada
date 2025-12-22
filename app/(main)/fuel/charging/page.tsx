@@ -68,22 +68,26 @@ export default function ChargingHistoryPage() {
         <div className="p-6 max-w-[1800px] mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">Charging History</h1>
+                <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Charging History</h1>
+
                 <div className="flex gap-2">
                     <button
                         onClick={handleRefresh}
-                        disabled={loading}
+                        data-testid="refresh-button"
                         className="bg-green-100 border border-transparent px-3 py-1.5 rounded text-sm font-medium text-green-800 flex items-center gap-2 disabled:opacity-50"
                     >
-                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} data-testid="refresh-spinner" /> Refresh
                     </button>
+
                     <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
                     <button
                         onClick={handleAdd}
+                        data-testid="add-charging-entry-button"
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                     >
                         <Plus size={20} /> New Charging Entry
                     </button>
+
                 </div>
             </div>
 

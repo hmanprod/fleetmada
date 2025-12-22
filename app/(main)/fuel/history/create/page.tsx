@@ -4,11 +4,15 @@ import React, { useState } from 'react';
 import { ArrowLeft, Upload, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCreateFuelEntry } from '@/lib/hooks/useFuelEntries';
+import { useVehicles } from '@/lib/hooks/useVehicles';
 import { CreateFuelEntryData } from '@/types/fuel';
+
 
 export default function FuelEntryCreatePage() {
   const router = useRouter();
   const { createEntry, loading, error } = useCreateFuelEntry();
+  const { vehicles, loading: vehiclesLoading } = useVehicles();
+
 
   const [formData, setFormData] = useState<CreateFuelEntryData>({
     vehicleId: '',
@@ -58,13 +62,15 @@ export default function FuelEntryCreatePage() {
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
+          <button onClick={handleCancel} data-testid="cancel-button" className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
+
             <ArrowLeft size={18} /> Fuel Entries
           </button>
           <h1 className="text-2xl font-bold text-gray-900">New Fuel Entry</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+
           <button
             onClick={handleSave}
             disabled={loading}
@@ -96,10 +102,11 @@ export default function FuelEntryCreatePage() {
                 data-testid="vehicle-select"
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
               >
-                <option value="">Please select</option>
-                <option value="MV112TRNS">MV112TRNS</option>
-                <option value="AM101">AM101</option>
-                <option value="AG103">AG103</option>
+                <option value="">{vehiclesLoading ? 'Loading vehicles...' : 'Please select'}</option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle.id} value={vehicle.id}>{vehicle.name}</option>
+                ))}
+
               </select>
             </div>
 
@@ -227,7 +234,8 @@ export default function FuelEntryCreatePage() {
         </div>
 
         <div className="flex justify-end gap-3 pt-4 pb-12">
-          <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white">Cancel</button>
+          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white">Cancel</button>
+
           <button
             onClick={handleSave}
             disabled={loading}

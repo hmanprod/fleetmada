@@ -91,7 +91,7 @@ const buildWhereClause = (filters: FuelEntryFilters, userId: string) => {
 // Fonction pour construire l'ordre de tri
 const buildOrderBy = (sortBy?: string, sortOrder?: string) => {
   const orderBy: any = {}
-  
+
   switch (sortBy) {
     case 'date':
       orderBy.date = sortOrder === 'desc' ? 'desc' : 'asc'
@@ -109,7 +109,7 @@ const buildOrderBy = (sortBy?: string, sortOrder?: string) => {
       orderBy.createdAt = 'desc'
       break
   }
-  
+
   return orderBy
 }
 
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // Validation des données
     if (!body.vehicleId || !body.date || !body.volume || body.cost === undefined) {
       return NextResponse.json(
@@ -267,10 +267,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Véhicule non trouvé' }, { status: 404 })
     }
 
-    logAction('CREATE_FUEL_ENTRY', user.userId, { 
-      vehicleId: body.vehicleId, 
-      volume: body.volume, 
-      cost: body.cost 
+
+
+    logAction('CREATE_FUEL_ENTRY', user.userId, {
+      vehicleId: body.vehicleId,
+      volume: body.volume,
+      cost: body.cost
     })
 
     // Création de l'entrée avec le schéma correct
@@ -279,7 +281,8 @@ export async function POST(request: NextRequest) {
         vehicleId: body.vehicleId,
         userId: user.userId,
         date: new Date(body.date),
-        vendor: body.vendor || null,
+        vendorName: body.vendor || null,
+
         usage: body.usage || null,
         volume: body.volume,
         cost: body.cost,

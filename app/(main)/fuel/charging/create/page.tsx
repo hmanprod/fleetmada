@@ -4,11 +4,15 @@ import React, { useState } from 'react';
 import { ArrowLeft, Clock, Calendar, Plus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCreateChargingEntry } from '@/lib/hooks/useChargingEntries';
+import { useVehicles } from '@/lib/hooks/useVehicles';
 import { CreateChargingEntryData } from '@/types/fuel';
+
 
 export default function ChargingEntryCreatePage() {
     const router = useRouter();
     const { createEntry, loading, error } = useCreateChargingEntry();
+    const { vehicles, loading: vehiclesLoading } = useVehicles();
+
 
     const [formData, setFormData] = useState<CreateChargingEntryData>({
         vehicleId: '',
@@ -21,10 +25,11 @@ export default function ChargingEntryCreatePage() {
         notes: ''
     });
 
-    const [startDate, setStartDate] = useState('2025-12-14');
-    const [startTime, setStartTime] = useState('03:49');
-    const [endDate, setEndDate] = useState('2025-12-14');
-    const [endTime, setEndTime] = useState('03:49');
+    const [startDate, setStartDate] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [endTime, setEndTime] = useState('');
+
     const [energyPrice, setEnergyPrice] = useState('0.00');
 
     const handleCancel = () => {
@@ -95,7 +100,8 @@ export default function ChargingEntryCreatePage() {
                     <h1 className="text-2xl font-bold text-gray-900">New Charging Entry</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+                    <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+
                     <button
                         onClick={handleSave}
                         disabled={loading}
@@ -127,9 +133,11 @@ export default function ChargingEntryCreatePage() {
                             data-testid="vehicle-select"
                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                         >
-                            <option value="">Please select</option>
-                            <option value="MV112TRNS">MV112TRNS</option>
-                            <option value="AM101">AM101</option>
+                            <option value="">{vehiclesLoading ? 'Loading vehicles...' : 'Please select'}</option>
+                            {vehicles.map(vehicle => (
+                                <option key={vehicle.id} value={vehicle.id}>{vehicle.name}</option>
+                            ))}
+
                         </select>
                     </div>
                 </div>
@@ -164,6 +172,7 @@ export default function ChargingEntryCreatePage() {
                                             type="date"
                                             value={startDate}
                                             onChange={e => setStartDate(e.target.value)}
+                                            data-testid="start-date-input"
                                             className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
@@ -173,6 +182,7 @@ export default function ChargingEntryCreatePage() {
                                             type="time"
                                             value={startTime}
                                             onChange={e => setStartTime(e.target.value)}
+                                            data-testid="start-time-input"
                                             className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
@@ -187,6 +197,7 @@ export default function ChargingEntryCreatePage() {
                                             type="date"
                                             value={endDate}
                                             onChange={e => setEndDate(e.target.value)}
+                                            data-testid="end-date-input"
                                             className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
@@ -196,6 +207,7 @@ export default function ChargingEntryCreatePage() {
                                             type="time"
                                             value={endTime}
                                             onChange={e => setEndTime(e.target.value)}
+                                            data-testid="end-time-input"
                                             className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                         />
                                     </div>
@@ -209,6 +221,7 @@ export default function ChargingEntryCreatePage() {
                                         readOnly
                                         value={durationMinutes > 0 ? `${durationMinutes} min` : ''}
                                         placeholder="Auto-calculated"
+                                        data-testid="duration-input"
                                         className="w-24 p-2.5 border border-gray-300 rounded-md bg-gray-50"
                                     />
                                 </div>

@@ -19,13 +19,11 @@ const validateToken = (token: string): TokenPayload | null => {
     const decoded = jwt.verify(token, secret) as TokenPayload
 
     if (decoded.type !== 'login') {
-      console.log('[Charging Entries API] Token type invalide:', decoded.type)
       return null
     }
 
     return decoded
   } catch (error) {
-    console.log('[Charging Entries API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
     return null
   }
 }
@@ -91,7 +89,7 @@ const buildWhereClause = (filters: ChargingEntryFilters, userId: string) => {
 // Fonction pour construire l'ordre de tri
 const buildOrderBy = (sortBy?: string, sortOrder?: string) => {
   const orderBy: any = {}
-  
+
   switch (sortBy) {
     case 'date':
       orderBy.date = sortOrder === 'desc' ? 'desc' : 'asc'
@@ -109,7 +107,7 @@ const buildOrderBy = (sortBy?: string, sortOrder?: string) => {
       orderBy.createdAt = 'desc'
       break
   }
-  
+
   return orderBy
 }
 
@@ -228,7 +226,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // Validation des données (uniquement les champs du schéma)
     if (!body.vehicleId || !body.date || !body.energyKwh || body.cost === undefined) {
       return NextResponse.json(
@@ -258,10 +256,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Véhicule non trouvé' }, { status: 404 })
     }
 
-    logAction('CREATE_CHARGING_ENTRY', user.userId, { 
-      vehicleId: body.vehicleId, 
-      energyKwh: body.energyKwh, 
-      cost: body.cost 
+
+
+    logAction('CREATE_CHARGING_ENTRY', user.userId, {
+      vehicleId: body.vehicleId,
+      energyKwh: body.energyKwh,
+      cost: body.cost
     })
 
     // Création de l'entrée (uniquement avec les champs du schéma)
