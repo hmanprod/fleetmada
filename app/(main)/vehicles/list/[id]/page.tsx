@@ -138,7 +138,7 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                             <MoreHorizontal size={20} />
                         </button>
                         <button
-                            onClick={() => alert('Edit functionality to be implemented')}
+                            onClick={() => router.push(`/vehicles/list/${params.id}/edit`)}
                             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm"
                         >
                             Edit Vehicle

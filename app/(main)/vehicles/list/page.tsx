@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { LayoutList, Search, Filter, Plus, Car, MoreVertical, Loader2 } from 'lucide-react';
+import {
+  LayoutList, Search, Filter, Plus, Car, MoreVertical, Loader2,
+  Settings, CheckCircle, Wrench, Paperclip, Fuel, History, Archive
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useVehicles } from '@/lib/hooks/useVehicles';
 import type { VehicleListQuery } from '@/lib/validations/vehicle-validations';
@@ -177,9 +180,61 @@ export default function VehicleList() {
                         {vehicle.group || <span className="text-gray-400">-</span>}
                       </td>
                       <td className="p-4 text-gray-400">
-                        <button className="p-1 hover:bg-gray-200 rounded" onClick={(e) => { e.stopPropagation(); /* Menu logic */ }}>
-                          <MoreVertical size={16} />
-                        </button>
+                        <div className="relative group">
+                          <button
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            onClick={(e) => { e.stopPropagation(); }}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                          
+                          {/* Dropdown Menu */}
+                          <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-20 hidden group-hover:block">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}/edit`); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Settings size={14} /> Edit Vehicle Settings
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <CheckCircle size={14} /> Manage Inspection Forms
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Wrench size={14} /> Manage Service Programs
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Paperclip size={14} /> Attach Shared Document
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Fuel size={14} /> Recalculate Fuel Entries
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <History size={14} /> View Record History
+                            </button>
+                            <div className="border-t border-gray-100 my-1"></div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); }}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Archive size={14} /> Archive
+                            </button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}

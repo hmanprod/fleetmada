@@ -78,7 +78,7 @@ export default function NewInspectionPage() {
 
             // Redirect after short delay
             setTimeout(() => {
-                router.push(`/inspections/${newInspection.id}`);
+                router.push(`/inspections/history/${newInspection.id}`);
             }, 1500);
 
         } catch (err) {
@@ -129,7 +129,7 @@ export default function NewInspectionPage() {
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
-                        <ArrowLeft size={16} /> Inspections
+                        <ArrowLeft size={16} /> Historique
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900">Nouvelle Inspection</h1>
                 </div>
@@ -221,6 +221,7 @@ export default function NewInspectionPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Titre <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
+                                name="title"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.title}
                                 onChange={(e) => handleInputChange('title', e.target.value)}
@@ -243,6 +244,7 @@ export default function NewInspectionPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l'Inspecteur</label>
                             <input
                                 type="text"
+                                name="inspectorName"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.inspectorName}
                                 onChange={(e) => handleInputChange('inspectorName', e.target.value)}
@@ -291,7 +293,7 @@ export default function NewInspectionPage() {
                 </div>
 
                 <div className="flex justify-between items-center pt-4">
-                    <button onClick={handleCancel} className="text-[#008751] hover:underline text-sm font-medium">Annuler</button>
+                    <button onClick={handleCancel} className="text-[#008751] hover:underline text-sm font-medium">Retour à l'historique</button>
                     <div className="flex gap-3">
                         <button onClick={handleSaveAndAddAnother} className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-bold bg-white hover:bg-gray-50">Sauvegarder et Ajouter un Autre</button>
                         <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Sauvegarder</button>

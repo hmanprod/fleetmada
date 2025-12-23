@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Search, Filter, Calendar, Download, FileText, Eye, 
-    ChevronDown, ChevronLeft, ChevronRight, Settings, 
+import {
+    Search, Filter, Calendar, Download, FileText, Eye,
+    ChevronDown, ChevronLeft, ChevronRight, Settings,
     MoreHorizontal, AlertCircle, CheckCircle, Clock,
     TrendingUp, BarChart3, User, MapPin, Award
 } from 'lucide-react';
@@ -15,21 +15,21 @@ import type { InspectionFilters } from '@/lib/services/inspections-api';
 
 export default function InspectionHistoryPage() {
     const router = useRouter();
-    
+
     // Hooks
-    const { 
-        inspections, 
-        loading, 
-        error, 
-        pagination, 
-        filters, 
-        setFilters, 
-        fetchInspections, 
-        getStatistics 
+    const {
+        inspections,
+        loading,
+        error,
+        pagination,
+        filters,
+        setFilters,
+        fetchInspections,
+        getStatistics
     } = useInspections();
     const { vehicles } = useVehicles();
     const { templates } = useInspectionTemplates();
-    
+
     // États locaux
     const [searchQuery, setSearchQuery] = useState('');
     const [dateRange, setDateRange] = useState({
@@ -103,7 +103,7 @@ export default function InspectionHistoryPage() {
     };
 
     const handleViewDetails = (id: string) => {
-        router.push(`/inspections/${id}`);
+        router.push(`/inspections/history/${id}`);
     };
 
     const handleViewVehicle = (vehicleId: string) => {
@@ -112,7 +112,7 @@ export default function InspectionHistoryPage() {
 
     const formatDate = (date: Date | string) => {
         const d = new Date(date);
-        return d.toLocaleDateString('fr-FR', { 
+        return d.toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -170,7 +170,7 @@ export default function InspectionHistoryPage() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
                     <AlertCircle className="text-red-600" size={20} />
                     <span className="text-red-700">{error}</span>
-                    <button 
+                    <button
                         onClick={() => fetchInspections()}
                         className="ml-auto text-red-600 hover:text-red-800"
                     >
@@ -193,7 +193,7 @@ export default function InspectionHistoryPage() {
                 </div>
 
                 <div className="flex gap-2">
-                    <button 
+                    <button
                         onClick={handleExport}
                         className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50 flex items-center gap-2"
                     >
@@ -202,8 +202,8 @@ export default function InspectionHistoryPage() {
                     <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50">
                         <Settings size={20} />
                     </button>
-                    <button 
-                        onClick={() => router.push('/inspections/create')}
+                    <button
+                        onClick={() => router.push('/inspections/history/create')}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                     >
                         <FileText size={20} /> Nouvelle Inspection
@@ -213,23 +213,21 @@ export default function InspectionHistoryPage() {
 
             {/* Onglets */}
             <div className="flex gap-6 border-b border-gray-200 mb-6">
-                <button 
+                <button
                     onClick={() => setActiveTab('all')}
-                    className={`pb-3 border-b-2 font-medium text-sm ${
-                        activeTab === 'all' 
-                            ? 'border-[#008751] text-[#008751]' 
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`pb-3 border-b-2 font-medium text-sm ${activeTab === 'all'
+                        ? 'border-[#008751] text-[#008751]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     Toutes les Inspections ({completedInspections.length})
                 </button>
-                <button 
+                <button
                     onClick={() => setActiveTab('failed')}
-                    className={`pb-3 border-b-2 font-medium text-sm ${
-                        activeTab === 'failed' 
-                            ? 'border-[#008751] text-[#008751]' 
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`pb-3 border-b-2 font-medium text-sm ${activeTab === 'failed'
+                        ? 'border-[#008751] text-[#008751]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     Échecs de Conformité ({failedInspections.length})
                 </button>
@@ -243,9 +241,10 @@ export default function InspectionHistoryPage() {
                             {/* Recherche */}
                             <div className="relative flex-1 max-w-md">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     placeholder="Rechercher par titre, véhicule, inspecteur..."
+                                    data-testid="inspection-search-input"
                                     className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                                     value={searchQuery}
                                     onChange={(e) => handleSearch(e.target.value)}
@@ -253,7 +252,7 @@ export default function InspectionHistoryPage() {
                             </div>
 
                             {/* Filtres rapides */}
-                            <select 
+                            <select
                                 className="border border-gray-300 rounded px-3 py-2 text-sm"
                                 value={selectedVehicle}
                                 onChange={(e) => setSelectedVehicle(e.target.value)}
@@ -266,7 +265,21 @@ export default function InspectionHistoryPage() {
                                 ))}
                             </select>
 
-                            <select 
+                            <select
+                                className="border border-gray-300 rounded px-3 py-2 text-sm"
+                                data-testid="status-filter"
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value)}
+                            >
+                                <option value="">Tous les statuts</option>
+                                <option value="DRAFT">Brouillon</option>
+                                <option value="SCHEDULED">Programmé</option>
+                                <option value="IN_PROGRESS">En cours</option>
+                                <option value="COMPLETED">Terminé</option>
+                                <option value="CANCELLED">Annulé</option>
+                            </select>
+
+                            <select
                                 className="border border-gray-300 rounded px-3 py-2 text-sm"
                                 value={selectedTemplate}
                                 onChange={(e) => setSelectedTemplate(e.target.value)}
@@ -279,7 +292,7 @@ export default function InspectionHistoryPage() {
                                 ))}
                             </select>
 
-                            <select 
+                            <select
                                 className="border border-gray-300 rounded px-3 py-2 text-sm"
                                 value={selectedCompliance}
                                 onChange={(e) => setSelectedCompliance(e.target.value)}
@@ -291,7 +304,7 @@ export default function InspectionHistoryPage() {
                             </select>
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => setShowFilters(!showFilters)}
                             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded border border-gray-300"
                         >
@@ -299,7 +312,7 @@ export default function InspectionHistoryPage() {
                         </button>
 
                         {(searchQuery || selectedVehicle || selectedTemplate || selectedCompliance) && (
-                            <button 
+                            <button
                                 onClick={clearFilters}
                                 className="ml-2 text-sm text-gray-500 hover:text-gray-700"
                             >
@@ -316,7 +329,7 @@ export default function InspectionHistoryPage() {
                             {/* Période */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
-                                <input 
+                                <input
                                     type="date"
                                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                                     value={dateRange.start}
@@ -325,7 +338,7 @@ export default function InspectionHistoryPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
-                                <input 
+                                <input
                                     type="date"
                                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                                     value={dateRange.end}
@@ -336,7 +349,7 @@ export default function InspectionHistoryPage() {
                             {/* Score */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Score min (%)</label>
-                                <input 
+                                <input
                                     type="number"
                                     min="0"
                                     max="100"
@@ -348,7 +361,7 @@ export default function InspectionHistoryPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Score max (%)</label>
-                                <input 
+                                <input
                                     type="number"
                                     min="0"
                                     max="100"
@@ -391,12 +404,12 @@ export default function InspectionHistoryPage() {
                                         </div>
                                         <p className="mb-1">Aucun historique d'inspection trouvé</p>
                                         <p className="text-xs max-w-md mx-auto mb-6">
-                                            {activeTab === 'failed' 
-                                                ? 'Aucune inspection avec des échecs de conformité trouvée.' 
+                                            {activeTab === 'failed'
+                                                ? 'Aucune inspection avec des échecs de conformité trouvée.'
                                                 : 'Commencez par créer et compléter votre première inspection.'}
                                         </p>
-                                        <button 
-                                            onClick={() => router.push('/inspections/create')}
+                                        <button
+                                            onClick={() => router.push('/inspections/history/create')}
                                             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                                         >
                                             <FileText size={20} /> Créer une Inspection
@@ -406,104 +419,104 @@ export default function InspectionHistoryPage() {
                             </tr>
                         ) : (
                             completedInspections
-                                .filter(inspection => 
-                                    activeTab === 'failed' 
+                                .filter(inspection =>
+                                    activeTab === 'failed'
                                         ? inspection.complianceStatus === 'NON_COMPLIANT'
                                         : true
                                 )
                                 .map(inspection => (
-                                <tr key={inspection.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" /></td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
-                                                <img 
-                                                    src={`https://source.unsplash.com/random/50x50/?truck&sig=${inspection.vehicle?.id}`} 
-                                                    className="w-full h-full object-cover" 
-                                                    alt="Vehicle" 
-                                                />
+                                    <tr key={inspection.id} data-testid="inspection-row" className="hover:bg-gray-50">
+                                        <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" /></td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={`https://source.unsplash.com/random/50x50/?truck&sig=${inspection.vehicle?.id}`}
+                                                        className="w-full h-full object-cover"
+                                                        alt="Vehicle"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <button
+                                                        onClick={() => handleViewVehicle(inspection.vehicleId)}
+                                                        className="text-[#008751] font-medium hover:underline cursor-pointer text-sm"
+                                                    >
+                                                        {inspection.vehicle ? `${inspection.vehicle.make} ${inspection.vehicle.model}` : 'N/A'}
+                                                    </button>
+                                                    <div className="text-xs text-gray-500">{inspection.vehicle?.vin || 'No VIN'}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <button 
-                                                    onClick={() => handleViewVehicle(inspection.vehicleId)}
-                                                    className="text-[#008751] font-medium hover:underline cursor-pointer text-sm"
-                                                >
-                                                    {inspection.vehicle ? `${inspection.vehicle.make} ${inspection.vehicle.model}` : 'N/A'}
-                                                </button>
-                                                <div className="text-xs text-gray-500">{inspection.vehicle?.vin || 'No VIN'}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-gray-500 text-sm">
-                                        {inspection.inspectionTemplate?.name || 'N/A'}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <button 
-                                            onClick={() => handleViewDetails(inspection.id)}
-                                            className="text-gray-900 font-medium hover:underline cursor-pointer text-sm"
-                                        >
-                                            {inspection.title}
-                                        </button>
-                                        {inspection.description && (
-                                            <div className="text-xs text-gray-500 mt-1">{inspection.description}</div>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-1">
-                                            <User size={14} className="text-gray-400" />
-                                            <span className="text-sm text-gray-900">{inspection.inspectorName || 'N/A'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-1">
-                                            <Clock size={14} className="text-gray-400" />
-                                            <span className="text-sm text-gray-900">
-                                                {inspection.completedAt ? formatDate(inspection.completedAt) : '—'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-900">
-                                        {inspection.startedAt && inspection.completedAt ? 
-                                            `${Math.round((new Date(inspection.completedAt).getTime() - new Date(inspection.startedAt).getTime()) / (1000 * 60))} min`
-                                            : '—'
-                                        }
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-1">
-                                            <BarChart3 size={14} className="text-gray-400" />
-                                            <span className={`text-sm font-bold ${getScoreColor(inspection.overallScore || 0)}`}>
-                                                {inspection.overallScore ? `${inspection.overallScore}%` : '—'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${getComplianceColor(inspection.complianceStatus)}`}>
-                                            {inspection.complianceStatus === 'COMPLIANT' ? 'Conforme' : 
-                                             inspection.complianceStatus === 'NON_COMPLIANT' ? 'Non-conforme' : 'En attente'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-1">
-                                            <MapPin size={14} className="text-gray-400" />
-                                            <span className="text-sm text-gray-500">{inspection.location || '—'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center gap-2">
-                                            <button 
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500 text-sm">
+                                            {inspection.inspectionTemplate?.name || 'N/A'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <button
                                                 onClick={() => handleViewDetails(inspection.id)}
-                                                className="text-gray-400 hover:text-gray-600"
-                                                title="Voir les détails"
+                                                className="text-gray-900 font-medium hover:underline cursor-pointer text-sm"
                                             >
-                                                <Eye size={16} />
+                                                {inspection.title}
                                             </button>
-                                            <button className="text-gray-400 hover:text-gray-600">
-                                                <MoreHorizontal size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                                            {inspection.description && (
+                                                <div className="text-xs text-gray-500 mt-1">{inspection.description}</div>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <User size={14} className="text-gray-400" />
+                                                <span className="text-sm text-gray-900">{inspection.inspectorName || 'N/A'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <Clock size={14} className="text-gray-400" />
+                                                <span className="text-sm text-gray-900">
+                                                    {inspection.completedAt ? formatDate(inspection.completedAt) : '—'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-900">
+                                            {inspection.startedAt && inspection.completedAt ?
+                                                `${Math.round((new Date(inspection.completedAt).getTime() - new Date(inspection.startedAt).getTime()) / (1000 * 60))} min`
+                                                : '—'
+                                            }
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <BarChart3 size={14} className="text-gray-400" />
+                                                <span className={`text-sm font-bold ${getScoreColor(inspection.overallScore || 0)}`}>
+                                                    {inspection.overallScore ? `${inspection.overallScore}%` : '—'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${getComplianceColor(inspection.complianceStatus)}`}>
+                                                {inspection.complianceStatus === 'COMPLIANT' ? 'Conforme' :
+                                                    inspection.complianceStatus === 'NON_COMPLIANT' ? 'Non-conforme' : 'En attente'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <MapPin size={14} className="text-gray-400" />
+                                                <span className="text-sm text-gray-500">{inspection.location || '—'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleViewDetails(inspection.id)}
+                                                    className="text-gray-400 hover:text-gray-600"
+                                                    title="Voir les détails"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button className="text-gray-400 hover:text-gray-600">
+                                                    <MoreHorizontal size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                         )}
                     </tbody>
                 </table>
@@ -515,7 +528,7 @@ export default function InspectionHistoryPage() {
                             {pagination.page * pagination.limit - pagination.limit + 1} - {Math.min(pagination.page * pagination.limit, pagination.totalCount)} sur {pagination.totalCount} résultats
                         </div>
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
                                 disabled={!pagination.hasPrev}
                                 onClick={() => {
@@ -529,7 +542,7 @@ export default function InspectionHistoryPage() {
                             <span className="text-sm text-gray-500">
                                 Page {pagination.page} sur {pagination.totalPages}
                             </span>
-                            <button 
+                            <button
                                 className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50"
                                 disabled={!pagination.hasNext}
                                 onClick={() => {
@@ -559,7 +572,7 @@ export default function InspectionHistoryPage() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-green-100 text-green-600 rounded flex items-center justify-center">
@@ -573,7 +586,7 @@ export default function InspectionHistoryPage() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-red-100 text-red-600 rounded flex items-center justify-center">
@@ -587,7 +600,7 @@ export default function InspectionHistoryPage() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded flex items-center justify-center">
@@ -595,7 +608,7 @@ export default function InspectionHistoryPage() {
                             </div>
                             <div>
                                 <div className="text-lg font-bold text-gray-900">
-                                    {completedInspections.length > 0 
+                                    {completedInspections.length > 0
                                         ? Math.round(completedInspections.reduce((sum, i) => sum + (i.overallScore || 0), 0) / completedInspections.length)
                                         : 0}%
                                 </div>

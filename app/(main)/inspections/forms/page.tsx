@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Plus, Search, Filter, MoreHorizontal, FileText,
     Settings, AlertCircle, ChevronRight, LayoutGrid,
@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 
-export default function InspectionTemplatesPage() {
+export default function InspectionFormsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -27,14 +27,16 @@ export default function InspectionTemplatesPage() {
         clearError
     } = useInspectionTemplates();
 
+    useEffect(() => {
+        fetchTemplates();
+    }, []);
+
     const handleCreate = () => {
-        // router.push('/inspections/templates/create');
-        console.log('Create template clicked');
+        router.push('/inspections/forms/create');
     };
 
     const handleEdit = (id: string) => {
-        // router.push(`/inspections/templates/${id}/edit`);
-        console.log('Edit template:', id);
+        router.push(`/inspections/forms/${id}/edit`);
     };
 
     const handleDuplicate = async (id: string, name: string) => {
@@ -46,7 +48,7 @@ export default function InspectionTemplatesPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) {
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce formulaire ?')) {
             try {
                 await deleteTemplate(id);
             } catch (err) {
@@ -68,7 +70,7 @@ export default function InspectionTemplatesPage() {
             <div className="p-6 max-w-[1800px] mx-auto min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008751] mx-auto"></div>
-                    <p className="mt-4 text-gray-500 font-medium">Chargement des modèles...</p>
+                    <p className="mt-4 text-gray-500 font-medium">Chargement des formulaires...</p>
                 </div>
             </div>
         );
@@ -79,14 +81,14 @@ export default function InspectionTemplatesPage() {
             {/* Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Modèles d'Inspection</h1>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Formulaires d'Inspection</h1>
                     <p className="text-gray-500 mt-1">Gérez vos formulaires et critères de vérification</p>
                 </div>
                 <button
                     onClick={handleCreate}
                     className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2.5 px-6 rounded-lg transition-all shadow-md flex items-center gap-2 active:scale-95"
                 >
-                    <Plus size={20} /> Nouveau Modèle
+                    <Plus size={20} /> Nouveau Formulaire
                 </button>
             </div>
 
@@ -113,7 +115,7 @@ export default function InspectionTemplatesPage() {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Rechercher un modèle par nom ou catégorie..."
+                        placeholder="Rechercher un formulaire par nom ou catégorie..."
                         className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all placeholder:text-gray-400"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -136,13 +138,13 @@ export default function InspectionTemplatesPage() {
                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <FileText size={40} className="text-gray-300" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Aucun modèle trouvé</h3>
-                    <p className="text-gray-500 mb-8 max-w-sm mx-auto">Commencez par créer votre premier modèle d'inspection pour standardiser vos vérifications.</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Aucun formulaire trouvé</h3>
+                    <p className="text-gray-500 mb-8 max-w-sm mx-auto">Commencez par créer votre premier formulaire d'inspection pour standardiser vos vérifications.</p>
                     <button
                         onClick={handleCreate}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg active:scale-95 flex items-center gap-2 mx-auto"
                     >
-                        <Plus size={20} /> Créer le premier modèle
+                        <Plus size={20} /> Créer le premier formulaire
                     </button>
                 </div>
             ) : (
@@ -152,8 +154,8 @@ export default function InspectionTemplatesPage() {
                             <div className="p-6 flex-1">
                                 <div className="flex justify-between items-start mb-4">
                                     <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${template.category === 'Sécurité' ? 'bg-orange-100 text-orange-700' :
-                                            template.category === 'Mécanique' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-gray-100 text-gray-700'
+                                        template.category === 'Mécanique' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-gray-100 text-gray-700'
                                         }`}>
                                         {template.category}
                                     </span>
@@ -204,7 +206,7 @@ export default function InspectionTemplatesPage() {
             {pagination && (
                 <div className="mt-8 flex justify-between items-center text-sm font-medium text-gray-500 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                     <p>
-                        Affichage de <span className="text-gray-900 font-bold">{templates.length}</span> modèles sur <span className="text-gray-900 font-bold">{pagination.totalCount}</span>
+                        Affichage de <span className="text-gray-900 font-bold">{templates.length}</span> formulaires sur <span className="text-gray-900 font-bold">{pagination.totalCount}</span>
                     </p>
                     <div className="flex gap-2">
                         <button disabled={!pagination.hasPrev} className="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"><ChevronRight className="rotate-180" size={16} /></button>

@@ -71,7 +71,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       ]
     },
     // { id: 'tools', label: 'Outils', icon: Wrench, href: '/tools', view: undefined },
-    { id: 'inspections', label: 'Inspections', icon: ClipboardCheck, href: '/inspections', view: ViewState.INSPECTIONS_LIST },
+    {
+      id: 'inspections',
+      label: 'Inspections',
+      icon: ClipboardCheck,
+      href: null,
+      subItems: [
+        { id: 'inspections-hub', label: 'Vue d\'ensemble', href: '/inspections', view: ViewState.INSPECTIONS_LIST },
+        { id: 'inspections-history', label: 'Historique', href: '/inspections/history' },
+        { id: 'inspections-schedules', label: 'Planifications', href: '/inspections/schedules' },
+        { id: 'inspections-forms', label: 'Formulaires', href: '/inspections/forms' },
+      ]
+    },
     { id: 'issues', label: 'Problèmes', icon: AlertTriangle, href: '/issues', view: ViewState.ISSUES_LIST },
     {
       id: 'reminders',

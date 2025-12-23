@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'next/navigation';
 import useInspections from '@/lib/hooks/useInspections';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
-import ScoringSystem from '../components/ScoringSystem';
+import ScoringSystem from '../../components/ScoringSystem';
 import type { InspectionResultData, InspectionTemplateItem } from '@/lib/services/inspections-api';
 
 // Utiliser les types de l'API directement
@@ -69,11 +69,11 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
     };
 
     const handleBack = () => {
-        router.push('/inspections');
+        router.push('/inspections/history');
     };
 
     const handleEdit = () => {
-        router.push(`/inspections/${params.id}/edit`);
+        router.push(`/inspections/history/${params.id}/edit`);
     };
 
     const handleStartExecution = async () => {
@@ -255,7 +255,7 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-1">
                     <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium mr-4">
-                        <ArrowLeft size={16} /> Inspections
+                        <ArrowLeft size={16} /> Historique
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900">{inspection.title}</h1>
                     <span className={`status-badge text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(inspection.status)}`}>{inspection.status}</span>
@@ -263,9 +263,10 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
 
                 <div className="flex gap-2">
                     <button className="p-2 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50"><MoreHorizontal size={20} /></button>
-                    {inspection.status === 'DRAFT' && (
+                    {(inspection.status === 'DRAFT' || inspection.status === 'SCHEDULED') && (
                         <button
                             onClick={handleStartExecution}
+                            data-testid="start-inspection-button"
                             className="px-3 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm"
                         >
                             <Play size={16} /> Démarrer
@@ -419,9 +420,10 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                                 <h2 className="text-lg font-bold text-gray-900">Exécution de l'Inspection</h2>
-                                {inspection.status === 'DRAFT' && (
+                                {(inspection.status === 'DRAFT' || inspection.status === 'SCHEDULED') && (
                                     <button
                                         onClick={handleStartExecution}
+                                        data-testid="start-inspection-button-execution"
                                         className="px-3 py-1 bg-[#008751] hover:bg-[#007043] text-white rounded text-sm"
                                     >
                                         Démarrer l'Inspection

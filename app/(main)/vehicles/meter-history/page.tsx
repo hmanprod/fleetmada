@@ -1,16 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronRight, X, Calendar, AlertCircle } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, ChevronRight, X, Calendar, AlertCircle, Trash2, History, Ban, Edit2 } from 'lucide-react';
 import { MOCK_VEHICLES, MOCK_METER_ENTRIES, MeterEntry } from '../types';
 
 export default function VehicleMeterPage() {
   const [entries, setEntries] = useState<MeterEntry[]>(MOCK_METER_ENTRIES);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<MeterEntry | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<string | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<MeterEntry | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<Partial<MeterEntry>>({
@@ -52,6 +55,17 @@ export default function VehicleMeterPage() {
       setEntries([newEntry, ...entries]);
     }
     closeModal();
+  };
+
+  const handleVoid = (id: string) => {
+    setEntries(entries.map(e => e.id === id ? { ...e, isVoid: !e.isVoid } : e));
+    setActiveMenu(null);
+  };
+
+  const handleDelete = (id: string) => {
+    setEntries(entries.filter(e => e.id !== id));
+    setIsDeleteConfirmOpen(null);
+    setActiveMenu(null);
   };
 
   const openAddModal = () => {
@@ -122,29 +136,75 @@ export default function VehicleMeterPage() {
               <th className="p-4">Source</th>
               <th className="p-4">Void Status</th>
               <th className="p-4">Auto-Void Reason</th>
+              <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="text-sm divide-y divide-gray-100">
             {filteredEntries.map((entry) => (
               <tr
                 key={entry.id}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                className={`hover:bg-gray-50 cursor-pointer transition-colors ${entry.isVoid ? 'opacity-60 bg-gray-50' : ''}`}
                 onClick={() => openEditModal(entry)}
               >
                 <td className="p-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="rounded border-gray-300" /></td>
-                <td className="p-4 font-medium text-[#008751] hover:underline">{getVehicleName(entry.vehicleId)}</td>
-                <td className="p-4 text-gray-700 underline decoration-dotted">{new Date(entry.date).toLocaleDateString()}</td>
-                <td className="p-4 text-gray-900 font-medium">{entry.value.toLocaleString()} {entry.unit}</td>
+                <td className={`p-4 font-medium text-[#008751] hover:underline ${entry.isVoid ? 'line-through text-gray-400' : ''}`}>{getVehicleName(entry.vehicleId)}</td>
+                <td className={`p-4 text-gray-700 underline decoration-dotted ${entry.isVoid ? 'line-through' : ''}`}>{new Date(entry.date).toLocaleDateString()}</td>
+                <td className={`p-4 text-gray-900 font-medium ${entry.isVoid ? 'line-through' : ''}`}>{entry.value.toLocaleString()} {entry.unit}</td>
                 <td className="p-4 text-gray-500">{entry.type}</td>
-                <td className="p-4 text-gray-500">{entry.isVoid ? 'Yes' : '—'}</td>
+                <td className="p-4 text-gray-500">
+                  {entry.isVoid ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                      Void
+                    </span>
+                  ) : '—'}
+                </td>
                 <td className="p-4 text-[#008751] hover:underline">{entry.source || '—'}</td>
                 <td className="p-4 text-gray-400">{entry.voidStatus || '—'}</td>
                 <td className="p-4 text-gray-400">{entry.autoVoidReason || '—'}</td>
+                <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                  <div className="relative">
+                    <button
+                      onClick={() => setActiveMenu(activeMenu === entry.id ? null : entry.id)}
+                      className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {activeMenu === entry.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 py-1">
+                        <button
+                          onClick={() => openEditModal(entry)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Edit2 size={14} className="mr-2" /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleVoid(entry.id)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Ban size={14} className="mr-2" /> {entry.isVoid ? 'Unvoid' : 'Void'}
+                        </button>
+                        <button
+                          onClick={() => setIsHistoryModalOpen(entry)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <History size={14} className="mr-2" /> View record history
+                        </button>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button
+                          onClick={() => setIsDeleteConfirmOpen(entry.id)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 size={14} className="mr-2" /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
             {filteredEntries.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-12 text-center text-gray-500">
+                <td colSpan={10} className="p-12 text-center text-gray-500">
                   No meter readings found matching your search.
                 </td>
               </tr>
@@ -269,6 +329,79 @@ export default function VehicleMeterPage() {
                 className={`bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm ${editingEntry ? 'bg-gray-200 text-gray-400 hover:bg-gray-200 cursor-not-allowed' : ''}`}
               >
                 Save {editingEntry ? '' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this meter reading? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsDeleteConfirmOpen(null)}
+                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(isDeleteConfirmOpen)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Record History Modal (Simulated) */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">Record History</h3>
+              <button onClick={() => setIsHistoryModalOpen(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-2 bg-green-500 rounded-full"></div>
+                  <div>
+                    <p className="text-sm font-bold">Created</p>
+                    <p className="text-xs text-gray-500">Dec 20, 2025 10:30 AM by John Doe</p>
+                  </div>
+                </div>
+                {isHistoryModalOpen.isVoid && (
+                  <div className="flex gap-4">
+                    <div className="w-2 bg-red-500 rounded-full"></div>
+                    <div>
+                      <p className="text-sm font-bold">Marked as Void</p>
+                      <p className="text-xs text-gray-500">Dec 22, 2025 02:15 PM by Jane Smith</p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-4">
+                  <div className="w-2 bg-blue-500 rounded-full"></div>
+                  <div>
+                    <p className="text-sm font-bold">Last Viewed</p>
+                    <p className="text-xs text-gray-500">Today 09:45 AM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setIsHistoryModalOpen(null)}
+                className="px-4 py-2 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              >
+                Close
               </button>
             </div>
           </div>

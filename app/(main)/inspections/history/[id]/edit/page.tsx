@@ -117,7 +117,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
     };
 
     const handleBack = () => {
-        router.push(`/inspections/${params.id}`);
+        router.push(`/inspections/history/${params.id}`);
     };
 
     const handleInputChange = (field: string, value: string) => {
@@ -178,7 +178,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
             }
 
             // Rediriger vers la page de détails
-            router.push(`/inspections/${params.id}`);
+            router.push(`/inspections/history/${params.id}`);
 
         } catch (err) {
             console.error('Erreur lors de la sauvegarde:', err);
@@ -318,6 +318,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
                                             <input
                                                 type="text"
+                                                name="title"
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                                 value={formData.title}
                                                 onChange={(e) => handleInputChange('title', e.target.value)}
@@ -329,6 +330,7 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Inspecteur</label>
                                             <input
                                                 type="text"
+                                                name="inspectorName"
                                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#008751] focus:border-[#008751]"
                                                 value={formData.inspectorName}
                                                 onChange={(e) => handleInputChange('inspectorName', e.target.value)}

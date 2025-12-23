@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import inspectionsAPI, { 
-  InspectionTemplate, 
+import inspectionsAPI, {
+  InspectionTemplate,
   InspectionTemplateItem,
-  InspectionTemplateFilters, 
+  InspectionTemplateFilters,
   InspectionTemplatesResponse,
   InspectionTemplateCreateData,
   InspectionTemplateUpdateData
@@ -57,10 +57,10 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     try {
       setLoading(true)
       setError(null)
-      
+
       const currentFilters = { ...filters, ...newFilters }
       setFilters(currentFilters)
-      
+
       const response = await inspectionsAPI.getInspectionTemplates(currentFilters)
       setTemplates(response.templates)
       setPagination(response.pagination)
@@ -77,10 +77,10 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     try {
       setError(null)
       const newTemplate = await inspectionsAPI.createInspectionTemplate(data)
-      
+
       // Rafraîchir la liste après création
       await fetchTemplates()
-      
+
       return newTemplate
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du modèle d\'inspection'
@@ -93,12 +93,12 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     try {
       setError(null)
       const updatedTemplate = await inspectionsAPI.updateInspectionTemplate(id, data)
-      
+
       // Mettre à jour le template dans la liste locale
-      setTemplates(prev => prev.map(template => 
+      setTemplates(prev => prev.map(template =>
         template.id === id ? { ...template, ...updatedTemplate } : template
       ))
-      
+
       return updatedTemplate
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la modification du modèle d\'inspection'
@@ -111,10 +111,10 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     try {
       setError(null)
       await inspectionsAPI.deleteInspectionTemplate(id)
-      
+
       // Supprimer le template de la liste locale
       setTemplates(prev => prev.filter(template => template.id !== id))
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -133,10 +133,10 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     try {
       setError(null)
       const duplicatedTemplate = await inspectionsAPI.duplicateInspectionTemplate(id, newName)
-      
+
       // Rafraîchir la liste après duplication
       await fetchTemplates()
-      
+
       return duplicatedTemplate
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la duplication du modèle'
@@ -149,12 +149,12 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     try {
       setError(null)
       const updatedTemplate = await inspectionsAPI.updateInspectionTemplate(id, { isActive })
-      
+
       // Mettre à jour le template dans la liste locale
-      setTemplates(prev => prev.map(template => 
+      setTemplates(prev => prev.map(template =>
         template.id === id ? { ...template, ...updatedTemplate } : template
       ))
-      
+
       return updatedTemplate
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du statut'
@@ -196,23 +196,23 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
   // Statistiques calculées
   const getStatistics = useCallback(() => {
     const total = templates.length
-    
+
     const byCategory = templates.reduce((acc, template) => {
       acc[template.category] = (acc[template.category] || 0) + 1
       return acc
     }, {} as Record<string, number>)
-    
+
     const activeCount = templates.filter(t => t.isActive).length
-    
+
     // Template le plus utilisé (basé sur _count.inspections)
-    const mostUsedTemplate = templates.length > 0 
+    const mostUsedTemplate = templates.length > 0
       ? templates.reduce((most, current) => {
-          const mostCount = (most as any)._count?.inspections || 0
-          const currentCount = (current as any)._count?.inspections || 0
-          return currentCount > mostCount ? current : most
-        }).name
+        const mostCount = (most as any)._count?.inspections || 0
+        const currentCount = (current as any)._count?.inspections || 0
+        return currentCount > mostCount ? current : most
+      }).name
       : null
-    
+
     return {
       total,
       byCategory,
@@ -221,10 +221,10 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     }
   }, [templates])
 
-  // Charger les données initiales
-  useEffect(() => {
-    fetchTemplates()
-  }, []) // Seulemente au montage
+  // Charger les données initiales - Supprimé pour éviter les conflits avec les appels spécifiques aux pages
+  // useEffect(() => {
+  //   fetchTemplates()
+  // }, [])
 
   return {
     templates,

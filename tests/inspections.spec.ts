@@ -44,12 +44,14 @@ test.describe('Module Inspections - Tests E2E', () => {
   // Tests de navigation
   test.describe('Navigation', () => {
     test('Accès au module Inspections depuis le dashboard', async () => {
-      // Naviguer vers le module Inspections
-      // On s'assure que l'élément est cliquable et non intercepté
-      const inspectionLink = page.locator('a[href="/inspections"], a:has-text("Inspections"), button:has-text("Inspections")').first();
+      // Cliquer sur le menu parent pour l'étendre si nécessaire
+      const parentMenu = page.getByTestId('sidebar-inspections');
+      await parentMenu.click();
+
+      const inspectionLink = page.locator('a[href="/inspections"]').first();
       await inspectionLink.waitFor({ state: 'visible' });
       await inspectionLink.click({ force: true });
-      await page.waitForURL('**/inspections**');
+      await page.waitForURL(url => url.pathname.startsWith('/inspections'), { timeout: 30000 });
 
       // Vérifier l'affichage de la page principale des inspections
       await expect(page.locator('h1').filter({ hasText: /inspection/i }).first()).toBeVisible();
@@ -59,8 +61,8 @@ test.describe('Module Inspections - Tests E2E', () => {
       // Navigation directe vers les pages
       const pages = [
         { url: '/inspections', expectedText: /inspection/i },
-        { url: '/inspections/create', expectedText: /créer|nouv/i },
-        { url: '/inspections/templates', expectedText: /modèle|template/i },
+        { url: '/inspections/history/create', expectedText: /créer|nouv/i },
+        { url: '/inspections/forms', expectedText: /modèle|template|formulaire/i },
       ];
 
       for (const { url, expectedText } of pages) {
@@ -75,7 +77,7 @@ test.describe('Module Inspections - Tests E2E', () => {
   // Tests de création d'inspection
   test.describe('Création d\'Inspection', () => {
     test('Création d\'une inspection avec template', async () => {
-      await page.goto('/inspections/create');
+      await page.goto('/inspections/history/create');
 
       // Vérifier le titre de la page
       await expect(page.locator('h1').filter({ hasText: /créer|nouv/i }).first()).toBeVisible();
@@ -127,14 +129,14 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Validation des champs obligatoires', async () => {
-      await page.goto('/inspections/create');
+      await page.goto('/inspections/history/create');
 
       // Essayer de sauvegarder sans remplir les champs
       await page.click('button[type="submit"], button:has-text("Sauvegarder"), button:has-text("Save")');
 
       // Vérifier les messages d'erreur (ils peuvent être des tooltips HTML5 ou des messages personnalisés)
       // On vérifie que l'URL n'a pas changé si la validation bloque
-      expect(page.url()).toContain('/inspections/create');
+      expect(page.url()).toContain('/inspections/history/create');
 
       // Vérifier les champs requis spécifiquement via placeholders
       const requiredSelectors = [
@@ -152,19 +154,22 @@ test.describe('Module Inspections - Tests E2E', () => {
   test.describe('Exécution d\'Inspection', () => {
     test('Démarrage et exécution d\'une inspection', async () => {
       // Créer ou utiliser une inspection existante
+      // Naviguer via le hub vers les planifications
       await page.goto('/inspections');
+      await page.click('text="Planifications"');
+      await page.waitForURL('**/inspections/schedules');
 
       // Cliquer sur une inspection pour l'exécuter
       // On cherche une inspection en attente (DRAFT ou SCHEDULED)
-      const targetRow = page.locator('tbody tr').filter({ has: page.locator('span', { hasText: /DRAFT|SCHEDULED/ }) }).first();
+      const targetRow = page.getByTestId('inspection-row').filter({ hasText: /PROGRAMMÉE|BROUILLON/ }).first();
       await expect(targetRow).toBeVisible({ timeout: 15000 });
       await targetRow.click();
 
-      await page.waitForURL('**/inspections/**');
+      await page.waitForURL('**/inspections/history/**');
       await page.waitForLoadState('load');
 
       // Cliquer sur "Démarrer l'inspection" (peut être dans le header ou l'onglet exécution)
-      const startButton = page.locator('button:has-text("Démarrer"), button:has-text("Start"), button:has-text("Commencer")').first();
+      const startButton = page.getByTestId('start-inspection-button').first();
       await expect(startButton).toBeVisible({ timeout: 15000 });
 
       console.log('Cliquer sur le bouton de démarrage et attendre les réponses API...');
@@ -223,13 +228,13 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Système de scoring et conformité', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Aller à une inspection complétée
-      const completedInspection = page.locator('a[href*="/inspections/"]:has-text("Terminé"), a[href*="/inspections/"]:has-text("Completed")').first();
+      const completedInspection = page.getByTestId('inspection-row').first();
       if (await completedInspection.isVisible()) {
         await completedInspection.click();
-        await page.waitForURL('**/inspections/**');
+        await page.waitForURL('**/inspections/history/**');
 
         // Vérifier l'affichage du score
         await expect(page.locator('.score, .compliance-score, .rating')).toBeVisible();
@@ -255,20 +260,19 @@ test.describe('Module Inspections - Tests E2E', () => {
   // Tests de modification et statut
   test.describe('Modification et Statut', () => {
     test('Modification d\'une inspection', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/schedules');
 
       // Cliquer sur une ligne pour aller aux détails
-      // Cliquer sur une ligne pour aller aux détails (éviter les inspections complétées qui ne sont pas modifiables)
-      const firstRow = page.locator('tbody tr').filter({ has: page.locator('span', { hasText: /DRAFT|SCHEDULED|IN_PROGRESS/ }) }).first();
+      const firstRow = page.getByTestId('inspection-row').first();
       await expect(firstRow).toBeVisible();
       await firstRow.click();
-      await page.waitForURL('**/inspections/**');
+      await page.waitForURL('**/inspections/history/**');
 
       // Cliquer sur le bouton d'édition dans la page de détails
       const editButton = page.locator('button:has-text("Modifier"), button:has-text("Edit")').first();
       await expect(editButton).toBeVisible();
       await editButton.click();
-      await page.waitForURL('**/inspections/**/edit');
+      await page.waitForURL('**/inspections/history/**/edit');
 
       // Modifier le titre
       await page.waitForSelector('input[name="title"]', { state: 'visible' });
@@ -292,14 +296,13 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Changement de statut (démarrer, compléter, annuler)', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/schedules');
 
       // Sélectionner une inspection (en mode liste)
-      // On utilise la même logique que pour la modification pour être sûr de cliquer sur une ligne
-      const row = page.locator('tbody tr').first();
-      await expect(row).toBeVisible();
+      const row = page.getByTestId('inspection-row').first();
+      await expect(row).toBeVisible({ timeout: 15000 });
       await row.click();
-      await page.waitForURL('**/inspections/**');
+      await page.waitForURL('**/inspections/history/**');
 
       // Test démarrage inspection
       const startButton = page.locator('button:has-text("Démarrer"), button:has-text("Start")');
@@ -327,25 +330,19 @@ test.describe('Module Inspections - Tests E2E', () => {
   // Tests de filtres et recherche
   test.describe('Filtres et Recherche', () => {
     test('Filtres par statut', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Vérifier la présence des filtres
-      await expect(page.locator('button:has-text("Status:"), .filter-status').first()).toBeVisible();
+      await expect(page.getByTestId('status-filter')).toBeVisible();
 
       // Tester chaque filtre de statut
       const statuses = ['DRAFT', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
       for (const status of statuses) {
         // Selectionner l'option
-        const filterSelect = page.locator('select[name="status"], .filter-status').first();
-        if (await filterSelect.isVisible()) {
-          await filterSelect.selectOption(status);
-          await page.waitForTimeout(500); // Attendre le filtrage
-        } else {
-          // Si le filtre est un bouton ou dropdown custom
-          // Skip pour ce test si non trouvé standard
-          continue;
-        }
+        const filterSelect = page.getByTestId('status-filter');
+        await filterSelect.selectOption(status);
+        await page.waitForTimeout(500); // Attendre le filtrage
 
         // Vérifier que les résultats correspondent au filtre
         const statusBadges = page.locator('.status-badge, .status');
@@ -362,10 +359,10 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Recherche textuelle', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Vérifier la présence du champ de recherche
-      const searchInput = page.locator('input[placeholder*="Search"], input[placeholder*="rechercher"], .search-input').first();
+      const searchInput = page.getByTestId('inspection-search-input').first();
       await expect(searchInput).toBeVisible();
 
       // Effectuer une recherche
@@ -380,7 +377,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Filtres par véhicule et période', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Filtre par véhicule
       const vehicleFilter = page.locator('select[name="vehicleId"], .filter-vehicle');
@@ -437,7 +434,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     test('Navigation tactile sur mobile', async () => {
       await page.setViewportSize({ width: 375, height: 667 });
 
-      await page.goto('/inspections/create');
+      await page.goto('/inspections/history/create');
 
       // Tester les interactions tactiles
       await page.touchscreen.tap(200, 300);
@@ -455,7 +452,7 @@ test.describe('Module Inspections - Tests E2E', () => {
   // Tests d'intégration véhicules
   test.describe('Intégration Véhicules', () => {
     test('Navigation vers fiche véhicule depuis inspection', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Cliquer sur un lien véhicule depuis une inspection
       const vehicleLink = page.locator('a[href*="/vehicles/"], .vehicle-link').first();
@@ -469,7 +466,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Sélection de véhicule lors de création inspection', async () => {
-      await page.goto('/inspections/create');
+      await page.goto('/inspections/history/create');
 
       // Vérifier que la liste des véhicules se charge
       // Vérifier que la liste des véhicules se charge
@@ -539,7 +536,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     test('Temps de chargement des pages inspections', async () => {
       const startTime = Date.now();
 
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
       await page.waitForLoadState('networkidle');
 
       const loadTime = Date.now() - startTime;
@@ -550,7 +547,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Navigation au clavier', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Tester la navigation au clavier
       await page.keyboard.press('Tab');
@@ -563,7 +560,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Accessibilité des couleurs et contrastes', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Vérifier les couleurs des statuts
       const statusElements = page.locator('.status, .badge, .status-badge');
@@ -597,7 +594,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Gestion des données vides', async () => {
-      await page.goto('/inspections');
+      await page.goto('/inspections/history');
 
       // Si pas de données, vérifier l'état vide
       const emptyState = page.locator('.empty-state, .no-data, .placeholder');
@@ -609,7 +606,7 @@ test.describe('Module Inspections - Tests E2E', () => {
     });
 
     test('Redirection en cas d\'URL invalide', async () => {
-      await page.goto('/inspections/invalid-id-12345');
+      await page.goto('/inspections/history/invalid-id-12345');
 
       // Vérifier la redirection ou l'affichage d'erreur 404
       await page.waitForTimeout(2000);

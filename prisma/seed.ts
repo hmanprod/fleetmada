@@ -17,6 +17,7 @@ async function main() {
 
   // Supprimer les entrées dépendantes d'autres entités d'abord
   await prisma.blacklistedToken.deleteMany();
+  await prisma.stockMovement.deleteMany();
   await prisma.fuelEntry.deleteMany();
   await prisma.chargingEntry.deleteMany();
   await prisma.expenseEntry.deleteMany();

@@ -273,10 +273,10 @@ export function useInspections(initialFilters: InspectionFilters = {}): UseInspe
     }
   }, [inspections])
 
-  // Charger les données initiales
-  useEffect(() => {
-    fetchInspections()
-  }, []) // Seulemente au montage
+  // Charger les données initiales - Supprimé pour éviter les conflits avec les appels spécifiques aux pages
+  // useEffect(() => {
+  //   fetchInspections()
+  // }, [])
 
   return {
     inspections,
