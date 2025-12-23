@@ -192,7 +192,7 @@ export default function ServicePage() {
               <FileText className="w-5 h-5 text-green-600" />
             </div>
             <div className="text-left">
-              <p className="font-medium text-gray-900">Ordres de Travail</p>
+              <p className="font-medium text-gray-900">Demandes d’entretien</p>
               <p className="text-sm text-gray-600">Gérer les work orders</p>
             </div>
           </button>

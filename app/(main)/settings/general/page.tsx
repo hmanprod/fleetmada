@@ -639,7 +639,7 @@ export default function SettingsGeneralPage() {
                      />
                      <div>
                          <span className="block text-sm font-bold text-gray-900">Taxe secondaire</span>
-                         <span className="block text-xs text-gray-500">Active un second champ de taxe pour les ordres de travail et les entrées d'entretien.</span>
+                         <span className="block text-xs text-gray-500">Active un second champ de taxe pour les Demandes d’entretien et les entrées d'entretien.</span>
                      </div>
                  </label>
             </div>
@@ -676,7 +676,7 @@ export default function SettingsGeneralPage() {
                   <option value="percentage">Pourcentage</option>
                   <option value="fixed">Fix</option>
                </select>
-               <p className="mt-1 text-xs text-gray-500">Comment les montants de taxes sont-ils saisis sur les ordres de travail ? Choisissez 'pourcentage' ou 'fixe'.</p>
+               <p className="mt-1 text-xs text-gray-500">Comment les montants de taxes sont-ils saisis sur les Demandes d’entretien ? Choisissez 'pourcentage' ou 'fixe'.</p>
             </div>
          </div>
       </div>

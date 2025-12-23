@@ -121,7 +121,7 @@ test.describe('Module Service - Tests E2E', () => {
       await page.goto('/service/work-orders');
 
       // Vérifier le titre
-      await expect(page.locator('[data-testid="page-title"]')).toContainText('Ordres de Travail');
+      await expect(page.locator('[data-testid="page-title"]')).toContainText('Demandes d’entretien');
 
       // Vérifier les onglets
       await expect(page.locator('button:has-text("Tous")')).toBeVisible();

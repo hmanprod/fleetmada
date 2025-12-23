@@ -64,13 +64,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       icon: Car,
       href: null,
       subItems: [
-        { id: 'vehicles-list', label: 'Liste des véhicules', href: '/vehicles', view: ViewState.VEHICLES_LIST },
+        { id: 'vehicles-list', label: 'Liste des véhicules', href: '/vehicles/list', view: ViewState.VEHICLES_LIST },
         { id: 'vehicle-assignments', label: 'Affectations', href: '/vehicles/assignments', view: ViewState.VEHICLE_ASSIGNMENTS },
         { id: 'meter-history', label: 'Historique compteur', href: '/vehicles/meter-history', view: ViewState.METER_HISTORY },
-        { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement-analysis', view: ViewState.REPLACEMENT_ANALYSIS },
+        { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement', view: ViewState.REPLACEMENT_ANALYSIS },
       ]
     },
-    { id: 'tools', label: 'Outils', icon: Wrench, href: '/tools', view: undefined },
+    // { id: 'tools', label: 'Outils', icon: Wrench, href: '/tools', view: undefined },
     { id: 'inspections', label: 'Inspections', icon: ClipboardCheck, href: '/inspections', view: ViewState.INSPECTIONS_LIST },
     { id: 'issues', label: 'Problèmes', icon: AlertTriangle, href: '/issues', view: ViewState.ISSUES_LIST },
     {
@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       subItems: [
         { id: 'service-reminders', label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS },
         { id: 'vehicle-renewals', label: 'Renouvellements véhicules', href: '/reminders/vehicle-renewals', view: ViewState.VEHICLE_RENEWALS },
-        { id: 'contact-renewals', label: 'Renouvellements contacts', href: '/reminders/contact', view: ViewState.CONTACT_RENEWALS },
+        // { id: 'contact-renewals', label: 'Renouvellements contacts', href: '/reminders/contact', view: ViewState.CONTACT_RENEWALS },
       ]
     },
     {
@@ -91,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       href: null,
       subItems: [
         { id: 'service-history', label: 'Historique d\'entretien', href: '/service/history', view: ViewState.SERVICE_HISTORY },
-        { id: 'work-orders', label: 'Ordres de travail', href: '/service/work-orders', view: ViewState.WORK_ORDERS },
+        { id: 'work-orders', label: 'Demandes d’entretien', href: '/service/work-orders', view: ViewState.WORK_ORDERS },
         { id: 'service-tasks', label: 'Tâches d\'entretien', href: '/service/tasks', view: ViewState.SERVICE_TASKS },
         { id: 'service-programs', label: 'Programmes d\'entretien', href: '/service/programs', view: ViewState.SERVICE_PROGRAMS },
       ]
@@ -111,8 +111,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
     { id: 'parts', label: 'Pièces', icon: Box, href: '/parts', view: ViewState.PARTS_LIST },
     { id: 'places', label: 'Lieux', icon: MapPin, href: '/places', view: ViewState.PLACES_LIST },
     { id: 'documents', label: 'Documents', icon: FileText, href: '/documents', view: ViewState.DOCUMENTS_LIST },
-    { id: 'integrations', label: 'Intégrations', icon: Grid, href: '/integrations', view: undefined },
-    { id: 'reports', label: 'Rapports', icon: BarChart3, href: '/reports', view: ViewState.REPORTS_LIST },
+    // { id: 'integrations', label: 'Intégrations', icon: Grid, href: '/integrations', view: undefined },
+    // { id: 'reports', label: 'Rapports', icon: BarChart3, href: '/reports', view: ViewState.REPORTS_LIST },
   ];
 
   return (

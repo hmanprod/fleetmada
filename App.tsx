@@ -63,7 +63,7 @@ const IssueCreate = ({ onCancel, onSave }: { onCancel: () => void; onSave: () =>
 const IssueDetail = ({ issue, onBack }: { issue: Issue | null; onBack: () => void }) => <div className="p-6"><h2>Détail du problème</h2></div>;
 const ServiceHistory = ({ onAdd }: { onAdd: () => void }) => <div className="p-6"><h2>Historique des services</h2></div>;
 const EntryCreate = ({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) => <div className="p-6"><h2>Créer une entrée</h2></div>;
-const WorkOrders = () => <div className="p-6"><h2>Ordres de travail</h2></div>;
+const WorkOrders = () => <div className="p-6"><h2>Demandes d’entretien</h2></div>;
 const ServiceReminders = () => <div className="p-6"><h2>Rappels de service</h2></div>;
 const VehicleRenewals = () => <div className="p-6"><h2>Renouvellements de véhicules</h2></div>;
 const ServiceTasks = ({ onAdd }: { onAdd: () => void }) => <div className="p-6"><h2>Tâches de service</h2></div>;

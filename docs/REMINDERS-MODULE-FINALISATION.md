@@ -234,7 +234,7 @@ npm start
 
 ### Modules FleetMada
 - **Vehicles** : Synchronisation des données véhicule
-- **Service** : Création d'ordres de travail depuis rappels
+- **Service** : Création d'Demandes d’entretien depuis rappels
 - **Documents** : Gestion des documents de renouvellement
 - **Notifications** : Alertes et notifications utilisateur
 

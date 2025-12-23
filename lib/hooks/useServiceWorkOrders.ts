@@ -1,5 +1,5 @@
 /**
- * Hook personnalisé pour gérer les ordres de travail de service
+ * Hook personnalisé pour gérer les Demandes d’entretien de service
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -110,7 +110,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
       setWorkOrders(response.data.entries || [])
       setPagination(response.data.pagination)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la récupération des ordres de travail')
+      setError(err instanceof Error ? err.message : 'Erreur lors de la récupération des Demandes d’entretien')
     } finally {
       setLoading(false)
     }
@@ -294,7 +294,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
 
   const exportWorkOrders = useCallback(async (filters?: WorkOrderFilters): Promise<Blob | null> => {
     try {
-      // Implémenter l'export CSV/Excel des ordres de travail
+      // Implémenter l'export CSV/Excel des Demandes d’entretien
       const queryParams = new URLSearchParams()
       Object.entries(filters || {}).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {

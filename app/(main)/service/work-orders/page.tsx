@@ -177,7 +177,7 @@ export default function WorkOrdersPage() {
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Ordres de Travail</h1>
+          <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Demandes d’entretien</h1>
           <button className="text-[#008751] hover:underline text-sm font-medium">
             Gérer les work orders
           </button>
@@ -480,7 +480,7 @@ export default function WorkOrdersPage() {
                 <td colSpan={9} className="px-6 py-8 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008751]"></div>
-                    <span className="text-gray-600">Chargement des ordres de travail...</span>
+                    <span className="text-gray-600">Chargement des Demandes d’entretien...</span>
                   </div>
                 </td>
               </tr>

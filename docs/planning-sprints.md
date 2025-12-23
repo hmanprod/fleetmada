@@ -1145,7 +1145,7 @@ model InspectionForm {
 ### Objectifs
 - Développer l'API complète pour la gestion de l'entretien
 - Implémenter les programmes de service et rappels
-- Gérer les ordres de travail et pièces
+- Gérer les Demandes d’entretien et pièces
 
 ### Durée Estimée
 **12 jours ouvrés**
@@ -1158,7 +1158,7 @@ model InspectionForm {
 | API Service Entries | CRUD entrées de service | 2.5 jours |
 | API Service Tasks | Gestion des tâches de service | 2.5 jours |
 | API Parts | Gestion des pièces détachées | 2 jours |
-| API Work Orders | Ordres de travail | 2 jours |
+| API Work Orders | Demandes d’entretien | 2 jours |
 
 ### Modèles de Données
 
@@ -1209,7 +1209,7 @@ model Part {
 - ✅ CRUD entrées de service avec calcul de coûts
 - ✅ Gestion des tâches de service avec codes
 - ✅ Inventaire des pièces avec suivi des quantités
-- ✅ Ordres de travail avec statuts
+- ✅ Demandes d’entretien avec statuts
 - ✅ Calculs automatiques des statistiques
 - ⏳ **Frontend**: Pages Service (History, WorkOrders)
 - ⏳ **Frontend**: Composants ServiceEntryForm, PartInventory
