@@ -66,10 +66,10 @@ export function useCostAnalysis(options: UseCostAnalysisOptions = {}) {
 
       const currentPeriod = customPeriod || period;
       const response = await authenticatedFetch(
-        `/api/dashboard/costs?period=${currentPeriod}`, 
+        `/api/dashboard/costs?period=${currentPeriod}`,
         token
       );
-      
+
       if (response.success) {
         setData(response.data);
         setLastRefresh(new Date());
@@ -92,7 +92,7 @@ export function useCostAnalysis(options: UseCostAnalysisOptions = {}) {
   };
 
   // Computed values
-  const costPerVehicle = data && data.summary.totalCosts > 0 
+  const costPerVehicle = data && data.summary.totalCosts > 0
     ? data.summary.totalCosts / Math.max(data.breakdown.fuel.count + data.breakdown.service.count + data.breakdown.charging.count, 1)
     : 0;
 
@@ -149,14 +149,14 @@ export function useCostAnalysis(options: UseCostAnalysisOptions = {}) {
     lastRefresh,
     refresh,
     changePeriod,
-    
+
     // Computed values
     costPerVehicle: Math.round(costPerVehicle * 100) / 100,
     averageCostPerEntry: Math.round(averageCostPerEntry * 100) / 100,
     costEfficiency,
     trend,
     alerts,
-    
+
     // State helpers
     isLoading: loading,
     hasData: !!data,

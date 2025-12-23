@@ -17,7 +17,7 @@ export const useUploadDocuments = (): UseUploadDocumentsReturn => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const token = useAuthToken();
+  const { token } = useAuthToken();
 
   const updateProgress = useCallback((fileName: string, progress: UploadProgress) => {
     setUploadProgress(prev => {
@@ -39,7 +39,7 @@ export const useUploadDocuments = (): UseUploadDocumentsReturn => {
   }, []);
 
   const uploadSingleDocument = useCallback(async (
-    file: File, 
+    file: File,
     metadata: Partial<DocumentMetadata> = {}
   ): Promise<UploadResult> => {
     if (!token) {
@@ -60,7 +60,7 @@ export const useUploadDocuments = (): UseUploadDocumentsReturn => {
       // Créer FormData
       const formData = new FormData();
       formData.append('file', file);
-      
+
       // Ajouter les métadonnées
       Object.entries(metadata).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -113,7 +113,7 @@ export const useUploadDocuments = (): UseUploadDocumentsReturn => {
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      
+
       updateProgress(file.name, {
         fileName: file.name,
         progress: 0,
@@ -135,7 +135,7 @@ export const useUploadDocuments = (): UseUploadDocumentsReturn => {
   }, [token, updateProgress]);
 
   const uploadDocuments = useCallback(async (
-    files: File[], 
+    files: File[],
     metadata: Partial<DocumentMetadata> = {}
   ): Promise<UploadResult[]> => {
     if (files.length === 0) {
@@ -148,7 +148,7 @@ export const useUploadDocuments = (): UseUploadDocumentsReturn => {
     try {
       // Créer FormData pour l'upload multiple
       const formData = new FormData();
-      
+
       // Ajouter tous les fichiers
       files.forEach((file, index) => {
         formData.append('files', file);

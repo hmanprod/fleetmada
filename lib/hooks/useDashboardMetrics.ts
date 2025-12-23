@@ -171,7 +171,7 @@ export function useDashboardMetrics() {
 
   const fetchOverview = async () => {
     if (!token) return;
-    
+
     try {
       const response = await authenticatedFetch('/api/dashboard/overview', token);
       if (response.success) {
@@ -186,7 +186,7 @@ export function useDashboardMetrics() {
 
   const fetchCosts = async (period: string = '30d') => {
     if (!token) return;
-    
+
     try {
       const response = await authenticatedFetch(`/api/dashboard/costs?period=${period}`, token);
       if (response.success) {
@@ -201,7 +201,7 @@ export function useDashboardMetrics() {
 
   const fetchMaintenance = async () => {
     if (!token) return;
-    
+
     try {
       const response = await authenticatedFetch('/api/dashboard/maintenance', token);
       if (response.success) {
@@ -216,7 +216,7 @@ export function useDashboardMetrics() {
 
   const fetchFuel = async (period: string = '30d') => {
     if (!token) return;
-    
+
     try {
       const response = await authenticatedFetch(`/api/dashboard/fuel?period=${period}`, token);
       if (response.success) {
@@ -231,7 +231,7 @@ export function useDashboardMetrics() {
 
   const fetchVehicles = async (limit: number = 10) => {
     if (!token) return;
-    
+
     try {
       const response = await authenticatedFetch(`/api/dashboard/vehicles?limit=${limit}`, token);
       if (response.success) {
@@ -324,19 +324,19 @@ export function useDashboardMetrics() {
     maintenance,
     fuel,
     vehicles,
-    
+
     // États
     loading,
     error,
     lastRefresh,
-    
+
     // Actions
     refreshAll,
     refreshSection,
     fetchCosts,
     fetchFuel,
     fetchVehicles,
-    
+
     // Computed values
     hasData: !!(overview && costs && maintenance && fuel && vehicles),
     isStale: (Date.now() - lastRefresh.getTime()) > 5 * 60 * 1000, // 5 minutes

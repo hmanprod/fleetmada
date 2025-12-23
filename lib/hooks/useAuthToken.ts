@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 // Utilitaire pour récupérer le token d'authentification
 export function useAuthToken() {
@@ -9,22 +9,25 @@ export function useAuthToken() {
 
   useEffect(() => {
     // Récupérer le token depuis localStorage ou cookies
-    const storedToken = localStorage.getItem('authToken') || 
-                       document.cookie.match(/authToken=([^;]*)/)?.[1];
-    
+    const storedToken = localStorage.getItem('authToken') ||
+      document.cookie.match(/authToken=([^;]*)/)?.[1];
+
     if (storedToken) {
       setToken(storedToken);
     }
     setLoading(false);
   }, []);
 
-  return { token, loading };
+  return useMemo(() => ({
+    token,
+    loading
+  }), [token, loading]);
 }
 
 // Utilitaire pour les requêtes API authentifiées
 export async function authenticatedFetch(
-  url: string, 
-  token: string, 
+  url: string,
+  token: string,
   options: RequestInit = {}
 ) {
   const response = await fetch(url, {

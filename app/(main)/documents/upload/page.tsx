@@ -18,7 +18,7 @@ export default function DocumentsUploadPage() {
   const [description, setDescription] = useState('');
   const [attachedTo, setAttachedTo] = useState('');
   const [attachedId, setAttachedId] = useState('');
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploading, uploadProgress, error, uploadDocuments, clearError } = useUploadDocuments();
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function DocumentsUploadPage() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     handleFilesSelected(files);
   };
@@ -51,12 +51,12 @@ export default function DocumentsUploadPage() {
 
   const handleFilesSelected = (files: File[]) => {
     // Filtrer les fichiers déjà sélectionnés
-    const newFiles = files.filter(file => 
-      !selectedFiles.some(selectedFile => 
+    const newFiles = files.filter(file =>
+      !selectedFiles.some(selectedFile =>
         selectedFile.name === file.name && selectedFile.size === file.size
       )
     );
-    
+
     setSelectedFiles(prev => [...prev, ...newFiles]);
   };
 
@@ -96,17 +96,17 @@ export default function DocumentsUploadPage() {
 
     try {
       const results = await uploadDocuments(selectedFiles, uploadMetadata);
-      
+
       const successfulUploads = results.filter(result => result.success);
       const failedUploads = results.filter(result => !result.success);
-      
+
       if (successfulUploads.length > 0) {
         setUploadSuccess(true);
         setTimeout(() => {
           router.push('/documents');
         }, 2000);
       }
-      
+
       if (failedUploads.length > 0) {
         alert(`Échec de l'upload de ${failedUploads.length} fichier(s)`);
       }
@@ -149,7 +149,7 @@ export default function DocumentsUploadPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Upload de Documents</h1>
-        <button 
+        <button
           onClick={handleCancel}
           className="text-gray-400 hover:text-gray-600 transition-colors"
         >
@@ -160,10 +160,9 @@ export default function DocumentsUploadPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Zone d'upload */}
         <div className="lg:col-span-2">
-          <div 
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
-            }`}
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
+              }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -175,11 +174,13 @@ export default function DocumentsUploadPage() {
               onChange={handleFileSelect}
               className="hidden"
               id="file-upload"
+              data-testid="file-input"
               accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+
             />
-            
-            <label 
-              htmlFor="file-upload" 
+
+            <label
+              htmlFor="file-upload"
               className="cursor-pointer"
             >
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -239,7 +240,7 @@ export default function DocumentsUploadPage() {
                       <span>{progress.progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-[#008751] h-2 rounded-full transition-all duration-300"
                         style={{ width: `${progress.progress}%` }}
                       ></div>
@@ -258,7 +259,7 @@ export default function DocumentsUploadPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Métadonnées</h3>
-            
+
             {/* Description */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -268,8 +269,10 @@ export default function DocumentsUploadPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
+                data-testid="description-textarea"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#008751] focus:border-[#008751]"
                 placeholder="Description du document..."
+
               />
             </div>
 
@@ -284,15 +287,19 @@ export default function DocumentsUploadPage() {
                   value={labelInput}
                   onChange={(e) => setLabelInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addLabel()}
+                  data-testid="label-input"
                   className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-[#008751] focus:border-[#008751]"
                   placeholder="Ajouter une étiquette..."
+
                 />
                 <button
                   onClick={addLabel}
+                  data-testid="add-label-button"
                   className="px-3 py-2 bg-[#008751] text-white rounded-md hover:bg-[#007043]"
                 >
                   <Plus size={16} />
                 </button>
+
               </div>
               {metadata.labels && metadata.labels.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -322,8 +329,10 @@ export default function DocumentsUploadPage() {
               <select
                 value={attachedTo}
                 onChange={(e) => setAttachedTo(e.target.value)}
+                data-testid="attached-to-select"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#008751] focus:border-[#008751]"
               >
+
                 <option value="">Sélectionner...</option>
                 <option value="vehicle">Véhicule</option>
                 <option value="service">Service</option>
@@ -344,9 +353,11 @@ export default function DocumentsUploadPage() {
                   type="text"
                   value={attachedId}
                   onChange={(e) => setAttachedId(e.target.value)}
+                  data-testid="attached-id-input"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#008751] focus:border-[#008751]"
                   placeholder="ID de l'élément..."
                 />
+
               </div>
             )}
 
@@ -385,19 +396,23 @@ export default function DocumentsUploadPage() {
 
           {/* Boutons d'action */}
           <div className="flex gap-3">
-            <button 
+            <button
               onClick={handleCancel}
+              data-testid="cancel-button"
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             >
               Annuler
             </button>
-            <button 
+
+            <button
               onClick={handleUpload}
               disabled={selectedFiles.length === 0 || uploading}
+              data-testid="upload-button"
               className="flex-1 px-4 py-2 bg-[#008751] text-white rounded-md hover:bg-[#007043] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading ? 'Upload...' : `Télécharger (${selectedFiles.length})`}
             </button>
+
           </div>
         </div>
       </div>

@@ -16,14 +16,14 @@ export const useDocumentOperations = (): UseDocumentOperationsReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const token = useAuthToken();
+  const { token } = useAuthToken();
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   const updateDocument = useCallback(async (
-    id: string, 
+    id: string,
     updates: Partial<DocumentMetadata>
   ): Promise<Document | null> => {
     if (!token) {
@@ -99,7 +99,7 @@ export const useDocumentOperations = (): UseDocumentOperationsReturn => {
   }, [token]);
 
   const downloadDocument = useCallback(async (
-    id: string, 
+    id: string,
     action: 'download' | 'preview' = 'download'
   ): Promise<void> => {
     if (!token) {
@@ -151,7 +151,7 @@ export const useDocumentOperations = (): UseDocumentOperationsReturn => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        
+
         // Essayer d'extraire le nom de fichier des headers
         const contentDisposition = response.headers.get('content-disposition');
         let filename = 'document';
@@ -161,7 +161,7 @@ export const useDocumentOperations = (): UseDocumentOperationsReturn => {
             filename = matches[1].replace(/['"]/g, '');
           }
         }
-        
+
         a.download = filename;
         document.body.appendChild(a);
         a.click();
@@ -179,8 +179,8 @@ export const useDocumentOperations = (): UseDocumentOperationsReturn => {
   }, [token]);
 
   const shareDocument = useCallback(async (
-    id: string, 
-    email: string, 
+    id: string,
+    email: string,
     permission: 'read' | 'write'
   ): Promise<boolean> => {
     if (!token) {

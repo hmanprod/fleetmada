@@ -45,7 +45,7 @@ export const useDocumentSearch = (): UseDocumentSearchReturn => {
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const token = useAuthToken();
+  const { token } = useAuthToken();
 
   const buildSearchQuery = useCallback((query: string, options: SearchOptions = {}): string => {
     const params = new URLSearchParams();
@@ -78,7 +78,7 @@ export const useDocumentSearch = (): UseDocumentSearchReturn => {
   }, []);
 
   const searchDocuments = useCallback(async (
-    query: string, 
+    query: string,
     options: SearchOptions = {}
   ): Promise<void> => {
     if (!token) {
@@ -121,7 +121,7 @@ export const useDocumentSearch = (): UseDocumentSearchReturn => {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
       setError(errorMessage);
       console.error('Erreur lors de la recherche de documents:', err);
-      
+
       // Réinitialiser les résultats en cas d'erreur
       setSearchResults([]);
       setTotalCount(0);
@@ -182,11 +182,11 @@ export const useDocumentSearch = (): UseDocumentSearchReturn => {
 // Utilitaires pour le formatage (importés depuis types/documents)
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 

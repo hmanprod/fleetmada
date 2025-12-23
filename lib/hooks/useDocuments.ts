@@ -32,11 +32,11 @@ export const useDocuments = (initialFilters: DocumentFilters = {}): UseDocuments
     ...initialFilters
   });
 
-  const token = useAuthToken();
+  const { token } = useAuthToken();
 
   const buildQueryString = useCallback((filtersToUse: DocumentFilters): string => {
     const params = new URLSearchParams();
-    
+
     Object.entries(filtersToUse).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         if (Array.isArray(value)) {
@@ -54,7 +54,7 @@ export const useDocuments = (initialFilters: DocumentFilters = {}): UseDocuments
 
   const fetchDocuments = useCallback(async (filtersToUse?: DocumentFilters) => {
     const currentFilters = filtersToUse || filters;
-    
+
     if (!token) {
       setError('Token d\'authentification manquant');
       return;
@@ -103,13 +103,20 @@ export const useDocuments = (initialFilters: DocumentFilters = {}): UseDocuments
 
   // Chargement initial
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    if (token) {
+      fetchDocuments();
+    }
+  }, [token, fetchDocuments]);
 
   // Mise à jour des filtres
   useEffect(() => {
-    if (Object.keys(initialFilters).length > 0) {
-      setFilters(prev => ({ ...prev, ...initialFilters }));
+    if (initialFilters && Object.keys(initialFilters).length > 0) {
+      setFilters(prev => {
+        const hasChanged = Object.entries(initialFilters).some(([key, value]) =>
+          prev[key as keyof DocumentFilters] !== value
+        );
+        return hasChanged ? { ...prev, ...initialFilters } : prev;
+      });
     }
   }, [initialFilters]);
 

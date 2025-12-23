@@ -16,12 +16,12 @@ interface TokenPayload {
 
 // Schémas de validation
 const UploadMultipleSchema = z.object({
-  attachedTo: z.string().optional(),
-  attachedId: z.string().optional(),
-  labels: z.string().optional(),
-  description: z.string().optional(),
-  isPublic: z.string().transform(Boolean).default('false'),
-  companyId: z.string().optional()
+  attachedTo: z.string().nullable().optional(),
+  attachedId: z.string().nullable().optional(),
+  labels: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isPublic: z.string().transform(val => val === 'true').default('false'),
+  companyId: z.string().nullable().optional()
 });
 
 const UploadProgressSchema = z.object({
@@ -131,17 +131,18 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
     const timestamp = Date.now();
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const uniqueFileName = `${timestamp}_${sanitizedFileName}`;
-    
+
     // Chemin de stockage
     const filePath = `/uploads/documents/${uniqueFileName}`;
 
     // Sauvegarde du fichier (ici on simule le stockage)
     // Dans une implémentation réelle, vous utiliseriez un service de stockage comme AWS S3
     const buffer = Buffer.from(await file.arrayBuffer());
-    
+
     // Génération du checksum pour l'intégrité
     const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
 
+    console.log(`[Documents Upload] Creating document in DB for ${file.name}`);
     // Création du document en base
     const document = await prisma.document.create({
       data: {
@@ -158,16 +159,9 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
         checksum,
         isPublic: metadata.isPublic,
         version: 1
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true }
-        },
-        company: {
-          select: { id: true, name: true }
-        }
       }
     });
+    console.log(`[Documents Upload] Document created with ID: ${document.id}`);
 
     return {
       success: true,
@@ -176,6 +170,7 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
     };
 
   } catch (error) {
+    console.error(`[Documents Upload] processFile Error for ${file.name}:`, error);
     return {
       success: false,
       fileName: file.name,
@@ -201,110 +196,114 @@ export async function POST(request: NextRequest) {
 
     logAction('POST Upload Multiple', userId, { userId });
 
+    console.log('[Documents Upload] Parsing formData...');
+    let formData: FormData;
     try {
-      // Extraction et validation des données
-      const formData = await request.formData();
-      const files = formData.getAll('files') as File[];
+      formData = await request.formData();
+    } catch (fdError) {
+      console.error('[Documents Upload] FormData parsing error:', fdError);
+      return NextResponse.json(
+        { success: false, error: 'Erreur lors de l\'extraction des données (multipart/form-data)' },
+        { status: 400 }
+      );
+    }
 
-      if (!files || files.length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'Aucun fichier fourni' },
-          { status: 400 }
-        );
-      }
+    const files = formData.getAll('files') as File[];
+    console.log(`[Documents Upload] Received ${files.length} files`);
 
-      // Limitation du nombre de fichiers (max 10)
-      if (files.length > 10) {
-        return NextResponse.json(
-          { success: false, error: 'Trop de fichiers (maximum 10)' },
-          { status: 400 }
-        );
-      }
+    if (!files || files.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Aucun fichier fourni' },
+        { status: 400 }
+      );
+    }
 
-      // Extraction des métadonnées
-      const metadata = UploadMultipleSchema.parse({
+    // Limitation du nombre de fichiers (max 10)
+    if (files.length > 10) {
+      return NextResponse.json(
+        { success: false, error: 'Trop de fichiers (maximum 10)' },
+        { status: 400 }
+      );
+    }
+
+    // Extraction des métadonnées
+    console.log('[Documents Upload] Parsing metadata...');
+    let metadata;
+    try {
+      metadata = UploadMultipleSchema.parse({
         attachedTo: formData.get('attachedTo') as string,
         attachedId: formData.get('attachedId') as string,
         labels: formData.get('labels') as string,
         description: formData.get('description') as string,
         isPublic: formData.get('isPublic') as string || 'false',
-        companyId: formData.get('companyId') as string
+        companyId: formData.get('companyId') as string || null
       });
-
-      logAction('POST Upload Multiple - Processing', userId, { 
-        userId, 
-        fileCount: files.length,
-        metadata: {
-          attachedTo: metadata.attachedTo,
-          isPublic: metadata.isPublic
-        }
-      });
-
-      // Traitement des fichiers en parallèle
-      const uploadPromises = files.map(file => processFile(file, metadata, userId, companyId));
-      const results = await Promise.all(uploadPromises);
-
-      // Séparation des succès et erreurs
-      const successful = results.filter(result => result.success);
-      const failed = results.filter(result => !result.success);
-
-      logAction('POST Upload Multiple - Results', userId, { 
-        userId, 
-        totalFiles: files.length,
-        successful: successful.length,
-        failed: failed.length
-      });
-
-      // Préparation de la réponse
-      const responseData = {
-        success: true,
-        message: `${successful.length} fichier(s) uploadé(s) avec succès${failed.length > 0 ? `, ${failed.length} erreur(s)` : ''}`,
-        data: {
-          successful: successful.map(result => ({
-            document: (result as any).document,
-            fileName: result.fileName
-          })),
-          failed: failed.map(result => ({
-            fileName: result.fileName,
-            error: result.error
-          })),
-          summary: {
-            total: files.length,
-            successful: successful.length,
-            failed: failed.length
-          }
-        }
-      };
-
-      const statusCode = failed.length === 0 ? 201 : 207; // 207 = Multi-Status pour les uploads partiels
-
-      return NextResponse.json(responseData, { status: statusCode });
-
-    } catch (dbError) {
-      logAction('POST Upload Multiple - Database error', userId, {
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      });
-
+    } catch (zodError) {
+      console.error('[Documents Upload] Zod Parsing error:', zodError);
+      const detail = zodError instanceof z.ZodError ? JSON.stringify(zodError.format()) : (zodError as Error).message;
       return NextResponse.json(
-        { success: false, error: 'Erreur lors de l\'upload des documents' },
-        { status: 500 }
-      );
-    }
-
-  } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown';
-    
-    // Gestion des erreurs de validation
-    if (error instanceof Error && error.name === 'ZodError') {
-      logAction('POST Upload Multiple - Validation error', userId, {
-        error: error.message
-      });
-
-      return NextResponse.json(
-        { success: false, error: 'Données invalides', details: error.message },
+        { success: false, error: `Données invalides: ${detail}` },
         { status: 400 }
       );
     }
+
+    console.log(`[Documents Upload] Metadata: ${JSON.stringify(metadata)}`);
+
+    logAction('POST Upload Multiple - Processing', userId, {
+      userId,
+      fileCount: files.length,
+      metadata: {
+        attachedTo: metadata.attachedTo,
+        isPublic: metadata.isPublic
+      }
+    });
+
+    console.log(`[Documents Upload] Starting parallel processing for ${files.length} files`);
+    // Traitement des fichiers en parallèle
+    const uploadPromises = files.map(file => processFile(file, metadata, userId, companyId));
+    const results = await Promise.all(uploadPromises);
+
+    // Séparation des succès et erreurs
+    const successful = results.filter(result => result.success);
+    const failed = results.filter(result => !result.success);
+
+    console.log(`[Documents Upload] Results: ${successful.length} success, ${failed.length} failed`);
+
+    logAction('POST Upload Multiple - Results', userId, {
+      userId,
+      totalFiles: files.length,
+      successful: successful.length,
+      failed: failed.length
+    });
+
+    // Préparation de la réponse
+    const responseData = {
+      success: true,
+      message: `${successful.length} fichier(s) uploadé(s) avec succès${failed.length > 0 ? `, ${failed.length} erreur(s)` : ''}`,
+      data: {
+        successful: successful.map(result => ({
+          document: (result as any).document,
+          fileName: result.fileName
+        })),
+        failed: failed.map(result => ({
+          fileName: result.fileName,
+          error: result.error
+        })),
+        summary: {
+          total: files.length,
+          successful: successful.length,
+          failed: failed.length
+        }
+      }
+    };
+
+    const statusCode = failed.length === 0 ? 201 : 207; // 207 = Multi-Status pour les uploads partiels
+
+    return NextResponse.json(responseData, { status: statusCode });
+
+  } catch (error) {
+    console.error('[Documents Upload] GLOBAL ERROR:', error);
+    const userId = request.headers.get('x-user-id') || 'unknown';
 
     logAction('POST Upload Multiple - Server error', userId, {
       error: error instanceof Error ? error.message : 'Unknown server error',
@@ -312,7 +311,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, error: 'Erreur serveur interne' },
+      { success: false, error: 'Erreur serveur interne', detail: (error as Error).message },
       { status: 500 }
     );
   }

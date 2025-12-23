@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { Search, FileText, Star, Save, Share2, LayoutGrid, List as ListIcon, ChevronDown, Car, Wrench, AlertTriangle, Users, Box, Fuel, ClipboardCheck, ArrowUpDown, Play, Download, Heart, Settings, Plus, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { 
-  useReports, 
-  useReportTemplates, 
-  useGenerateReport, 
-  useFavoriteReport, 
-  useShareReport, 
-  useExportReport 
+import {
+  useReports,
+  useReportTemplates,
+  useGenerateReport,
+  useFavoriteReport,
+  useShareReport,
+  useExportReport
 } from '@/lib/hooks/useReports';
 import { ReportConfig } from '@/types/reports';
 
@@ -24,13 +24,14 @@ interface ReportCardProps {
 
 function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, viewMode }: ReportCardProps) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#008751] hover:shadow-md transition-all cursor-pointer flex flex-col ${
-      viewMode === 'grid' ? 'p-6 h-full' : 'p-4 flex-row items-center gap-4'
-    }`}>
+    <div
+      data-testid="report-card"
+      className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:border-[#008751] hover:shadow-md transition-all cursor-pointer flex flex-col ${viewMode === 'grid' ? 'p-6 h-full' : 'p-4 flex-row items-center gap-4'
+        }`}>
       {viewMode === 'grid' ? (
         <>
           <div className="flex justify-between items-start mb-3">
-            <h3 className="font-bold text-gray-900 flex-1">{report.name || report.title}</h3>
+            <h3 className="font-bold text-gray-900 flex-1" data-testid="report-name">{report.name || report.title}</h3>
             <div className="flex gap-1 ml-2">
               <button
                 onClick={(e) => {
@@ -39,6 +40,7 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
                 }}
                 className="p-1 hover:bg-gray-100 rounded"
                 title="Ajouter aux favoris"
+                data-testid="favorite-button"
               >
                 <Heart size={16} className="text-gray-400 hover:text-red-500" />
               </button>
@@ -54,9 +56,9 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
               </button>
             </div>
           </div>
-          
+
           <p className="text-sm text-gray-500 mb-4 flex-1">{report.description}</p>
-          
+
           <div className="flex justify-between items-center">
             <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-medium">{report.category}</span>
             <div className="flex gap-2">
@@ -67,6 +69,7 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
                 }}
                 className="flex items-center gap-1 px-3 py-1 bg-[#008751] text-white text-xs rounded hover:bg-[#006639]"
                 title="Générer le rapport"
+                data-testid="generate-button"
               >
                 <Play size={12} />
                 Générer
@@ -144,12 +147,12 @@ export default function ReportsPage() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Hooks pour les APIs
-  const { 
-    reports, 
-    loading: reportsLoading, 
-    error: reportsError, 
+  const {
+    reports,
+    loading: reportsLoading,
+    error: reportsError,
     pagination,
-    refetch: refetchReports 
+    refetch: refetchReports
   } = useReports({
     category: selectedCategory || undefined,
     favorites: activeTab === 'favorites',
@@ -158,11 +161,11 @@ export default function ReportsPage() {
     search: searchTerm || undefined
   });
 
-  const { 
-    templates, 
-    loading: templatesLoading, 
+  const {
+    templates,
+    loading: templatesLoading,
     error: templatesError,
-    refetch: refetchTemplates 
+    refetch: refetchTemplates
   } = useReportTemplates();
 
   const { generateReport, loading: generateLoading } = useGenerateReport();
@@ -181,17 +184,17 @@ export default function ReportsPage() {
     }));
 
     const savedReports = reports.filter((report: any) => report.isSaved);
-    
+
     return [...templateReports, ...savedReports];
   }, [templates, reports]);
 
   // Filtrer les rapports selon la recherche et la catégorie
   const filteredReports = allReports.filter(report => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       (report.name || report.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (report.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesCategory = !selectedCategory || 
+
+    const matchesCategory = !selectedCategory ||
       report.category === selectedCategory ||
       (selectedCategory === 'Vehicles' && report.category === 'Vehicles') ||
       (selectedCategory === 'Service' && report.category === 'Service') ||
@@ -200,7 +203,7 @@ export default function ReportsPage() {
       (selectedCategory === 'Inspections' && report.category === 'Inspections') ||
       (selectedCategory === 'Contacts' && report.category === 'Contacts') ||
       (selectedCategory === 'Parts' && report.category === 'Parts')
-    
+
     return matchesSearch && matchesCategory
   });
 
@@ -219,7 +222,7 @@ export default function ReportsPage() {
       };
 
       const result = await generateReport(template, config, true, `Rapport ${template}`, 'Rapport généré automatiquement');
-      
+
       if (result) {
         // Rafraîchir la liste des rapports
         refetchReports();
@@ -306,31 +309,32 @@ export default function ReportsPage() {
         <div className="p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Search for a Report"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" 
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+              data-testid="search-reports-input"
             />
           </div>
         </div>
-        
+
         <nav className="space-y-1 px-2">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button 
+              <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium border-l-4 transition-colors ${
-                  isActive 
-                    ? 'bg-green-50 text-[#008751] border-[#008751]' 
-                    : 'text-gray-600 hover:bg-gray-50 border-transparent'
-                }`}
+                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium border-l-4 transition-colors ${isActive
+                  ? 'bg-green-50 text-[#008751] border-[#008751]'
+                  : 'text-gray-600 hover:bg-gray-50 border-transparent'
+                  }`}
+                data-testid={`nav-tab-${tab.id}`}
               >
-                <span className="flex items-center gap-2"><Icon size={16}/> {tab.name}</span>
+                <span className="flex items-center gap-2"><Icon size={16} /> {tab.name}</span>
                 {tab.count !== undefined && (
                   <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
                     {tab.count}
@@ -344,7 +348,7 @@ export default function ReportsPage() {
         <div className="mt-6 px-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Report Types</h3>
-            <button 
+            <button
               onClick={refetchTemplates}
               className="p-1 hover:bg-gray-100 rounded"
               title="Rafraîchir"
@@ -357,14 +361,14 @@ export default function ReportsPage() {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
               return (
-                <button 
+                <button
                   key={category.id}
                   onClick={() => setSelectedCategory(isSelected ? null : category.id)}
-                  className={`w-full flex items-center justify-between py-1.5 text-sm transition-colors ${
-                    isSelected ? 'text-[#008751] bg-green-50' : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`w-full flex items-center justify-between py-1.5 text-sm transition-colors ${isSelected ? 'text-[#008751] bg-green-50' : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  data-testid={`category-filter-${category.id}`}
                 >
-                  <span className="flex items-center gap-2"><Icon size={14}/> {category.name}</span>
+                  <span className="flex items-center gap-2"><Icon size={14} /> {category.name}</span>
                   <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs">{category.count}</span>
                 </button>
               );
@@ -377,9 +381,9 @@ export default function ReportsPage() {
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
+            <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Reports</h1>
             {isGenerating && (
-              <p className="text-sm text-blue-600 mt-1">Génération d'un rapport en cours...</p>
+              <p className="text-sm text-blue-600 mt-1" data-testid="generating-indicator">Génération d'un rapport en cours...</p>
             )}
           </div>
           <div className="flex gap-2">
@@ -387,15 +391,17 @@ export default function ReportsPage() {
               <ArrowUpDown size={14} /> Name <ChevronDown size={14} />
             </button>
             <div className="flex border border-gray-300 rounded overflow-hidden">
-              <button 
+              <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 hover:bg-gray-200 ${viewMode === 'grid' ? 'bg-gray-100 text-gray-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                data-testid="view-grid"
               >
                 <LayoutGrid size={18} />
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 border-l border-gray-300 ${viewMode === 'list' ? 'bg-gray-100 text-gray-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                data-testid="view-list"
               >
                 <ListIcon size={18} />
               </button>
@@ -405,9 +411,9 @@ export default function ReportsPage() {
 
         {/* Error State */}
         {(reportsError || templatesError) && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" data-testid="error-message">
             <p className="text-red-800">Erreur: {reportsError || templatesError}</p>
-            <button 
+            <button
               onClick={() => { refetchReports(); refetchTemplates(); }}
               className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
             >
@@ -418,7 +424,7 @@ export default function ReportsPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="text-center py-12">
+          <div className="text-center py-12" data-testid="loading-state">
             <RefreshCw className="animate-spin mx-auto mb-4 text-gray-400" size={32} />
             <p className="text-gray-500">Chargement des rapports...</p>
           </div>
@@ -426,7 +432,10 @@ export default function ReportsPage() {
 
         {/* Reports Grid/List */}
         {!isLoading && (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
+          <div
+            className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}
+            data-testid={viewMode === 'grid' ? 'reports-grid' : 'reports-list'}
+          >
             {filteredReports.map(report => (
               <ReportCard
                 key={report.id || report.template}
@@ -443,7 +452,7 @@ export default function ReportsPage() {
 
         {/* Empty State */}
         {!isLoading && filteredReports.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12" data-testid="empty-state">
             <FileText className="mx-auto mb-4 text-gray-300" size={48} />
             <p className="text-gray-500 mb-4">
               {searchTerm ? 'Aucun rapport trouvé pour votre recherche.' : 'Aucun rapport disponible.'}
@@ -462,18 +471,20 @@ export default function ReportsPage() {
         {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-8">
-            <button 
+            <button
               disabled={pagination.page <= 1}
               className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+              data-testid="pagination-prev"
             >
               Précédent
             </button>
             <span className="px-3 py-1 text-sm">
               Page {pagination.page} sur {pagination.totalPages}
             </span>
-            <button 
+            <button
               disabled={!pagination.hasMore}
               className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+              data-testid="pagination-next"
             >
               Suivant
             </button>

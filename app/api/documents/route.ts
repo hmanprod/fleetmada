@@ -136,20 +136,31 @@ export async function GET(request: NextRequest) {
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url);
     const queryParams: any = {};
-    
+
     for (const [key, value] of searchParams.entries()) {
       queryParams[key] = value;
     }
 
-    const query = DocumentListQuerySchema.parse(queryParams);
+    let query;
+    try {
+      query = DocumentListQuerySchema.parse(queryParams);
+    } catch (zodError) {
+      console.error('[Documents API] GET Query Parsing error:', zodError);
+      const detail = zodError instanceof z.ZodError ? JSON.stringify(zodError.format()) : (zodError as Error).message;
+      return NextResponse.json(
+        { success: false, error: `Paramètres de requête invalides: ${detail}` },
+        { status: 400 }
+      );
+    }
+
     const offset = (query.page - 1) * query.limit;
 
-    logAction('GET Documents', userId, { 
-      userId, 
-      page: query.page, 
+    logAction('GET Documents', userId, {
+      userId,
+      page: query.page,
       limit: query.limit,
-      filters: { 
-        search: query.search, 
+      filters: {
+        search: query.search,
         mimeType: query.mimeType,
         attachedTo: query.attachedTo,
         labels: query.labels
@@ -158,34 +169,34 @@ export async function GET(request: NextRequest) {
 
     try {
       // Construction des filtres
-      const filters: any = {
+      const accessFilters = {
         OR: [
           { userId },
-          { companyId },
+          ...(companyId ? [{ companyId }] : []),
           { isPublic: true }
         ]
       };
 
+      const searchFilters: any = {};
       if (query.search) {
-        filters.OR = [
+        searchFilters.OR = [
           { fileName: { contains: query.search, mode: 'insensitive' } },
           { description: { contains: query.search, mode: 'insensitive' } },
           { labels: { has: query.search } }
         ];
       }
 
-      if (query.mimeType) {
-        filters.mimeType = { contains: query.mimeType };
-      }
+      const filters = {
+        AND: [
+          accessFilters,
+          searchFilters,
+          query.mimeType ? { mimeType: { contains: query.mimeType } } : {},
+          query.attachedTo ? { attachedTo: query.attachedTo } : {},
+          query.labels ? { labels: { hasSome: query.labels.split(',').map((l: string) => l.trim()) } } : {}
+        ].filter(condition => Object.keys(condition).length > 0)
+      };
 
-      if (query.attachedTo) {
-        filters.attachedTo = query.attachedTo;
-      }
-
-      if (query.labels) {
-        const labelsArray = query.labels.split(',').map(label => label.trim());
-        filters.labels = { hasSome: labelsArray };
-      }
+      console.log('[Documents API] Applying filters:', JSON.stringify(filters, null, 2));
 
       // Construction de l'ordre de tri
       const orderBy: any = {};
@@ -194,6 +205,17 @@ export async function GET(request: NextRequest) {
       } else {
         orderBy.createdAt = 'desc';
       }
+
+      // Log total count for debugging
+      const debugTotalCount = await prisma.document.count();
+      const debugLatestDocs = await prisma.document.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, fileName: true, userId: true, companyId: true, isPublic: true, labels: true }
+      });
+
+      console.log(`[Documents API] DEBUG: Total documents in DB: ${debugTotalCount}`);
+      console.log(`[Documents API] DEBUG: Latest documents: ${JSON.stringify(debugLatestDocs, null, 2)}`);
 
       // Récupération des documents avec pagination
       const [documents, totalCount] = await Promise.all([
@@ -216,8 +238,8 @@ export async function GET(request: NextRequest) {
 
       const totalPages = Math.ceil(totalCount / query.limit);
 
-      logAction('GET Documents - Success', userId, { 
-        userId, 
+      logAction('GET Documents - Success', userId, {
+        userId,
         totalCount,
         page: query.page,
         totalPages
@@ -227,7 +249,7 @@ export async function GET(request: NextRequest) {
         {
           success: true,
           data: {
-            documents,
+            data: documents,
             pagination: {
               page: query.page,
               limit: query.limit,
@@ -235,6 +257,11 @@ export async function GET(request: NextRequest) {
               totalPages,
               hasNext: query.page < totalPages,
               hasPrev: query.page > 1
+            },
+            debug: {
+              totalInDb: debugTotalCount,
+              latestDocs: debugLatestDocs,
+              appliedFilters: filters
             }
           }
         },
@@ -311,8 +338,8 @@ export async function POST(request: NextRequest) {
       companyId: formData.get('companyId') as string
     });
 
-    logAction('POST Documents', userId, { 
-      userId, 
+    logAction('POST Documents', userId, {
+      userId,
       fileName: file.name,
       fileSize: file.size,
       mimeType: file.type,
@@ -324,14 +351,14 @@ export async function POST(request: NextRequest) {
       const timestamp = Date.now();
       const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const uniqueFileName = `${timestamp}_${sanitizedFileName}`;
-      
-      // Chemin de stockage
-      const filePath = `/uploads/documents}`;
 
-      // Sauvegarde du/${uniqueFileName fichier (ici on simule le stockage)
+      // Chemin de stockage
+      const filePath = `/uploads/documents/${uniqueFileName}`;
+
+      // Sauvegarde du fichier (ici on simule le stockage)
       // Dans une implémentation réelle, vous utiliseriez un service de stockage comme AWS S3
       const buffer = Buffer.from(await file.arrayBuffer());
-      
+
       // Génération du checksum pour l'intégrité
       const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
 
@@ -362,8 +389,8 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      logAction('POST Documents - Success', userId, { 
-        userId, 
+      logAction('POST Documents - Success', userId, {
+        userId,
         documentId: document.id,
         fileName: document.fileName
       });
@@ -390,7 +417,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown';
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Documents - Validation error', userId, {

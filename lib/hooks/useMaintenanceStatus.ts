@@ -54,7 +54,7 @@ export function useMaintenanceStatus() {
       setError(null);
 
       const response = await authenticatedFetch('/api/dashboard/maintenance', token);
-      
+
       if (response.success) {
         setData(response.data);
         setLastRefresh(new Date());
@@ -80,9 +80,9 @@ export function useMaintenanceStatus() {
       .map(r => ({ ...r, priority: 'warning' as const }))
   ] : [];
 
-  const maintenanceScore = data ? Math.max(0, Math.min(100, 
-    data.summary.complianceRate - 
-    (data.summary.overdueReminders * 15) - 
+  const maintenanceScore = data ? Math.max(0, Math.min(100,
+    data.summary.complianceRate -
+    (data.summary.overdueReminders * 15) -
     (data.summary.upcomingReminders * 5)
   )) : 0;
 
@@ -137,7 +137,7 @@ export function useMaintenanceStatus() {
     error,
     lastRefresh,
     refresh,
-    
+
     // Computed values
     urgentReminders,
     maintenanceScore,
@@ -145,7 +145,7 @@ export function useMaintenanceStatus() {
     recommendations,
     isOverdue,
     isDueSoon,
-    
+
     // State helpers
     isLoading: loading,
     hasData: !!data,

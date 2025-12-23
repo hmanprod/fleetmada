@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, Download, Eye, Edit, Trash2, FileText, Image, File, Upload, X, AlertCircle, CheckCircle, FolderOpen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Plus, Filter, MoreHorizontal, Download, Eye, Edit, Trash2, FileText, Image, File, Upload, X, AlertCircle, CheckCircle, FolderOpen, ArrowLeft } from 'lucide-react';
 import { useDocuments } from '@/lib/hooks/useDocuments';
 import { useDocumentOperations } from '@/lib/hooks/useDocumentOperations';
 import { useUploadDocuments } from '@/lib/hooks/useUploadDocuments';
 import { useDocumentSearch } from '@/lib/hooks/useDocumentSearch';
 import { Document, formatFileSize, isImageFile, isPdfFile } from '@/types/documents';
-import Link from 'next/link';
+
 
 interface DocumentCardProps {
   document: Document;
@@ -34,14 +35,15 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow" data-testid="document-card">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3 flex-1">
           {getFileIcon(document.mimeType)}
+
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-gray-900 truncate">{document.fileName}</h3>
             <p className="text-sm text-gray-500">{formatFileSize(document.fileSize)}</p>
-            <p className="text-xs text-gray-400">Par {document.user.name}</p>
+            <p className="text-xs text-gray-400">Par {document.user?.name || 'Utilisateur'}</p>
             <p className="text-xs text-gray-400">{formatDate(document.createdAt)}</p>
           </div>
         </div>
@@ -50,26 +52,32 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
             onClick={() => onPreview(document.id)}
             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
             title="Prévisualiser"
+            data-testid="preview-button"
           >
             <Eye size={16} />
           </button>
+
           <button
             onClick={() => onDownload(document.id)}
             className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
             title="Télécharger"
+            data-testid="download-button"
           >
             <Download size={16} />
           </button>
+
           <button
             onClick={() => onDelete(document.id)}
             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
             title="Supprimer"
+            data-testid="delete-button"
           >
             <Trash2 size={16} />
           </button>
+
         </div>
       </div>
-      
+
       {document.labels && document.labels.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
           {document.labels.map((label, index) => (
@@ -82,7 +90,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
           ))}
         </div>
       )}
-      
+
       {document.description && (
         <p className="mt-2 text-sm text-gray-600 line-clamp-2">{document.description}</p>
       )}
@@ -91,6 +99,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
 };
 
 export default function DocumentsPage() {
+  const router = useRouter();
+  console.log('Rendering DocumentsPage', { timestamp: new Date().toISOString() });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMimeType, setSelectedMimeType] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -100,28 +110,23 @@ export default function DocumentsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt' | 'fileName' | 'fileSize'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
-  const filters = {
-    search: searchQuery,
-    mimeType: selectedMimeType,
-    page: currentPage,
-    limit: 20,
-    sortBy,
-    sortOrder
-  };
-  
-  const { documents, loading, error, pagination, fetchDocuments, clearError } = useDocuments({
+
+  const memoizedFilters = React.useMemo(() => ({
     search: searchQuery,
     mimeType: selectedMimeType,
     limit: 20,
     sortBy,
-    sortOrder
-  });
-  
+    sortOrder,
+    page: currentPage
+  }), [searchQuery, selectedMimeType, sortBy, sortOrder, currentPage]);
+
+  const { documents = [], loading, error, pagination, fetchDocuments, refreshDocuments, clearError } = useDocuments(memoizedFilters);
+
   const { downloadDocument, deleteDocument, loading: operationsLoading } = useDocumentOperations();
-  const { uploading, uploadProgress, uploadDocuments, clearError: clearUploadError } = useUploadDocuments();
+  const { uploading, uploadProgress, uploadDocuments, error: uploadError, clearError: clearUploadError } = useUploadDocuments();
   const { searchResults, searchDocuments, loading: searchLoading } = useDocumentSearch();
-  
+
+
   // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -129,7 +134,7 @@ export default function DocumentsPage() {
         searchDocuments(searchQuery);
       }
     }, 300);
-    
+
     return () => clearTimeout(timeoutId);
   }, [searchQuery, searchDocuments]);
 
@@ -148,7 +153,7 @@ export default function DocumentsPage() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     handleFilesSelected(files);
   };
@@ -164,7 +169,7 @@ export default function DocumentsPage() {
       ];
       return validTypes.includes(file.type) && file.size < 50 * 1024 * 1024; // 50MB max
     });
-    
+
     setSelectedFiles(prev => [...prev, ...validFiles]);
   };
 
@@ -172,21 +177,31 @@ export default function DocumentsPage() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleSearch = () => {
+    fetchDocuments();
+  };
+
+  const handleRefresh = () => {
+    refreshDocuments();
+  };
+
+  const handleAdd = () => {
+    router.push('/documents/upload');
+  };
+
   const handleQuickUpload = async () => {
     if (selectedFiles.length === 0) return;
-    
+
     const metadata = {
       labels: ['upload-rapide'],
       isPublic: false
     };
-    
-    await uploadDocuments(selectedFiles, metadata);
-    setSelectedFiles([]);
-    fetchDocuments(); // Refresh list
-  };
 
-  const handleSearch = () => {
-    fetchDocuments({ search: searchQuery, mimeType: selectedMimeType });
+    const results = await uploadDocuments(selectedFiles, metadata);
+    if (results.every(r => r.success)) {
+      setSelectedFiles([]);
+      fetchDocuments();
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -212,8 +227,8 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleAdd = () => {
-    window.location.href = '/documents/upload';
+  const handleCancel = () => {
+    router.push('/documents');
   };
 
   if (error) {
@@ -245,7 +260,8 @@ export default function DocumentsPage() {
     <div className="p-6 max-w-[1800px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Documents</h1>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Documents</h1>
+
           {pagination && (
             <span className="text-sm text-gray-500">
               {pagination.totalCount} document{pagination.totalCount !== 1 ? 's' : ''}
@@ -253,26 +269,30 @@ export default function DocumentsPage() {
           )}
         </div>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={() => setShowFilters(!showFilters)}
             className={`border rounded p-2 text-gray-600 hover:bg-gray-50 ${showFilters ? 'bg-gray-50' : ''}`}
             title="Filtres"
+            data-testid="filter-button"
           >
             <Filter size={20} />
           </button>
-          <button 
+
+          <button
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             className="border rounded p-2 text-gray-600 hover:bg-gray-50"
             title="Changer la vue"
           >
             <FolderOpen size={20} />
           </button>
-          <button 
+          <button
             onClick={handleAdd}
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            data-testid="add-document-button"
           >
             <Plus size={20} /> Add Document
           </button>
+
         </div>
       </div>
 
@@ -287,10 +307,9 @@ export default function DocumentsPage() {
       )}
 
       {/* Barre de recherche et filtres */}
-      <div 
-        className={`flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center ${
-          dragActive ? 'border-blue-400 bg-blue-50' : ''
-        }`}
+      <div
+        className={`flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center ${dragActive ? 'border-blue-400 bg-blue-50' : ''
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -298,58 +317,66 @@ export default function DocumentsPage() {
       >
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Rechercher des documents..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" 
+            data-testid="search-input"
+            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
           />
+
           {searchLoading && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#008751]"></div>
             </div>
           )}
         </div>
-        
+
         {showFilters && (
           <>
-            <select 
+            <select
               value={selectedMimeType}
               onChange={(e) => setSelectedMimeType(e.target.value)}
+              data-testid="mime-type-select"
               className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700"
             >
+
               <option value="">Tous les types</option>
               <option value="image">Images</option>
               <option value="pdf">PDF</option>
               <option value="document">Documents</option>
               <option value="text">Texte</option>
             </select>
-            
-            <select 
+
+            <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
+              data-testid="sort-by-select"
               className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700"
             >
+
               <option value="createdAt">Date de création</option>
               <option value="updatedAt">Date de modification</option>
               <option value="fileName">Nom de fichier</option>
               <option value="fileSize">Taille</option>
             </select>
-            
-            <select 
+
+            <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as any)}
+              data-testid="sort-order-select"
               className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700"
             >
+
               <option value="desc">Décroissant</option>
               <option value="asc">Croissant</option>
             </select>
           </>
         )}
-        
-        <button 
+
+        <button
           onClick={handleSearch}
           disabled={loading || searchLoading}
           className="bg-[#008751] text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-[#007043] disabled:opacity-50"
@@ -404,7 +431,7 @@ export default function DocumentsPage() {
               </div>
             ))}
           </div>
-          
+
           {/* Progress d'upload */}
           {uploading && uploadProgress.length > 0 && (
             <div className="mt-3 space-y-2">
@@ -415,7 +442,7 @@ export default function DocumentsPage() {
                     <span>{progress.progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-[#008751] h-2 rounded-full transition-all duration-300"
                       style={{ width: `${progress.progress}%` }}
                     ></div>
@@ -443,7 +470,7 @@ export default function DocumentsPage() {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun document trouvé</h3>
           <p className="text-gray-500 mb-4">Commencez par télécharger votre premier document.</p>
-          <button 
+          <button
             onClick={handleAdd}
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 mx-auto"
           >
@@ -451,8 +478,9 @@ export default function DocumentsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="document-grid">
           {documents.map((document) => (
+
             <DocumentCard
               key={document.id}
               document={document}
@@ -476,7 +504,7 @@ export default function DocumentsPage() {
             <button
               onClick={() => {
                 setCurrentPage(prev => prev - 1);
-                fetchDocuments({ ...filters, page: pagination.page - 1 });
+                fetchDocuments({ ...memoizedFilters, page: pagination.page - 1 });
               }}
               disabled={!pagination.hasPrev}
               className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -489,7 +517,7 @@ export default function DocumentsPage() {
             <button
               onClick={() => {
                 setCurrentPage(prev => prev + 1);
-                fetchDocuments({ ...filters, page: pagination.page + 1 });
+                fetchDocuments({ ...memoizedFilters, page: pagination.page + 1 });
               }}
               disabled={!pagination.hasNext}
               className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"

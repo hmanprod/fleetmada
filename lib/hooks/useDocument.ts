@@ -15,7 +15,7 @@ export const useDocument = (documentId?: string): UseDocumentReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const token = useAuthToken();
+  const { token } = useAuthToken();
 
   const fetchDocument = useCallback(async (id: string) => {
     if (!token) {
