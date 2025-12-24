@@ -6,14 +6,12 @@ import { Contact } from '@/types';
 import { useContacts, useContactSearch } from '@/lib/hooks/useContacts';
 import { useRouter } from 'next/navigation';
 
-const handleAdd = () => {
-  // TODO: Implement add contact functionality
-  console.log('Add contact');
+const handleAdd = (router: any) => {
+  router.push('/contacts/create');
 };
 
-const handleSelect = (contact: Contact) => {
-  // TODO: Implement select contact functionality
-  console.log('Select contact:', contact);
+const handleSelect = (contact: Contact, router: any) => {
+  router.push(`/contacts/${contact.id}`);
 };
 
 export default function ContactsPage() {
@@ -52,7 +50,7 @@ export default function ContactsPage() {
     if (selectedGroup) filters.group = selectedGroup;
     if (selectedClassification) filters.classification = selectedClassification;
     if (searchQuery) filters.search = searchQuery;
-    
+
     fetchContacts(filters);
   };
 
@@ -101,7 +99,7 @@ export default function ContactsPage() {
           <div className="text-red-800">
             <strong>Erreur:</strong> {error}
           </div>
-          <button 
+          <button
             onClick={refetch}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
@@ -116,27 +114,28 @@ export default function ContactsPage() {
     <div className="p-6 max-w-[1800px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-           <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-           <button className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2">Learn</button>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="contacts-title">Contacts</h1>
+          <button className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2">Learn</button>
         </div>
         <div className="flex gap-2">
-           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
-           <button 
-             onClick={handleAdd}
-             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
-           >
-             <Plus size={20} /> Add Contact
-           </button>
+          <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
+          <button
+            onClick={() => handleAdd(router)}
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            data-testid="add-contact-button"
+          >
+            <Plus size={20} /> Add Contact
+          </button>
         </div>
       </div>
 
       <div className="flex gap-1 border-b border-gray-200 mb-6">
-         <button className="px-4 py-2 text-sm font-medium border-b-2 border-[#008751] text-[#008751]">All</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Employee</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Operator</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Technician</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Manager</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">External</button>
+        <button className="px-4 py-2 text-sm font-medium border-b-2 border-[#008751] text-[#008751]">All</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Employee</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Operator</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Technician</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Manager</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">External</button>
       </div>
 
       <div className="mb-6">
@@ -149,9 +148,10 @@ export default function ContactsPage() {
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008751] focus:border-transparent"
+              data-testid="search-input"
             />
           </div>
-          
+
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -177,7 +177,7 @@ export default function ContactsPage() {
             <option value="Georgia">Georgia</option>
           </select>
 
-          <button 
+          <button
             onClick={handleFilter}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
           >
@@ -251,8 +251,8 @@ export default function ContactsPage() {
                     {contact.status === 'ACTIVE' ? '0' : '—'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
-                      onClick={() => handleSelect(contact)}
+                    <button
+                      onClick={() => handleSelect(contact, router)}
                       className="text-[#008751] hover:text-[#007043]"
                     >
                       <ChevronRight size={16} />
@@ -271,8 +271,8 @@ export default function ContactsPage() {
             <p className="text-gray-500 mb-4">
               {searchQuery ? 'Try adjusting your search criteria' : 'Get started by adding your first contact'}
             </p>
-            <button 
-              onClick={handleAdd}
+            <button
+              onClick={() => handleAdd(router)}
               className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 mx-auto"
             >
               <Plus size={20} /> Add Contact

@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, Plus, Filter, MoreHorizontal, ChevronRight, Store, Phone, Globe, MapPin } from 'lucide-react';
 import { Vendor } from '@/types';
 import { useVendors, useVendorSearch } from '@/lib/hooks/useVendors';
 
-const handleAdd = () => {
-  // TODO: Implement add vendor functionality
-  console.log('Add vendor');
+const handleAdd = (router: any) => {
+  router.push('/vendors/create');
 };
 
-const handleSelect = (vendor: Vendor) => {
-  // TODO: Implement select vendor functionality
-  console.log('Select vendor:', vendor);
+const handleSelect = (vendor: Vendor, router: any) => {
+  router.push(`/vendors/${vendor.id}`);
 };
 
 export default function VendorsPage() {
+  const router = useRouter();
   const { vendors, loading, error, pagination, fetchVendors, refetch } = useVendors();
   const { results: searchResults, searchVendors, loading: searchLoading } = useVendorSearch();
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,7 +47,7 @@ export default function VendorsPage() {
     if (selectedClassification) filters.classification = selectedClassification;
     if (selectedLabel) filters.label = selectedLabel;
     if (searchQuery) filters.search = searchQuery;
-    
+
     fetchVendors(filters);
   };
 
@@ -87,7 +87,7 @@ export default function VendorsPage() {
           <div className="text-red-800">
             <strong>Erreur:</strong> {error}
           </div>
-          <button 
+          <button
             onClick={refetch}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
@@ -102,26 +102,27 @@ export default function VendorsPage() {
     <div className="p-6 max-w-[1800px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-           <h1 className="text-3xl font-bold text-gray-900">Vendors</h1>
-           <button className="text-[#008751] font-medium text-sm flex items-center gap-1"><Store size={16}/> Find Shops <span className="bg-orange-100 text-orange-800 text-[10px] px-1 rounded">New</span></button>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="vendors-title">Vendors</h1>
+          <button className="text-[#008751] font-medium text-sm flex items-center gap-1"><Store size={16} /> Find Shops <span className="bg-orange-100 text-orange-800 text-[10px] px-1 rounded">New</span></button>
         </div>
         <div className="flex gap-2">
-           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
-           <button 
-             onClick={handleAdd}
-             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
-           >
-             <Plus size={20} /> Add Vendor
-           </button>
+          <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
+          <button
+            onClick={() => handleAdd(router)}
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            data-testid="add-vendor-button"
+          >
+            <Plus size={20} /> Add Vendor
+          </button>
         </div>
       </div>
 
       <div className="flex gap-1 border-b border-gray-200 mb-6">
-         <button className="px-4 py-2 text-sm font-medium border-b-2 border-[#008751] text-[#008751]">All</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Charging</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Fuel</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Service</button>
-         <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Tools</button>
+        <button className="px-4 py-2 text-sm font-medium border-b-2 border-[#008751] text-[#008751]">All</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Charging</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Fuel</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Service</button>
+        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Tools</button>
       </div>
 
       <div className="mb-6">
@@ -134,9 +135,10 @@ export default function VendorsPage() {
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008751] focus:border-transparent"
+              data-testid="search-input"
             />
           </div>
-          
+
           <select
             value={selectedClassification}
             onChange={(e) => setSelectedClassification(e.target.value)}
@@ -161,7 +163,7 @@ export default function VendorsPage() {
             <option value="Emergency">Emergency</option>
           </select>
 
-          <button 
+          <button
             onClick={handleFilter}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
           >
@@ -274,8 +276,8 @@ export default function VendorsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
-                      onClick={() => handleSelect(vendor)}
+                    <button
+                      onClick={() => handleSelect(vendor, router)}
                       className="text-[#008751] hover:text-[#007043]"
                     >
                       <ChevronRight size={16} />
@@ -294,8 +296,8 @@ export default function VendorsPage() {
             <p className="text-gray-500 mb-4">
               {searchQuery ? 'Try adjusting your search criteria' : 'Get started by adding your first vendor'}
             </p>
-            <button 
-              onClick={handleAdd}
+            <button
+              onClick={() => handleAdd(router)}
               className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 mx-auto"
             >
               <Plus size={20} /> Add Vendor

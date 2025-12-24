@@ -1,13 +1,41 @@
 import { Place, PlaceSearchFilters, PlacesResponse, NearbyPlace, NearbyPlacesResponse } from '@/types/geolocation';
 import { GeocodingService } from './geocoding-service';
 
+// Fonction utilitaire pour récupérer le token d'authentification
+const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+
+  return localStorage.getItem('authToken') ||
+    document.cookie.match(/authToken=([^;]*)/)?.[1] ||
+    null
+}
+
 export class PlacesApiService {
+  private static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const token = getAuthToken();
+    const response = await fetch(endpoint, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: `HTTP Error ${response.status}` }));
+      throw new Error(error.message || error.error || `Request failed with status ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
   /**
    * Récupérer la liste des lieux avec filtres et pagination
    */
   static async getPlaces(filters: PlaceSearchFilters = {}): Promise<PlacesResponse> {
     const params = new URLSearchParams();
-    
+
     // Ajouter les paramètres de recherche
     if (filters.search) params.append('search', filters.search);
     if (filters.type) params.append('type', filters.type);
@@ -17,87 +45,56 @@ export class PlacesApiService {
       params.append('longitude', filters.longitude.toString());
       params.append('radius', filters.radius.toString());
     }
-    
+
     // Paramètres de pagination
     params.append('page', (filters.page || 1).toString());
     params.append('limit', (filters.limit || 20).toString());
-    
-    const response = await fetch(`/api/places?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch places: ${response.status}`);
-    }
-    
-    return await response.json();
+
+    return this.request<PlacesResponse>(`/api/places?${params}`);
   }
 
   /**
    * Récupérer un lieu par son ID
    */
   static async getPlace(id: string): Promise<Place> {
-    const response = await fetch(`/api/places/${id}`);
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Place not found');
-      }
-      throw new Error(`Failed to fetch place: ${response.status}`);
-    }
-    
-    return await response.json();
+    return this.request<Place>(`/api/places/${id}`);
   }
 
   /**
    * Créer un nouveau lieu
    */
   static async createPlace(placeData: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> {
-    const response = await fetch('/api/places', {
+    return this.request<Place>('/api/places', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(placeData),
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to create place: ${response.status}`);
-    }
-    
-    return await response.json();
   }
 
   /**
    * Mettre à jour un lieu
    */
   static async updatePlace(id: string, placeData: Partial<Place>): Promise<Place> {
-    const response = await fetch(`/api/places/${id}`, {
+    return this.request<Place>(`/api/places/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(placeData),
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to update place: ${response.status}`);
-    }
-    
-    return await response.json();
   }
 
   /**
    * Supprimer un lieu
    */
   static async deletePlace(id: string): Promise<void> {
+    const token = getAuthToken();
     const response = await fetch(`/api/places/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
-    
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to delete place: ${response.status}`);
+      const error = await response.json().catch(() => ({ message: `HTTP Error ${response.status}` }));
+      throw new Error(error.message || error.error || `Delete failed with status ${response.status}`);
     }
   }
 
@@ -114,7 +111,7 @@ export class PlacesApiService {
     try {
       // Géocoder l'adresse
       const geocodeResult = await GeocodingService.geocodeAddress(placeData.address);
-      
+
       // Créer le lieu avec les coordonnées
       const fullPlaceData = {
         ...placeData,
@@ -124,9 +121,9 @@ export class PlacesApiService {
         placeType: (placeData.placeType as any) || 'GENERAL',
         isActive: true,
       };
-      
+
       return await this.createPlace(fullPlaceData);
-      
+
     } catch (error) {
       throw new Error(`Failed to geocode address or create place: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -136,8 +133,8 @@ export class PlacesApiService {
    * Rechercher des lieux proches
    */
   static async getNearbyPlaces(
-    latitude: number, 
-    longitude: number, 
+    latitude: number,
+    longitude: number,
     radiusInKm: number = 10,
     placeType?: string
   ): Promise<NearbyPlacesResponse> {
@@ -146,18 +143,12 @@ export class PlacesApiService {
       lng: longitude.toString(),
       radius: radiusInKm.toString(),
     });
-    
+
     if (placeType) {
       params.append('type', placeType);
     }
-    
-    const response = await fetch(`/api/places/nearby?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch nearby places: ${response.status}`);
-    }
-    
-    return await response.json();
+
+    return this.request<NearbyPlacesResponse>(`/api/places/nearby?${params}`);
   }
 
   /**
@@ -167,14 +158,8 @@ export class PlacesApiService {
     const params = new URLSearchParams({
       address: address,
     });
-    
-    const response = await fetch(`/api/places/geocode?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to geocode address: ${response.status}`);
-    }
-    
-    return await response.json();
+
+    return this.request(`/api/places/geocode?${params}`);
   }
 
   /**
@@ -185,33 +170,25 @@ export class PlacesApiService {
       lat: latitude.toString(),
       lng: longitude.toString(),
     });
-    
-    const response = await fetch(`/api/places/reverse-geocode?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to reverse geocode coordinates: ${response.status}`);
-    }
-    
-    return await response.json();
+
+    return this.request(`/api/places/reverse-geocode?${params}`);
   }
 
   /**
    * Vérifier si un point est dans le géofence d'un lieu
    */
   static async checkGeofence(placeId: string, latitude: number, longitude: number) {
-    // Pour l'instant, cette fonctionnalité sera implémentée côté serveur
-    // On peut utiliser la formule haversine pour calculer la distance
     const place = await this.getPlace(placeId);
-    
+
     if (!place.latitude || !place.longitude || !place.geofenceRadius) {
       throw new Error('Place does not have valid geofence configuration');
     }
-    
+
     const distance = GeocodingService.calculateDistance(
       { latitude, longitude },
       { latitude: place.latitude, longitude: place.longitude }
     );
-    
+
     return {
       isInside: distance <= (place.geofenceRadius / 1000), // Conversion mètres vers km
       distance: distance,
@@ -227,7 +204,7 @@ export class PlacesApiService {
       search: query,
       limit
     });
-    
+
     return response.places;
   }
 
@@ -235,13 +212,7 @@ export class PlacesApiService {
    * Obtenir des statistiques sur les lieux
    */
   static async getPlacesStats() {
-    const response = await fetch('/api/places/stats');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch places stats: ${response.status}`);
-    }
-    
-    return await response.json();
+    return this.request('/api/places/stats');
   }
 
   /**
@@ -249,23 +220,23 @@ export class PlacesApiService {
    */
   static validatePlaceData(data: Partial<Place>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     if (!data.name || data.name.trim() === '') {
       errors.push('Name is required');
     }
-    
+
     if (data.latitude !== undefined && (data.latitude < -90 || data.latitude > 90)) {
       errors.push('Latitude must be between -90 and 90');
     }
-    
+
     if (data.longitude !== undefined && (data.longitude < -180 || data.longitude > 180)) {
       errors.push('Longitude must be between -180 and 180');
     }
-    
+
     if (data.geofenceRadius !== undefined && data.geofenceRadius <= 0) {
       errors.push('Geofence radius must be positive');
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors
@@ -282,10 +253,10 @@ export class PlacesApiService {
   } {
     const title = place.name;
     const subtitle = place.description || place.address;
-    const coordinates = place.latitude && place.longitude 
+    const coordinates = place.latitude && place.longitude
       ? `${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}`
       : undefined;
-    
+
     return { title, subtitle, coordinates };
   }
 }
