@@ -1,6 +1,7 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test';
 
 test.describe('Module Inspections - Tests E2E', () => {
+  test.describe.configure({ mode: 'serial' });
   test.setTimeout(90000); // Augmenter le timeout global pour les tests d'inspection
   let context: BrowserContext;
   let page: Page;

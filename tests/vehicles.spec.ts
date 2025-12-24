@@ -41,7 +41,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
     });
 
     test.describe('Liste des véhicules', () => {
-        test('Affichage de la liste des véhicules', async ({ page }) => {
+        test('Affichage de la liste des véhicules', async () => {
             await page.goto('/vehicles/list');
             await expect(page).toHaveURL(/\/vehicles\/list/);
 
@@ -56,7 +56,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await expect(rows.first()).toBeVisible();
         });
 
-        test('Navigation vers les détails d\'un véhicule', async ({ page }) => {
+        test('Navigation vers les détails d\'un véhicule', async () => {
             await page.goto('/vehicles/list');
             // Cliquer sur le premier véhicule
             const firstRow = page.locator('tbody tr').first();
@@ -64,12 +64,12 @@ test.describe('Module Véhicules - Tests E2E', () => {
 
             // Vérifier la redirection vers /vehicles/[id]
             await page.waitForURL(/\/vehicles\/[a-zA-Z0-9]+/);
-            await expect(page.locator('h1')).toBeVisible();
+            await expect(page.locator('h1').nth(1)).toBeVisible();
         });
     });
 
     test.describe('Affectations de véhicules', () => {
-        test('Affichage de la page des affectations', async ({ page }) => {
+        test('Affichage de la page des affectations', async () => {
             await page.goto('/vehicles/assignments');
             await expect(page).toHaveURL(/\/vehicles\/assignments/);
 
@@ -83,7 +83,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
     });
 
     test.describe('Dépenses véhicules', () => {
-        test('Affichage de la page des dépenses', async ({ page }) => {
+        test('Affichage de la page des dépenses', async () => {
             await page.goto('/vehicles/expense');
             await expect(page).toHaveURL(/\/vehicles\/expense/);
 
@@ -97,7 +97,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
     });
 
     test.describe('Historique des compteurs', () => {
-        test('Affichage de l\'historique des compteurs', async ({ page }) => {
+        test('Affichage de l\'historique des compteurs', async () => {
             await page.goto('/vehicles/meter-history');
             await expect(page).toHaveURL(/\/vehicles\/meter-history/);
 
@@ -111,7 +111,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
     });
 
     test.describe('Analyse de remplacement', () => {
-        test('Affichage de l\'analyse de remplacement', async ({ page }) => {
+        test('Affichage de l\'analyse de remplacement', async () => {
             await page.goto('/vehicles/replacement');
             await expect(page).toHaveURL(/\/vehicles\/replacement/);
 

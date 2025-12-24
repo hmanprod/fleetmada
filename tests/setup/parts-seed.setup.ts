@@ -1,5 +1,5 @@
 import { test as setup } from '@playwright/test';
-import { partsAPI } from '../lib/services/parts-api';
+import { partsAPI } from '../../lib/services/parts-api';
 
 /**
  * Test setup - Seed data for Parts E2E tests

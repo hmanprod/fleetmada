@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, Lightbulb, Zap, AlertCircle } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, Lightbulb, Zap, AlertCircle, Eye, Edit2, PlusSquare, Wrench, CheckCircle2, XCircle, Trash2, ArrowRight, ListPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useIssues from '@/lib/hooks/useIssues';
-import type { IssueFilters } from '@/lib/services/issues-api';
+import type { Issue, IssueFilters } from '@/lib/services/issues-api';
+import { serviceAPI } from '@/lib/services/service-api';
 
 export default function IssuesPage() {
   const router = useRouter();
@@ -24,8 +25,15 @@ export default function IssuesPage() {
     error,
     pagination,
     fetchIssues,
-    clearError
+    clearError,
+    updateIssueStatus,
+    deleteIssue
   } = useIssues(filters);
+
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [modalType, setModalType] = useState<'service_entry' | 'work_order' | 'resolve' | null>(null);
+  const [resolveNote, setResolveNote] = useState('');
 
   const handleAdd = () => {
     router.push('/issues/create');
@@ -62,6 +70,60 @@ export default function IssuesPage() {
 
     // Utiliser replace pour ne pas empiler l'historique à chaque frappe
     router.replace(`/issues?${params.toString()}`);
+  };
+
+  const handleEdit = (id: string) => {
+    router.push(`/issues/${id}/edit`);
+  };
+
+  const handleClose = async (id: string) => {
+    try {
+      await updateIssueStatus(id, 'CLOSED');
+      setActiveDropdown(null);
+    } catch (err) {
+      console.error('Failed to close issue:', err);
+    }
+  };
+
+  const handleDeleteIssue = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this issue?')) {
+      try {
+        await deleteIssue(id);
+        setActiveDropdown(null);
+      } catch (err) {
+        console.error('Failed to delete issue:', err);
+      }
+    }
+  };
+
+  const handleResolve = async () => {
+    if (!selectedIssue || !resolveNote.trim()) return;
+    try {
+      await updateIssueStatus(selectedIssue.id, 'RESOLVED');
+      // In a real app we'd also save the note
+      setModalType(null);
+      setResolveNote('');
+      setSelectedIssue(null);
+    } catch (err) {
+      console.error('Failed to resolve issue:', err);
+    }
+  };
+
+  const handleAddRecords = async (type: 'service_entry' | 'work_order') => {
+    if (!selectedIssue) return;
+    try {
+      await serviceAPI.createServiceEntry({
+        vehicleId: selectedIssue.vehicleId || '',
+        date: new Date().toISOString(),
+        isWorkOrder: type === 'work_order',
+        notes: `Created from issue: ${selectedIssue.summary}`,
+        status: 'SCHEDULED'
+      });
+      setModalType(null);
+      setSelectedIssue(null);
+    } catch (err) {
+      console.error(`Failed to create ${type}:`, err);
+    }
   };
 
   const formatDate = (date: Date | string) => {
@@ -217,7 +279,7 @@ export default function IssuesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden" data-testid="issues-list">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm" data-testid="issues-list">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-white border-b border-gray-200">
             <tr>
@@ -287,17 +349,219 @@ export default function IssuesPage() {
                 <td className="px-4 py-3 text-gray-500 hover:text-[#008751] hover:underline">
                   {issue.watchers > 0 ? `${issue.watchers} watcher${issue.watchers > 1 ? 's' : ''}` : '—'}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <span className="text-gray-400 flex gap-2">
-                    <div onClick={e => e.stopPropagation()}><Settings size={14} className="hover:text-gray-600" /></div>
-                    <div onClick={e => e.stopPropagation()}><Settings size={14} className="hover:text-gray-600" /></div>
-                  </span>
+                <td className="px-4 py-3 text-right sticky right-0 bg-white">
+                  <div className="relative inline-block text-left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdown(activeDropdown === issue.id ? null : issue.id);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+
+                    {activeDropdown === issue.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdown(null);
+                          }}
+                        ></div>
+                        <div
+                          className="!absolute !right-0 !top-full mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 overflow-hidden"
+                          style={{ pointerEvents: 'auto' }}
+                          data-testid="issue-dropdown-menu"
+                        >
+                          <div className="py-1 flex flex-col" role="menu">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRowClick(issue.id);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              View <ArrowRight size={14} className="text-gray-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(issue.id);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              Edit <Edit2 size={14} className="text-gray-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedIssue(issue);
+                                setModalType('service_entry');
+                                setActiveDropdown(null);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              Add to Service Entry <ListPlus size={14} className="text-gray-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedIssue(issue);
+                                setModalType('work_order');
+                                setActiveDropdown(null);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              Add to Work Order <Wrench size={14} className="text-gray-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedIssue(issue);
+                                setModalType('resolve');
+                                setActiveDropdown(null);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left border-t border-gray-100"
+                            >
+                              Resolve with Note <CheckCircle2 size={14} className="text-gray-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleClose(issue.id);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              Close <XCircle size={14} className="text-gray-400" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteIssue(issue.id);
+                              }}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                            >
+                              Delete <Trash2 size={14} className="text-red-400" />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Modals */}
+      {
+        modalType && selectedIssue && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {modalType === 'service_entry' ? 'Add to Service Entry' :
+                    modalType === 'work_order' ? 'Add to Work Order' :
+                      `Resolve Issue #${selectedIssue.id.slice(-6)}`}
+                </h2>
+                <button
+                  onClick={() => { setModalType(null); setSelectedIssue(null); }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Vehicle Info */}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-gray-500 w-24">Vehicle</span>
+                  <div className="flex items-center gap-2">
+                    <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${selectedIssue.id}`} className="w-8 h-8 rounded object-cover" alt="" />
+                    <span className="text-[#008751] font-bold">{selectedIssue.vehicle?.make} {selectedIssue.vehicle?.model}</span>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded">Sample</span>
+                  </div>
+                </div>
+
+                {modalType === 'resolve' ? (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium text-gray-500 w-24">Summary</span>
+                      <span className="text-gray-900">{selectedIssue.summary}</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-500">Note <span className="text-red-500">*</span></label>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-md p-3 h-32 focus:ring-1 focus:ring-[#008751] focus:border-[#008751] outline-none"
+                        placeholder="Describe what work was performed to resolve the issue."
+                        value={resolveNote}
+                        onChange={(e) => setResolveNote(e.target.value)}
+                      ></textarea>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-4">
+                      <span className="text-sm font-medium text-gray-500 w-24 pt-1">Issues</span>
+                      <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-1.5 rounded-sm">1</span>
+                          <span className="text-sm font-medium">Issue will be added</span>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded p-3 flex items-start gap-3">
+                          <input type="checkbox" checked readOnly className="mt-1 rounded border-gray-300 text-[#008751]" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 rounded-sm uppercase">Open</span>
+                              <span className="text-sm font-bold">1 - {selectedIssue.summary}</span>
+                            </div>
+                            <p className="text-sm text-gray-500 mt-1">Reported {formatDate(selectedIssue.reportedDate)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium text-gray-500 w-24">{modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="entry_type" checked readOnly className="text-[#008751] focus:ring-[#008751]" />
+                          <span className="text-sm">Add to New {modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer opacity-50">
+                          <input type="radio" name="entry_type" disabled className="text-[#008751] focus:ring-[#008751]" />
+                          <span className="text-sm">Add to Existing {modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <button
+                  onClick={() => { setModalType(null); setSelectedIssue(null); }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (modalType === 'resolve') handleResolve();
+                    else handleAddRecords(modalType as any);
+                  }}
+                  className="px-4 py-2 text-sm font-bold text-white bg-[#008751] hover:bg-[#007043] rounded"
+                >
+                  {modalType === 'resolve' ? 'Resolve Issue' : 'Continue'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

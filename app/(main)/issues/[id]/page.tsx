@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, MoreHorizontal, Edit, Bell, MessageSquare, MapPin, Check, EyeOff, AlertCircle, Send } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Edit, Bell, MessageSquare, MapPin, Check, EyeOff, AlertCircle, Send, Plus, ListPlus, Wrench, CheckCircle2, XCircle, Trash2, ArrowRight } from 'lucide-react';
+import { serviceAPI } from '@/lib/services/service-api';
+import type { Issue } from '@/lib/services/issues-api';
 import { useRouter } from 'next/navigation';
 import { useIssueDetails } from '@/lib/hooks/useIssueDetails';
 import { useIssueComments } from '@/lib/hooks/useIssueComments';
@@ -32,6 +34,9 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
     const [newComment, setNewComment] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [resolving, setResolving] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [modalType, setModalType] = useState<'service_entry' | 'work_order' | 'resolve' | null>(null);
+    const [resolveNote, setResolveNote] = useState('');
 
     // Charger les données au montage
     useEffect(() => {
@@ -78,6 +83,55 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             console.error('Erreur lors de l\'ajout du commentaire:', err);
         } finally {
             setSubmittingComment(false);
+        }
+    };
+
+    const handleCloseIssue = async () => {
+        if (!issue) return;
+        try {
+            await updateIssueStatus(params.id, 'CLOSED');
+            setShowDropdown(false);
+        } catch (err) {
+            console.error('Failed to close issue:', err);
+        }
+    };
+
+    const handleDeleteIssue = async () => {
+        if (!issue) return;
+        if (window.confirm('Are you sure you want to delete this issue?')) {
+            try {
+                // In a real app we'd call an API here.
+                router.push('/issues');
+            } catch (err) {
+                console.error('Failed to delete issue:', err);
+            }
+        }
+    };
+
+    const handleAddRecords = async (type: 'service_entry' | 'work_order') => {
+        if (!issue) return;
+        try {
+            await serviceAPI.createServiceEntry({
+                vehicleId: issue.vehicleId || '',
+                date: new Date().toISOString(),
+                isWorkOrder: type === 'work_order',
+                notes: `Created from issue: ${issue.summary}`,
+                status: 'SCHEDULED'
+            });
+            setModalType(null);
+        } catch (err) {
+            console.error(`Failed to create ${type}:`, err);
+        }
+    };
+
+    const handleResolveWithNote = async () => {
+        if (!issue || !resolveNote.trim()) return;
+        try {
+            await updateIssueStatus(params.id, 'RESOLVED');
+            setModalType(null);
+            setResolveNote('');
+        } catch (err) {
+            console.error('Failed to resolve issue:', err);
         }
     };
 
@@ -204,7 +258,69 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
                         <EyeOff size={16} /> Unwatch
                     </button>
-                    <button className="p-2 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50"><MoreHorizontal size={20} /></button>
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowDropdown(!showDropdown)}
+                            className="p-2 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 flex items-center"
+                        >
+                            <MoreHorizontal size={20} />
+                        </button>
+
+                        {showDropdown && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setShowDropdown(false)}
+                                ></div>
+                                <div
+                                    className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 overflow-hidden"
+                                    style={{ position: 'absolute', right: 0, top: '100%' }}
+                                >
+                                    <div className="py-1 flex flex-col" role="menu">
+                                        <button
+                                            onClick={() => {
+                                                setModalType('service_entry');
+                                                setShowDropdown(false);
+                                            }}
+                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                        >
+                                            Add to Service Entry <ListPlus size={14} className="text-gray-400" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setModalType('work_order');
+                                                setShowDropdown(false);
+                                            }}
+                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                        >
+                                            Add to Work Order <Wrench size={14} className="text-gray-400" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setModalType('resolve');
+                                                setShowDropdown(false);
+                                            }}
+                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left border-t border-gray-100"
+                                        >
+                                            Resolve with Note <CheckCircle2 size={14} className="text-gray-400" />
+                                        </button>
+                                        <button
+                                            onClick={handleCloseIssue}
+                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                        >
+                                            Close <XCircle size={14} className="text-gray-400" />
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteIssue}
+                                            className="flex items-center justify-between px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                        >
+                                            Delete <Trash2 size={14} className="text-red-400" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
                     <button onClick={handleEdit} className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
                         <Edit size={16} /> Edit
                     </button>
@@ -401,6 +517,110 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     </div>
                 </div>
             </div>
+            {/* Modals */}
+            {modalType && issue && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-900">
+                                {modalType === 'service_entry' ? 'Add to Service Entry' :
+                                    modalType === 'work_order' ? 'Add to Work Order' :
+                                        `Resolve Issue #${issue.id.slice(-6)}`}
+                            </h2>
+                            <button
+                                onClick={() => { setModalType(null); }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Vehicle Info */}
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium text-gray-500 w-24">Vehicle</span>
+                                <div className="flex items-center gap-2">
+                                    <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${issue.id}`} className="w-8 h-8 rounded object-cover" alt="" />
+                                    <span className="text-[#008751] font-bold">{issue.vehicle?.make} {issue.vehicle?.model}</span>
+                                    <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded">Sample</span>
+                                </div>
+                            </div>
+
+                            {modalType === 'resolve' ? (
+                                <>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm font-medium text-gray-500 w-24">Summary</span>
+                                        <span className="text-gray-900">{issue.summary}</span>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium text-gray-500">Note <span className="text-red-500">*</span></label>
+                                        <textarea
+                                            className="w-full border border-gray-300 rounded-md p-3 h-32 focus:ring-1 focus:ring-[#008751] focus:border-[#008751] outline-none"
+                                            placeholder="Describe what work was performed to resolve the issue."
+                                            value={resolveNote}
+                                            onChange={(e) => setResolveNote(e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex items-start gap-4">
+                                        <span className="text-sm font-medium text-gray-500 w-24 pt-1">Issues</span>
+                                        <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-1.5 rounded-sm">1</span>
+                                                <span className="text-sm font-medium">Issue will be added</span>
+                                            </div>
+                                            <div className="bg-white border border-gray-200 rounded p-3 flex items-start gap-3">
+                                                <input type="checkbox" checked readOnly className="mt-1 rounded border-gray-300 text-[#008751]" />
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 rounded-sm uppercase">Open</span>
+                                                        <span className="text-sm font-bold">1 - {issue.summary}</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-500 mt-1">Reported {formatDate(issue.reportedDate)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm font-medium text-gray-500 w-24">{modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input type="radio" name="entry_type" checked readOnly className="text-[#008751] focus:ring-[#008751]" />
+                                                <span className="text-sm">Add to New {modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer opacity-50">
+                                                <input type="radio" name="entry_type" disabled className="text-[#008751] focus:ring-[#008751]" />
+                                                <span className="text-sm">Add to Existing {modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
+                            <button
+                                onClick={() => { setModalType(null); }}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (modalType === 'resolve') handleResolveWithNote();
+                                    else handleAddRecords(modalType as any);
+                                }}
+                                className="px-4 py-2 text-sm font-bold text-white bg-[#008751] hover:bg-[#007043] rounded"
+                            >
+                                {modalType === 'resolve' ? 'Resolve Issue' : 'Continue'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
