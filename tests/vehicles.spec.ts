@@ -63,8 +63,95 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await firstRow.click();
 
             // Vérifier la redirection vers /vehicles/[id]
-            await page.waitForURL(/\/vehicles\/[a-zA-Z0-9]+/);
-            await expect(page.locator('h1').nth(1)).toBeVisible();
+            await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
+            await expect(page.locator('h1').first()).toBeVisible();
+        });
+    });
+
+    test.describe('Page détails véhicule - Onglets horizontaux', () => {
+        test.beforeEach(async () => {
+            await page.goto('/vehicles/list');
+            // Navigate to first vehicle
+            const firstRow = page.locator('tbody tr').first();
+            await firstRow.click();
+            await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
+        });
+
+        test('Affichage de l\'onglet Overview par défaut', async () => {
+            // Overview tab should be active by default
+            const overviewTab = page.locator('[data-testid="tab-overview"]');
+            await expect(overviewTab).toBeVisible();
+            await expect(overviewTab).toHaveClass(/text-\[#008751\]/);
+
+            // Details section should be visible
+            await expect(page.locator('text=Details')).toBeVisible();
+        });
+
+        test('Navigation entre les onglets principaux', async () => {
+            // Click on Specs tab
+            await page.click('[data-testid="tab-specs"]');
+            await expect(page.locator('text=Specifications')).toBeVisible();
+
+            // Click on Financial tab
+            await page.click('[data-testid="tab-financial"]');
+            await expect(page.locator('text=Purchase & Financial')).toBeVisible();
+
+            // Click on Service History tab
+            await page.click('[data-testid="tab-service-history"]');
+            await expect(page.locator('th:has-text("Work Order")')).toBeVisible();
+
+            // Click on Inspection History tab
+            await page.click('[data-testid="tab-inspection-history"]');
+            await expect(page.locator('th:has-text("Submitted")')).toBeVisible();
+        });
+
+        test('Menu More affiche les onglets supplémentaires', async () => {
+            // Click More button
+            await page.click('[data-testid="more-tabs-button"]');
+
+            // Verify dropdown items are visible
+            await expect(page.locator('text=Renewal Reminders')).toBeVisible();
+            await expect(page.locator('text=Issues')).toBeVisible();
+            await expect(page.locator('text=Meter History')).toBeVisible();
+            await expect(page.locator('text=Fuel History')).toBeVisible();
+
+            // Click on Fuel History
+            await page.click('text=Fuel History');
+            await expect(page.locator('th:has-text("Fuel Economy")')).toBeVisible();
+        });
+    });
+
+    test.describe('Page détails véhicule - Sidebar droite', () => {
+        test.beforeEach(async () => {
+            await page.goto('/vehicles/list');
+            const firstRow = page.locator('tbody tr').first();
+            await firstRow.click();
+            await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
+        });
+
+        test('Sidebar droite avec Comments, Photos, Documents', async () => {
+            // Right sidebar should be visible
+            await expect(page.locator('[data-testid="right-sidebar"]')).toBeVisible();
+
+            // Comments panel should be active by default
+            await expect(page.locator('text=Comments')).toBeVisible();
+            await expect(page.locator('[data-testid="sidebar-comments-btn"]')).toBeVisible();
+        });
+
+        test('Basculer entre les panneaux de la sidebar', async () => {
+            // Click on Photos button
+            await page.click('[data-testid="sidebar-photos-btn"]');
+            await expect(page.locator('text=Photos').first()).toBeVisible();
+            await expect(page.locator('text=Drag and drop files to upload')).toBeVisible();
+
+            // Click on Documents button
+            await page.click('[data-testid="sidebar-documents-btn"]');
+            await expect(page.locator('text=Documents').first()).toBeVisible();
+            await expect(page.locator('text=No documents found')).toBeVisible();
+
+            // Click back on Comments
+            await page.click('[data-testid="sidebar-comments-btn"]');
+            await expect(page.locator('input[placeholder="Add a Comment"]')).toBeVisible();
         });
     });
 

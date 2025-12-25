@@ -168,8 +168,15 @@ export default function VehicleAssignmentsPage() {
                 Month
               </button>
             </div>
+            <button 
+                onClick={() => setCurrentDate(new Date())} 
+                className="px-3 py-1 text-sm font-medium p-2 text-gray-900 bg-gray-100 rounded transition-colors"
+              >
+                Today
+              </button>
             <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-2 py-1">
               <button onClick={() => navigateDate(-1)} className="p-1 hover:bg-gray-100 rounded"><ChevronLeft size={16} /></button>
+              
               <span className="text-sm font-medium w-32 text-center">{formatDate(currentDate)}</span>
               <button onClick={() => navigateDate(1)} className="p-1 hover:bg-gray-100 rounded"><ChevronRight size={16} /></button>
             </div>

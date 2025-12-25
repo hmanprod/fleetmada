@@ -361,6 +361,164 @@ async function main() {
         compliance: 92.3,
       },
     }),
+    prisma.serviceReminder.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        task: 'Changement des pneus',
+        status: 'ACTIVE',
+        nextDue: new Date('2025-03-01'),
+        compliance: 75.0,
+      },
+    }),
+  ]);
+
+  // Créer des entrées de compteur (Meter History)
+  console.log('📏 Création des entrées de compteur...');
+  const meterEntries = await Promise.all([
+    prisma.meterEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        date: new Date('2024-12-15T09:00:00'),
+        value: 45670.5,
+        type: 'MILEAGE',
+        source: 'Manual',
+      },
+    }),
+    prisma.meterEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        date: new Date('2024-12-10T10:00:00'),
+        value: 45320.0,
+        type: 'MILEAGE',
+        source: 'FuelEntry',
+      },
+    }),
+    prisma.meterEntry.create({
+      data: {
+        vehicleId: vehicles[1].id,
+        date: new Date('2024-12-14T14:30:00'),
+        value: 32840.2,
+        type: 'MILEAGE',
+        source: 'Manual',
+      },
+    }),
+    prisma.meterEntry.create({
+      data: {
+        vehicleId: vehicles[2].id,
+        date: new Date('2024-12-13T08:00:00'),
+        value: 120.5,
+        type: 'HOURS',
+        source: 'Inspection',
+      },
+    }),
+  ]);
+
+  // Créer des entrées de service (Service History)
+  console.log('🔧 Création de l\'historique de service...');
+  const serviceEntries = await Promise.all([
+    prisma.serviceEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        userId: adminUser.id,
+        date: new Date('2024-12-01'),
+        status: 'COMPLETED',
+        meter: 44500,
+        totalCost: 205000.0,
+        notes: 'Vidange moteur et filtre à huile',
+        vendorId: vendors[1].id,
+      },
+    }),
+    prisma.serviceEntry.create({
+      data: {
+        vehicleId: vehicles[1].id,
+        userId: fleetManager.id,
+        date: new Date('2024-11-25'),
+        status: 'COMPLETED',
+        meter: 32000,
+        totalCost: 230000.0,
+        notes: 'Changement des plaquettes de frein avant',
+        vendorId: vendors[0].id,
+      },
+    }),
+    prisma.serviceEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        userId: adminUser.id,
+        date: new Date('2024-10-15'),
+        status: 'COMPLETED',
+        meter: 42000,
+        totalCost: 550000.0,
+        notes: 'Révision complète 40 000 km',
+        vendorId: vendors[0].id,
+      },
+    }),
+  ]);
+
+  // Créer des issues
+  console.log('⚠️ Création des signalements...');
+  const issues = await Promise.all([
+    prisma.issue.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        userId: driver1.id,
+        summary: 'Voyant moteur allumé - Le voyant moteur s\'est allumé ce matin lors du démarrage.',
+        priority: 'HIGH',
+        status: 'OPEN',
+        reportedDate: new Date('2024-12-14'),
+      },
+    }),
+    prisma.issue.create({
+      data: {
+        vehicleId: vehicles[1].id,
+        userId: fleetManager.id,
+        summary: 'Climatisation ne fonctionne pas - La climatisation ne refroidit plus correctement.',
+        priority: 'MEDIUM',
+        status: 'IN_PROGRESS',
+        reportedDate: new Date('2024-12-10'),
+      },
+    }),
+    prisma.issue.create({
+      data: {
+        vehicleId: vehicles[3].id,
+        userId: transportManager.id,
+        summary: 'Bruit anormal dans le moteur - Un bruit métallique est audible lors de l\'accélération.',
+        priority: 'HIGH',
+        status: 'OPEN',
+        reportedDate: new Date('2024-12-12'),
+      },
+    }),
+  ]);
+
+  // Créer des affectations de véhicules
+  console.log('👤 Création des affectations de véhicules...');
+  const vehicleAssignments = await Promise.all([
+    prisma.vehicleAssignment.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        operator: 'Paul Andriamanantsoa',
+        startDate: new Date('2024-01-01'),
+        endDate: null,
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.vehicleAssignment.create({
+      data: {
+        vehicleId: vehicles[1].id,
+        operator: 'Marie Ratsimba',
+        startDate: new Date('2024-06-01'),
+        endDate: null,
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.vehicleAssignment.create({
+      data: {
+        vehicleId: vehicles[4].id,
+        operator: 'Alain Ratsahotra',
+        startDate: new Date('2024-03-15'),
+        endDate: null,
+        status: 'ACTIVE',
+      },
+    }),
   ]);
 
   // Créer des templates d'inspection

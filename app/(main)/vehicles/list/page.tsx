@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   LayoutList, Search, Filter, Plus, Car, MoreVertical, Loader2,
-  Settings, CheckCircle, Wrench, Paperclip, Fuel, History, Archive
+  Settings, CheckCircle, Wrench, Paperclip, Fuel, History, Archive, X,
+  Eye
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useVehicles } from '@/lib/hooks/useVehicles';
+import { VehiclesAPIService, type Vehicle } from '@/lib/services/vehicles-api';
 import type { VehicleListQuery } from '@/lib/validations/vehicle-validations';
 
 export default function VehicleList() {
@@ -19,6 +21,11 @@ export default function VehicleList() {
     sortBy: 'name',
     sortOrder: 'asc'
   });
+
+  // État pour la popup de confirmation d'archivage
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [vehicleToArchive, setVehicleToArchive] = useState<Vehicle | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   const { vehicles, loading, error, fetchVehicles, hasNext, hasPrev, pagination } = useVehicles({
     query: filters,
@@ -49,6 +56,39 @@ export default function VehicleList() {
     }
   };
 
+  // Gestion de l'archivage
+  const handleArchiveClick = (vehicle: Vehicle, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setVehicleToArchive(vehicle);
+    setIsArchiveModalOpen(true);
+  };
+
+  const handleConfirmArchive = async () => {
+    if (!vehicleToArchive) return;
+    
+    setIsArchiving(true);
+    try {
+      const apiService = new VehiclesAPIService();
+      await apiService.archiveVehicle(vehicleToArchive.id);
+      
+      // Rafraîchir la liste des véhicules
+      await fetchVehicles();
+      
+      setIsArchiveModalOpen(false);
+      setVehicleToArchive(null);
+    } catch (error) {
+      console.error('Erreur lors de l\'archivage:', error);
+      alert('Erreur lors de l\'archivage du véhicule. Veuillez réessayer.');
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
+  const handleCancelArchive = () => {
+    setIsArchiveModalOpen(false);
+    setVehicleToArchive(null);
+  };
+
   // Mapper les statuts API vers les statuts UI
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -57,9 +97,9 @@ export default function VehicleList() {
       'MAINTENANCE': { label: 'In Shop', class: 'bg-yellow-100 text-yellow-800' },
       'DISPOSED': { label: 'Out of Service', class: 'bg-red-100 text-red-800' }
     };
-    
+
     const config = statusMap[status as keyof typeof statusMap] || { label: status, class: 'bg-gray-100 text-gray-800' };
-    
+
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.class}`}>
         {config.label}
@@ -123,7 +163,7 @@ export default function VehicleList() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[450px]">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
@@ -169,9 +209,9 @@ export default function VehicleList() {
                         ) : <span className="text-gray-400">-</span>}
                       </td>
                       <td className="p-4 text-gray-700">
-                        {vehicle.meterReading ? 
+                        {vehicle.meterReading ?
                           `${vehicle.meterReading.toLocaleString()} ${vehicle.primaryMeter || 'mi'}` :
-                          vehicle.lastMeterReading ? 
+                          vehicle.lastMeterReading ?
                             `${vehicle.lastMeterReading.toLocaleString()} ${vehicle.lastMeterUnit || 'mi'}` :
                             <span className="text-gray-400">-</span>
                         }
@@ -180,58 +220,36 @@ export default function VehicleList() {
                         {vehicle.group || <span className="text-gray-400">-</span>}
                       </td>
                       <td className="p-4 text-gray-400">
-                        <div className="relative group">
+                        <div className="relative group hover:z-30">
                           <button
                             className="p-1 hover:bg-gray-200 rounded transition-colors"
                             onClick={(e) => { e.stopPropagation(); }}
                           >
                             <MoreVertical size={16} />
                           </button>
-                          
+
                           {/* Dropdown Menu */}
-                          <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-20 hidden group-hover:block">
+                          <div className="absolute right-0 mt-0 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-20 hidden group-hover:block">
+                            
+                            <button
+                              onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}`); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <Eye size={14} /> View
+                            </button>
+                            
                             <button
                               onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}/edit`); }}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                              <Settings size={14} /> Edit Vehicle Settings
+                              <Settings size={14} /> Edit
                             </button>
+                            
                             <button
-                              onClick={(e) => { e.stopPropagation(); }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            >
-                              <CheckCircle size={14} /> Manage Inspection Forms
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            >
-                              <Wrench size={14} /> Manage Service Programs
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            >
-                              <Paperclip size={14} /> Attach Shared Document
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            >
-                              <Fuel size={14} /> Recalculate Fuel Entries
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            >
-                              <History size={14} /> View Record History
-                            </button>
-                            <div className="border-t border-gray-100 my-1"></div>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); }}
+                              onClick={(e) => handleArchiveClick(vehicle, e)}
                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                             >
-                              <Archive size={14} /> Archive
+                              <Archive size={14} /> Archiver
                             </button>
                           </div>
                         </div>
@@ -269,6 +287,60 @@ export default function VehicleList() {
           </>
         )}
       </div>
+
+      {/* Popup de confirmation d'archivage */}
+      {isArchiveModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">Confirmer l'archivage</h3>
+              <button 
+                onClick={handleCancelArchive}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={isArchiving}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                Êtes-vous sûr de vouloir archiver le véhicule <strong>{vehicleToArchive?.name}</strong> ?
+              </p>
+              <p className="text-sm text-gray-500">
+                Cette action peut être annulée ultérieurement. Le véhicule ne sera plus visible dans la liste active.
+              </p>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
+              <button
+                onClick={handleCancelArchive}
+                disabled={isArchiving}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmArchive}
+                disabled={isArchiving}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
+              >
+                {isArchiving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Archivage...
+                  </>
+                ) : (
+                  <>
+                    <Archive size={16} />
+                    Archiver
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

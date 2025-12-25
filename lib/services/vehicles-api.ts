@@ -1,6 +1,6 @@
-import { 
-  CreateVehicleInput, 
-  UpdateVehicleInput, 
+import {
+  CreateVehicleInput,
+  UpdateVehicleInput,
   VehicleListQuery,
   CreateMeterEntryInput,
   UpdateMeterEntryInput,
@@ -74,6 +74,17 @@ export interface Vehicle {
     expenses: number
     assignments: number
   }
+  // Specifications
+  bodyType?: string
+  bodySubtype?: string
+  msrp?: number
+  width?: number | string
+  height?: number | string
+  length?: number | string
+  interiorVolume?: number | string
+  passengerVolume?: number | string
+  groundClearance?: number | string
+  bedLength?: number | string
   recentCosts?: number
   createdAt: string
   updatedAt: string
@@ -236,14 +247,14 @@ export class VehiclesAPIService {
   private baseUrl = getBaseUrl()
 
   // === VEHICLES CRUD ===
-  
+
   /**
    * Récupère la liste des véhicules avec filtres et pagination
    */
   async getVehicles(query?: VehicleListQuery): Promise<VehiclesResponse> {
     try {
       const params = new URLSearchParams()
-      
+
       if (query) {
         Object.entries(query).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
@@ -261,7 +272,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération des véhicules')
       }
@@ -287,7 +298,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération du véhicule')
       }
@@ -315,7 +326,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la création du véhicule')
       }
@@ -343,12 +354,37 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la mise à jour du véhicule')
       }
 
       return data.data
+    } catch (error) {
+      handleApiError(error)
+      throw error
+    }
+  }
+
+  /**
+   * Archive un véhicule
+   */
+  async archiveVehicle(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${id}/archive`, {
+        method: 'PUT',
+        headers: getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors de l\'archivage du véhicule')
+      }
     } catch (error) {
       handleApiError(error)
       throw error
@@ -370,7 +406,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la suppression du véhicule')
       }
@@ -388,7 +424,7 @@ export class VehiclesAPIService {
   async getMeterEntries(vehicleId: string, query?: MeterEntriesQuery): Promise<MeterEntriesResponse> {
     try {
       const params = new URLSearchParams()
-      
+
       if (query) {
         Object.entries(query).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
@@ -406,7 +442,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération des entrées de compteur')
       }
@@ -432,7 +468,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération de l\'entrée de compteur')
       }
@@ -460,7 +496,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la création de l\'entrée de compteur')
       }
@@ -488,7 +524,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la mise à jour de l\'entrée de compteur')
       }
@@ -515,7 +551,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la suppression de l\'entrée de compteur')
       }
@@ -541,7 +577,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération des assignations')
       }
@@ -569,7 +605,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la création de l\'assignation')
       }
@@ -589,7 +625,7 @@ export class VehiclesAPIService {
   async getVehicleExpenses(vehicleId: string, query?: any): Promise<VehicleExpensesResponse> {
     try {
       const params = new URLSearchParams()
-      
+
       if (query) {
         Object.entries(query).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
@@ -607,7 +643,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération des dépenses')
       }
@@ -633,7 +669,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la récupération de la dépense')
       }
@@ -661,7 +697,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la création de la dépense')
       }
@@ -689,7 +725,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la mise à jour de la dépense')
       }
@@ -716,7 +752,7 @@ export class VehiclesAPIService {
       }
 
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Erreur lors de la suppression de la dépense')
       }
