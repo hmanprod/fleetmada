@@ -1,22 +1,44 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Car, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../lib/auth-context';
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import useAuthFlow from '../../components/AuthFlow';
 
 const LoginPage = () => {
   const { login, isLoading, error, clearError } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Activer le flux d'authentification pour gérer les redirections
   useAuthFlow('login');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
+
+  // Récupérer l'erreur depuis l'URL
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const fromParam = searchParams.get('from');
+    
+    if (errorParam) {
+      try {
+        const decodedError = decodeURIComponent(errorParam);
+        setUrlError(decodedError);
+        
+        // Nettoyer l'URL après avoir récupéré l'erreur
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('error');
+        newUrl.searchParams.delete('from');
+        window.history.replaceState({}, '', newUrl.toString());
+      } catch (e) {
+        console.warn('Erreur lors du décodage du message d\'erreur:', e);
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +78,10 @@ const LoginPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-sm border border-gray-200 sm:rounded-lg sm:px-10">
-          {error && (
+          {(error || urlError) && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-red-500" />
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-red-600">{error || urlError}</p>
             </div>
           )}
 
