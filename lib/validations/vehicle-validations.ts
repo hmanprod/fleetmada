@@ -141,3 +141,19 @@ export type CreateVehicleAssignmentInput = z.infer<typeof CreateVehicleAssignmen
 export type UpdateVehicleAssignmentInput = z.infer<typeof UpdateVehicleAssignmentSchema>
 export type CreateExpenseEntryInput = z.infer<typeof CreateExpenseEntrySchema>
 export type UpdateExpenseEntryInput = z.infer<typeof UpdateExpenseEntrySchema>
+
+// Schémas pour les renouvellements
+export const RenewalTypeSchema = z.enum(['REGISTRATION', 'INSURANCE', 'INSPECTION', 'EMISSION_TEST', 'OTHER'])
+export const RenewalStatusSchema = z.enum(['DUE', 'COMPLETED', 'OVERDUE', 'DISMISSED'])
+
+export const CreateVehicleRenewalSchema = z.object({
+  vehicleId: z.string(),
+  type: RenewalTypeSchema,
+  status: RenewalStatusSchema.default('DUE'),
+  dueDate: z.string().datetime(),
+  cost: z.number().min(0).optional(),
+  provider: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export type CreateVehicleRenewalInput = z.infer<typeof CreateVehicleRenewalSchema>

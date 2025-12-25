@@ -170,6 +170,22 @@ async function main() {
         status: 'ACTIVE',
         meterReading: 45670.5,
         userId: adminUser.id,
+        // Specs
+        bodyType: 'Pick-up',
+        width: 1855,
+        height: 1815,
+        length: 5325,
+        interiorVolume: 4000,
+        passengerVolume: 3500,
+        groundClearance: 286,
+        bedLength: 1520,
+        // Financial
+        purchaseVendor: 'Toyota Madagascar',
+        purchaseDate: new Date('2022-03-15'),
+        purchasePrice: 145000000,
+        loanLeaseType: 'Loan',
+        purchaseNotes: 'Acheté neuf, garantie 3 ans',
+
       },
     }),
     prisma.vehicle.create({
@@ -183,6 +199,21 @@ async function main() {
         status: 'ACTIVE',
         meterReading: 32840.2,
         userId: fleetManager.id,
+        // Specs
+        bodyType: 'SUV',
+        width: 1960,
+        height: 1795,
+        length: 5003,
+        interiorVolume: 4500,
+        passengerVolume: 4000,
+        groundClearance: 180,
+        // Financial
+        purchaseVendor: 'Nissan Madagascar',
+        purchaseDate: new Date('2021-06-20'),
+        purchasePrice: 180000000,
+        loanLeaseType: 'Lease',
+        purchaseNotes: 'Leasing sur 4 ans',
+
       },
     }),
     prisma.vehicle.create({
@@ -453,6 +484,167 @@ async function main() {
       },
     }),
   ]);
+
+  // Créer des Parts (Pièces)
+  console.log('⚙️ Création des pièces...');
+  const parts = await Promise.all([
+    prisma.part.create({
+      data: {
+        number: 'P-001',
+        description: 'Filtre à huile',
+        category: 'Filtres',
+        manufacturer: 'Bosch',
+        cost: 25000,
+        quantity: 10,
+        minimumStock: 5,
+      }
+    }),
+    prisma.part.create({
+      data: {
+        number: 'P-002',
+        description: 'Plaquettes de frein avant',
+        category: 'Freinage',
+        manufacturer: 'Brembo',
+        cost: 120000,
+        quantity: 4,
+        minimumStock: 2,
+      }
+    }),
+    prisma.part.create({
+      data: {
+        number: 'P-003',
+        description: 'Huile Moteur 5W30 (Litre)',
+        category: 'Fluides',
+        manufacturer: 'Total',
+        cost: 15000,
+        quantity: 50,
+        minimumStock: 20,
+      }
+    }),
+  ]);
+
+  // Créer des Work Orders (Ordres de travail)
+  console.log('📋 Création des ordres de travail...');
+  const workOrders = await Promise.all([
+    prisma.serviceEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        userId: fleetManager.id,
+        date: new Date('2024-12-26'),
+        status: 'SCHEDULED',
+        isWorkOrder: true,
+        priority: 'HIGH',
+        notes: 'Changement des pneus arrière et équilibrage',
+        totalCost: 25000,
+        vendorId: vendors[1].id,
+        parts: {
+          create: [
+            { partId: parts[0].id, quantity: 1, unitCost: 25000, totalCost: 25000 }
+          ]
+        }
+      },
+    }),
+    prisma.serviceEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        userId: fleetManager.id,
+        date: new Date('2024-12-28'),
+        status: 'IN_PROGRESS',
+        isWorkOrder: true,
+        priority: 'MEDIUM',
+        notes: 'Inspection système électrique',
+        totalCost: 0,
+        vendorId: vendors[0].id,
+      },
+    }),
+  ]);
+
+  // Créer des Service Entry Parts pour l'historique
+  await prisma.serviceEntryPart.create({
+    data: {
+      serviceEntryId: serviceEntries[0].id,
+      partId: parts[2].id, // Huile
+      quantity: 5,
+      unitCost: 15000,
+      totalCost: 75000,
+      notes: '5L Huile 5W30'
+    }
+  });
+  await prisma.serviceEntryPart.create({
+    data: {
+      serviceEntryId: serviceEntries[0].id, // Vidange
+      partId: parts[0].id, // Filtre à huile
+      quantity: 1,
+      unitCost: 25000,
+      totalCost: 25000,
+    }
+  });
+
+  // Créer des Expense Entries (Dépenses)
+  console.log('💰 Création des dépenses...');
+  await Promise.all([
+    prisma.expenseEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        date: new Date('2024-12-05'),
+        type: 'Assurance',
+        source: 'Manuelle',
+        amount: 500000,
+        currency: 'MGA',
+        notes: 'Assurance annuelle',
+        vendorId: vendors[0].id
+      }
+    }),
+    prisma.expenseEntry.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        date: new Date('2024-11-20'),
+        type: 'Lavage',
+        source: 'Manuelle',
+        amount: 25000,
+        currency: 'MGA',
+        notes: 'Lavage complet intérieur/extérieur',
+      }
+    }),
+  ]);
+
+  // Créer des Vehicle Renewals (Renouvellements)
+  console.log('🔄 Création des renouvellements...');
+  await Promise.all([
+    prisma.vehicleRenewal.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        type: 'REGISTRATION',
+        status: 'DUE',
+        dueDate: new Date('2025-06-15'),
+        cost: 150000,
+        provider: 'Centre Immatriculation',
+        notes: 'Renouvellement carte grise'
+      }
+    }),
+    prisma.vehicleRenewal.create({
+      data: {
+        vehicleId: vehicles[0].id,
+        type: 'INSURANCE',
+        status: 'OVERDUE',
+        dueDate: new Date('2024-12-01'),
+        cost: 850000,
+        provider: 'Allianz Madagascar',
+        notes: 'Assurance Tous Risques'
+      }
+    })
+  ]);
+
+  // Ajouter un historique d'assignation (terminée)
+  await prisma.vehicleAssignment.create({
+    data: {
+      vehicleId: vehicles[0].id,
+      operator: 'Ancien Conducteur',
+      startDate: new Date('2023-01-01'),
+      endDate: new Date('2023-12-31'),
+      status: 'INACTIVE'
+    }
+  });
 
   // Créer des issues
   console.log('⚠️ Création des signalements...');

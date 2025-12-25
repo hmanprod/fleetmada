@@ -761,6 +761,158 @@ export class VehiclesAPIService {
       throw error
     }
   }
+  async getWorkOrders(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/work-orders`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch work orders');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching work orders:', error);
+      return [];
+    }
+  }
+
+  async getRenewals(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/renewals`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch renewals');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching renewals:', error);
+      return [];
+    }
+  }
+
+  async getIssues(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/issues`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch issues');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+      return [];
+    }
+  }
+
+  async getFuelEntries(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/fuel-entries`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch fuel entries');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching fuel entries:', error);
+      return [];
+    }
+  }
+
+  async getPartsHistory(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/parts`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch parts history');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching parts history:', error);
+      return [];
+    }
+  }
+  async getServiceHistory(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/service-history`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch service history');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching service history:', error);
+      return [];
+    }
+  }
+
+  async getInspections(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/inspections`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch inspections');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching inspections:', error);
+      return [];
+    }
+  }
+
+  async getServiceReminders(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/service-reminders`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch service reminders');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching service reminders:', error);
+      return [];
+    }
+  }
+
+  async getMeterHistory(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/meter-history`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch meter history');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching meter history:', error);
+      return [];
+    }
+  }
+
+  async getAssignments(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/assignments`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch assignments');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      return [];
+    }
+  }
+
+  async getExpenses(vehicleId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/vehicles/${vehicleId}/expenses`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch expenses');
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      return [];
+    }
+  }
 }
 
 // Instance singleton du service

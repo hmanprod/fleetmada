@@ -81,6 +81,24 @@ model Vehicle {
   status                      VehicleStatus       @default(ACTIVE)
   image                       String?
   meterReading                Float?
+  // Specs
+  bodyType                    String?
+  bodySubtype                 String?
+  msrp                        Float?
+  width                       Float?
+  height                      Float?
+  length                      Float?
+  interiorVolume              Float?
+  passengerVolume             Float?
+  groundClearance             Float?
+  bedLength                   Float?
+  curbWeight                  Float?
+  grossVehicleWeight          Float?
+  towingCapacity              Float?
+  maxPayload                  Float?
+  epaCity                     Float?
+  epaHighway                  Float?
+  epaCombined                 Float?
   // Additional vehicle details
   ownership                   String?
   labels                      String[]
