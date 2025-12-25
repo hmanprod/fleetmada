@@ -162,7 +162,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
       // Calcul des coûts récents (30 derniers jours)
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      
+
       const [fuelCosts, serviceCosts, chargingCosts, expenseCosts] = await Promise.all([
         prisma.fuelEntry.aggregate({
           where: {
@@ -194,10 +194,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         })
       ])
 
-      const recentCosts = (fuelCosts._sum.cost || 0) + 
-                        (serviceCosts._sum.totalCost || 0) + 
-                        (chargingCosts._sum.cost || 0) + 
-                        (expenseCosts._sum.amount || 0)
+      const recentCosts = (fuelCosts._sum.cost || 0) +
+        (serviceCosts._sum.totalCost || 0) +
+        (chargingCosts._sum.cost || 0) +
+        (expenseCosts._sum.amount || 0)
 
       // Récupération des statistiques générales
       const [
@@ -249,6 +249,67 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         primaryMeter: vehicle.primaryMeter,
         fuelUnit: vehicle.fuelUnit,
         measurementUnits: vehicle.measurementUnits,
+        // Specifications - Dimensions
+        bodyType: vehicle.bodyType,
+        bodySubtype: vehicle.bodySubtype,
+        msrp: vehicle.msrp,
+        width: vehicle.width,
+        height: vehicle.height,
+        length: vehicle.length,
+        interiorVolume: vehicle.interiorVolume,
+        passengerVolume: vehicle.passengerVolume,
+        cargoVolume: vehicle.cargoVolume,
+        groundClearance: vehicle.groundClearance,
+        bedLength: vehicle.bedLength,
+        // Specifications - Weight
+        curbWeight: vehicle.curbWeight,
+        grossVehicleWeight: vehicle.grossVehicleWeight,
+        // Specifications - Performance
+        towingCapacity: vehicle.towingCapacity,
+        maxPayload: vehicle.maxPayload,
+        // Specifications - Fuel Economy
+        epaCity: vehicle.epaCity,
+        epaHighway: vehicle.epaHighway,
+        epaCombined: vehicle.epaCombined,
+        // Specifications - Fuel & Oil
+        fuelQuality: vehicle.fuelQuality,
+        fuelTankCapacity: vehicle.fuelTankCapacity,
+        fuelTank2Capacity: vehicle.fuelTank2Capacity,
+        oilCapacity: vehicle.oilCapacity,
+        // Specifications - Engine
+        engineDescription: vehicle.engineDescription,
+        engineBrand: vehicle.engineBrand,
+        engineAspiration: vehicle.engineAspiration,
+        engineBlockType: vehicle.engineBlockType,
+        engineBore: vehicle.engineBore,
+        engineCamType: vehicle.engineCamType,
+        engineCompression: vehicle.engineCompression,
+        engineCylinders: vehicle.engineCylinders,
+        engineDisplacement: vehicle.engineDisplacement,
+        fuelInduction: vehicle.fuelInduction,
+        maxHp: vehicle.maxHp,
+        maxTorque: vehicle.maxTorque,
+        redlineRpm: vehicle.redlineRpm,
+        engineStroke: vehicle.engineStroke,
+        engineValves: vehicle.engineValves,
+        // Specifications - Transmission
+        transmissionDescription: vehicle.transmissionDescription,
+        transmissionBrand: vehicle.transmissionBrand,
+        transmissionType: vehicle.transmissionType,
+        transmissionGears: vehicle.transmissionGears,
+        // Specifications - Wheels & Tires
+        driveType: vehicle.driveType,
+        brakeSystem: vehicle.brakeSystem,
+        frontTrackWidth: vehicle.frontTrackWidth,
+        rearTrackWidth: vehicle.rearTrackWidth,
+        wheelbase: vehicle.wheelbase,
+        frontWheelDiameter: vehicle.frontWheelDiameter,
+        rearWheelDiameter: vehicle.rearWheelDiameter,
+        rearAxleType: vehicle.rearAxleType,
+        frontTireType: vehicle.frontTireType,
+        frontTirePsi: vehicle.frontTirePsi,
+        rearTireType: vehicle.rearTireType,
+        rearTirePsi: vehicle.rearTirePsi,
         // Computed/Other
         group: vehicle.group,
         operator: vehicle.operator,
@@ -275,8 +336,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         updatedAt: vehicle.updatedAt
       }
 
-      logAction('GET Vehicle - Success', userId, { 
-        userId, 
+      logAction('GET Vehicle - Success', userId, {
+        userId,
         vehicleId: vehicle.id,
         vehicleName: vehicle.name
       })
@@ -304,7 +365,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     logAction('GET Vehicle - Server error', userId, {
       vehicleId,
       error: error instanceof Error ? error.message : 'Unknown server error',
@@ -375,8 +436,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const updateData = UpdateVehicleSchema.parse({ ...body, id: vehicleId })
 
-    logAction('PUT Vehicle', userId, { 
-      userId, 
+    logAction('PUT Vehicle', userId, {
+      userId,
       vehicleId,
       updateFields: Object.keys(body)
     })
@@ -400,9 +461,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         })
 
         if (vinExists) {
-          logAction('PUT Vehicle - VIN already exists', userId, { 
+          logAction('PUT Vehicle - VIN already exists', userId, {
             vehicleId,
-            vin: body.vin 
+            vin: body.vin
           })
 
           return NextResponse.json(
@@ -414,7 +475,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
       // Préparation des données de mise à jour
       const updateFields: any = { ...body }
-      
+
       // Conversion des dates
       if (updateFields.inServiceDate) {
         updateFields.inServiceDate = new Date(updateFields.inServiceDate)
@@ -437,8 +498,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         data: updateFields
       })
 
-      logAction('PUT Vehicle - Success', userId, { 
-        userId, 
+      logAction('PUT Vehicle - Success', userId, {
+        userId,
         vehicleId: updatedVehicle.id,
         vehicleName: updatedVehicle.name
       })
@@ -467,7 +528,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('PUT Vehicle - Validation error', userId, {
@@ -567,7 +628,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       const hasIssues = await prisma.issue.count({ where: { vehicleId } })
 
       if (hasFuelEntries > 0 || hasServiceEntries > 0 || hasIssues > 0) {
-        logAction('DELETE Vehicle - Cannot delete vehicle with dependencies', userId, { 
+        logAction('DELETE Vehicle - Cannot delete vehicle with dependencies', userId, {
           vehicleId,
           fuelEntries: hasFuelEntries,
           serviceEntries: hasServiceEntries,
@@ -575,9 +636,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         })
 
         return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Impossible de supprimer ce véhicule car il contient des données importantes (carburant, maintenance, problèmes)' 
+          {
+            success: false,
+            error: 'Impossible de supprimer ce véhicule car il contient des données importantes (carburant, maintenance, problèmes)'
           },
           { status: 409 }
         )
@@ -588,8 +649,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         where: { id: vehicleId }
       })
 
-      logAction('DELETE Vehicle - Success', userId, { 
-        userId, 
+      logAction('DELETE Vehicle - Success', userId, {
+        userId,
         vehicleId,
         vehicleName: vehicle.name
       })
@@ -617,7 +678,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     logAction('DELETE Vehicle - Server error', userId, {
       vehicleId,
       error: error instanceof Error ? error.message : 'Unknown server error',

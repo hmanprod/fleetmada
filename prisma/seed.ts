@@ -57,6 +57,9 @@ async function main() {
   await prisma.serviceTask.deleteMany();
   await prisma.serviceProgram.deleteMany();
   await prisma.place.deleteMany();
+  // New relations added
+  await prisma.photo.deleteMany();
+  await prisma.comment.deleteMany();
   await prisma.user.deleteMany();
   await prisma.company.deleteMany();
 
@@ -170,22 +173,69 @@ async function main() {
         status: 'ACTIVE',
         meterReading: 45670.5,
         userId: adminUser.id,
-        // Specs
+        // Specs - Dimensions
         bodyType: 'Pick-up',
         width: 1855,
         height: 1815,
         length: 5325,
         interiorVolume: 4000,
         passengerVolume: 3500,
+        cargoVolume: 1200,
         groundClearance: 286,
         bedLength: 1520,
+        // Specs - Weight & Performance
+        curbWeight: 2050,
+        grossVehicleWeight: 3210,
+        towingCapacity: 3500,
+        maxPayload: 980,
+        // Specs - Fuel Economy
+        epaCity: 12.5,
+        epaHighway: 9.8,
+        epaCombined: 11.2,
+        // Specs - Fuel & Oil
+        fuelQuality: 'Diesel',
+        fuelTankCapacity: 80,
+        oilCapacity: 7.5,
+        // Specs - Engine
+        engineDescription: '2.8L Turbo Diesel I4',
+        engineBrand: 'Toyota',
+        engineAspiration: 'Turbocharged',
+        engineBlockType: 'Inline',
+        engineBore: 92.0,
+        engineCamType: 'DOHC',
+        engineCompression: '15.6:1',
+        engineCylinders: 4,
+        engineDisplacement: 2.8,
+        fuelInduction: 'Direct Injection',
+        maxHp: 204,
+        maxTorque: 500,
+        redlineRpm: 3400,
+        engineStroke: 103.6,
+        engineValves: 16,
+        // Specs - Transmission
+        transmissionDescription: '6-Speed Automatic',
+        transmissionBrand: 'Aisin',
+        transmissionType: 'Automatic',
+        transmissionGears: 6,
+        // Specs - Wheels & Tires
+        driveType: '4WD',
+        brakeSystem: 'Disc (Front & Rear)',
+        frontTrackWidth: 1535,
+        rearTrackWidth: 1550,
+        wheelbase: 3085,
+        frontWheelDiameter: 18,
+        rearWheelDiameter: 18,
+        rearAxleType: 'Solid Axle',
+        frontTireType: '265/60R18',
+        frontTirePsi: 32,
+        rearTireType: '265/60R18',
+        rearTirePsi: 36,
         // Financial
         purchaseVendor: 'Toyota Madagascar',
         purchaseDate: new Date('2022-03-15'),
         purchasePrice: 145000000,
         loanLeaseType: 'Loan',
         purchaseNotes: 'Acheté neuf, garantie 3 ans',
-
       },
     }),
     prisma.vehicle.create({
@@ -199,21 +249,69 @@ async function main() {
         status: 'ACTIVE',
         meterReading: 32840.2,
         userId: fleetManager.id,
-        // Specs
+        // Specs - Dimensions
         bodyType: 'SUV',
         width: 1960,
         height: 1795,
         length: 5003,
         interiorVolume: 4500,
         passengerVolume: 4000,
+        cargoVolume: 2260,
         groundClearance: 180,
+        bedLength: null,
+        // Specs - Weight & Performance
+        curbWeight: 2025,
+        grossVehicleWeight: 2750,
+        towingCapacity: 2720,
+        maxPayload: 725,
+        // Specs - Fuel Economy
+        epaCity: 10.2,
+        epaHighway: 8.4,
+        epaCombined: 9.4,
+        // Specs - Fuel & Oil
+        fuelQuality: 'Essence 95',
+        fuelTankCapacity: 73,
+        oilCapacity: 5.2,
+        // Specs - Engine
+        engineDescription: '3.5L V6 VQ35DD',
+        engineBrand: 'Nissan',
+        engineAspiration: 'Naturally Aspirated',
+        engineBlockType: 'V6',
+        engineBore: 95.5,
+        engineCamType: 'DOHC',
+        engineCompression: '11.0:1',
+        engineCylinders: 6,
+        engineDisplacement: 3.5,
+        fuelInduction: 'Direct Injection',
+        maxHp: 284,
+        maxTorque: 351,
+        redlineRpm: 6400,
+        engineStroke: 81.4,
+        engineValves: 24,
+        // Specs - Transmission
+        transmissionDescription: '9-Speed Automatic ZF 9HP48',
+        transmissionBrand: 'ZF',
+        transmissionType: 'Automatic',
+        transmissionGears: 9,
+        // Specs - Wheels & Tires
+        driveType: 'AWD',
+        brakeSystem: 'Disc (Front & Rear) with ABS',
+        frontTrackWidth: 1634,
+        rearTrackWidth: 1635,
+        wheelbase: 2900,
+        frontWheelDiameter: 20,
+        rearWheelDiameter: 20,
+        rearAxleType: 'Independent Multi-Link',
+        frontTireType: '255/50R20',
+        frontTirePsi: 35,
+        rearTireType: '255/50R20',
+        rearTirePsi: 35,
         // Financial
         purchaseVendor: 'Nissan Madagascar',
         purchaseDate: new Date('2021-06-20'),
         purchasePrice: 180000000,
         loanLeaseType: 'Lease',
         purchaseNotes: 'Leasing sur 4 ans',
-
       },
     }),
     prisma.vehicle.create({

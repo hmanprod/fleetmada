@@ -74,17 +74,68 @@ export interface Vehicle {
     expenses: number
     assignments: number
   }
-  // Specifications
+  // Specifications - Dimensions
   bodyType?: string
   bodySubtype?: string
   msrp?: number
-  width?: number | string
-  height?: number | string
-  length?: number | string
-  interiorVolume?: number | string
-  passengerVolume?: number | string
-  groundClearance?: number | string
-  bedLength?: number | string
+  width?: number
+  height?: number
+  length?: number
+  interiorVolume?: number
+  passengerVolume?: number
+  cargoVolume?: number
+  groundClearance?: number
+  bedLength?: number
+  // Specifications - Weight
+  curbWeight?: number
+  grossVehicleWeight?: number
+  // Specifications - Performance
+  towingCapacity?: number
+  maxPayload?: number
+  // Specifications - Fuel Economy
+  epaCity?: number
+  epaHighway?: number
+  epaCombined?: number
+  // Specifications - Fuel & Oil
+  fuelQuality?: string
+  fuelTankCapacity?: number
+  fuelTank2Capacity?: number
+  oilCapacity?: number
+  // Specifications - Engine
+  engineDescription?: string
+  engineBrand?: string
+  engineAspiration?: string
+  engineBlockType?: string
+  engineBore?: number
+  engineCamType?: string
+  engineCompression?: string
+  engineCylinders?: number
+  engineDisplacement?: number
+  fuelInduction?: string
+  maxHp?: number
+  maxTorque?: number
+  redlineRpm?: number
+  engineStroke?: number
+  engineValves?: number
+  // Specifications - Transmission
+  transmissionDescription?: string
+  transmissionBrand?: string
+  transmissionType?: string
+  transmissionGears?: number
+  // Specifications - Wheels & Tires
+  driveType?: string
+  brakeSystem?: string
+  frontTrackWidth?: number
+  rearTrackWidth?: number
+  wheelbase?: number
+  frontWheelDiameter?: number
+  rearWheelDiameter?: number
+  rearAxleType?: string
+  frontTireType?: string
+  frontTirePsi?: number
+  rearTireType?: string
+  rearTirePsi?: number
+  // Other
   recentCosts?: number
   createdAt: string
   updatedAt: string

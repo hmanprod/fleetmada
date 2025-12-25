@@ -84,7 +84,7 @@ model Vehicle {
   status                      VehicleStatus       @default(ACTIVE)
   image                       String?
   meterReading                Float?
-  // Specs
+  // Specs - Dimensions
   bodyType                    String?
   bodySubtype                 String?
   msrp                        Float?
@@ -93,15 +93,58 @@ model Vehicle {
   length                      Float?
   interiorVolume              Float?
   passengerVolume             Float?
+  cargoVolume                 Float?
   groundClearance             Float?
   bedLength                   Float?
+  // Specs - Weight
   curbWeight                  Float?
   grossVehicleWeight          Float?
+  // Specs - Performance
   towingCapacity              Float?
   maxPayload                  Float?
+  // Specs - Fuel Economy
   epaCity                     Float?
   epaHighway                  Float?
   epaCombined                 Float?
+  // Specs - Fuel & Oil
+  fuelQuality                 String?
+  fuelTankCapacity            Float?
+  fuelTank2Capacity           Float?
+  oilCapacity                 Float?
+  // Specs - Engine
+  engineDescription           String?
+  engineBrand                 String?
+  engineAspiration            String?
+  engineBlockType             String?
+  engineBore                  Float?
+  engineCamType               String?
+  engineCompression           String?
+  engineCylinders             Int?
+  engineDisplacement          Float?
+  fuelInduction               String?
+  maxHp                       Int?
+  maxTorque                   Int?
+  redlineRpm                  Int?
+  engineStroke                Float?
+  engineValves                Int?
+  // Specs - Transmission
+  transmissionDescription     String?
+  transmissionBrand           String?
+  transmissionType            String?
+  transmissionGears           Int?
+  // Specs - Wheels & Tires
+  driveType                   String?
+  brakeSystem                 String?
+  frontTrackWidth             Float?
+  rearTrackWidth              Float?
+  wheelbase                   Float?
+  frontWheelDiameter          Float?
+  rearWheelDiameter           Float?
+  rearAxleType                String?
+  frontTireType               String?
+  frontTirePsi                Float?
+  rearTireType                String?
+  rearTirePsi                 Float?
   // Additional vehicle details
   ownership                   String?
   labels                      String[]

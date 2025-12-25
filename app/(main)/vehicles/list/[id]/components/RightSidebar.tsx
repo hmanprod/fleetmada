@@ -423,9 +423,9 @@ export function RightSidebar({
                             >
                                 <RefreshCw size={14} />
                             </button>
-                            <button className="text-gray-400 hover:text-gray-600">
+                            {/* <button className="text-gray-400 hover:text-gray-600">
                                 <ExternalLink size={14} />
-                            </button>
+                            </button> */}
                         </div>
                     </div>
 
@@ -837,14 +837,14 @@ export function RightSidebar({
                                         <button className="px-3 py-1.5 bg-white border border-gray-300 rounded text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1">
                                             {labelFilter || 'Etiquettes'} <ChevronDown size={12} />
                                         </button>
-                                        <div className="flex ml-auto border border-gray-300 rounded overflow-hidden">
+                                        {/* <div className="flex ml-auto border border-gray-300 rounded overflow-hidden">
                                             <button className="p-1.5 bg-[#008751] text-white">
                                                 <Grid size={14} />
                                             </button>
                                             <button className="p-1.5 bg-white text-gray-400 hover:bg-gray-50">
                                                 <List size={14} />
                                             </button>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
 
