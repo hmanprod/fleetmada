@@ -330,12 +330,12 @@ export async function POST(request: NextRequest) {
 
     // Extraction des métadonnées
     const metadata = DocumentCreateSchema.parse({
-      attachedTo: formData.get('attachedTo') as string,
-      attachedId: formData.get('attachedId') as string,
-      labels: formData.get('labels') as string,
-      description: formData.get('description') as string,
+      attachedTo: formData.get('attachedTo') as string || undefined,
+      attachedId: formData.get('attachedId') as string || undefined,
+      labels: formData.get('labels') as string || undefined,
+      description: formData.get('description') as string || undefined,
       isPublic: formData.get('isPublic') as string || 'false',
-      companyId: formData.get('companyId') as string
+      companyId: formData.get('companyId') as string || undefined
     });
 
     logAction('POST Documents', userId, {

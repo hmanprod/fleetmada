@@ -22,11 +22,17 @@ export function useVehicleComments(vehicleId: string): UseVehicleCommentsReturn 
   const { token: authToken } = useAuthToken();
 
   const fetchComments = useCallback(async () => {
-    if (!vehicleId) return;
+    if (!vehicleId || !authToken) {
+      console.log('useVehicleComments: Impossible de récupérer les commentaires - vehicleId ou authToken manquant');
+      setError('Authentification requise');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('useVehicleComments: Récupération des commentaires pour vehicleId:', vehicleId);
       
       const response = await fetch(`/api/vehicles/${vehicleId}/comments`, {
         method: 'GET',
@@ -54,6 +60,12 @@ export function useVehicleComments(vehicleId: string): UseVehicleCommentsReturn 
   }, [vehicleId, authToken]);
 
   const addComment = useCallback(async (data: CreateCommentData): Promise<Comment | null> => {
+    if (!authToken) {
+      console.log('useVehicleComments: Impossible d\'ajouter un commentaire - authToken manquant');
+      setError('Authentification requise');
+      return null;
+    }
+
     try {
       setError(null);
       
@@ -103,6 +115,12 @@ export function useVehicleComments(vehicleId: string): UseVehicleCommentsReturn 
   }, [vehicleId, authToken]);
 
   const updateComment = useCallback(async (commentId: string, data: UpdateCommentData): Promise<Comment | null> => {
+    if (!authToken) {
+      console.log('useVehicleComments: Impossible de modifier le commentaire - authToken manquant');
+      setError('Authentification requise');
+      return null;
+    }
+
     try {
       setError(null);
       
@@ -138,6 +156,12 @@ export function useVehicleComments(vehicleId: string): UseVehicleCommentsReturn 
   }, [vehicleId, authToken]);
 
   const deleteComment = useCallback(async (commentId: string): Promise<boolean> => {
+    if (!authToken) {
+      console.log('useVehicleComments: Impossible de supprimer le commentaire - authToken manquant');
+      setError('Authentification requise');
+      return false;
+    }
+
     try {
       setError(null);
       

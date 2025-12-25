@@ -12,8 +12,17 @@ export function useAuthToken() {
     const storedToken = localStorage.getItem('authToken') ||
       document.cookie.match(/authToken=([^;]*)/)?.[1];
 
+    console.log('useAuthToken: Récupération du token depuis storage:', {
+      hasLocalStorageToken: !!localStorage.getItem('authToken'),
+      hasCookieToken: !!document.cookie.match(/authToken=([^;]*)/)?.[1],
+      tokenLength: storedToken?.length || 0
+    });
+
     if (storedToken) {
       setToken(storedToken);
+      console.log('useAuthToken: Token défini avec succès');
+    } else {
+      console.log('useAuthToken: Aucun token trouvé');
     }
     setLoading(false);
   }, []);

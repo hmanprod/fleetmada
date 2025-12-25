@@ -29,6 +29,9 @@ model User {
   notifications   Notification[]
   documents       Document[]
   reports         Report[]
+  comments        Comment[]
+  photos          Photo[]
+  // Settings relations
   // Settings relations
   preferences     UserPreferences?
   securitySettings SecuritySettings?
@@ -178,6 +181,8 @@ model Issue {
   id           String       @id @default(cuid())
   vehicleId    String?
   userId       String
+  // Relation to User is already there
+
   summary      String
   status       IssueStatus  @default(OPEN)
   priority     Priority     @default(MEDIUM)
@@ -195,11 +200,58 @@ model Issue {
 
 model Comment {
   id        String   @id @default(cuid())
-  issueId   String
-  author    String
   content   String
-  createdAt DateTime @default(now())
-  issue     Issue    @relation(fields: [issueId], references: [id])
+  
+  // Polymorphic relations
+  entityType String   @default("issue") // Default to issue for existing
+  entityId   String
+  
+  // Relations
+  userId    String?   // Optional for migration compatibility
+  user      User?     @relation(fields: [userId], references: [id])
+  author    String?   // Keep for compatibility or legacy
+  
+  // Threading
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  
+  // Attachments
+  attachments Json?   // Store file info
+  
+  // Legacy Issue relation
+  issueId   String?
+  issue     Issue?    @relation(fields: [issueId], references: [id])
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([entityType, entityId])
+  @@index([parentId])
+}
+
+model Photo {
+  id           String   @id @default(cuid())
+  entityType   String
+  entityId     String
+  
+  fileName     String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  
+  locationType String?
+  description  String?
+  tags         String[]
+  isPublic     Boolean  @default(false)
+  
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([entityType, entityId])
 }
 
 model IssueImage {

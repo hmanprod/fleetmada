@@ -258,7 +258,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       // Création du commentaire
       const newComment = await prisma.comment.create({
         data: {
-          issueId,
+          entityType: 'issue',
+          entityId: issueId,
           author: commentData.author,
           content: commentData.content
         }

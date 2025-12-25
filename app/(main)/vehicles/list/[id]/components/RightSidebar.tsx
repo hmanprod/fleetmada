@@ -108,14 +108,15 @@ export function RightSidebar({
     } = useVehiclePhotos(vehicleId);
 
     // Mise à jour des filtres photos avec attachedId
-    React.useEffect(() => {
-        setPhotoFilters({
-            ...photoFilters,
-            attachedId: vehicleId,
-            entityType: 'vehicle',
-            entityId: vehicleId
-        });
-    }, [vehicleId, photoFilters, setPhotoFilters]);
+    // Retiré pour éviter la boucle infinie de re-rendus
+    // React.useEffect(() => {
+    //     setPhotoFilters({
+    //         ...photoFilters,
+    //         attachedId: vehicleId,
+    //         entityType: 'vehicle',
+    //         entityId: vehicleId
+    //     });
+    // }, [vehicleId, photoFilters, setPhotoFilters]);
 
     const {
         documents,
@@ -943,8 +944,8 @@ export function RightSidebar({
                         data-testid={`sidebar-${item.id}-btn`}
                         onClick={() => onPanelChange(activePanel === item.id ? null : (item.id as any))}
                         className={`w-10 h-10 rounded flex items-center justify-center relative transition-all duration-200 ${activePanel === item.id
-                                ? 'bg-[#008751] text-white shadow-sm transform scale-105'
-                                : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 hover:text-gray-700 hover:shadow-sm'
+                            ? 'bg-[#008751] text-white shadow-sm transform scale-105'
+                            : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 hover:text-gray-700 hover:shadow-sm'
                             }`}
                         title={item.label}
                     >

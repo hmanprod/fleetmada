@@ -87,12 +87,14 @@ export default function PlaceCreatePage() {
 
     try {
       const result = await geocodeAddress(formData.address);
-      setFormData(prev => ({
-        ...prev,
-        latitude: result.latitude.toString(),
-        longitude: result.longitude.toString(),
-        address: result.formattedAddress
-      }));
+      if (result && typeof result === 'object' && 'latitude' in result && 'longitude' in result) {
+        setFormData(prev => ({
+          ...prev,
+          latitude: (result as any).latitude.toString(),
+          longitude: (result as any).longitude.toString(),
+          address: (result as any).formattedAddress
+        }));
+      }
     } catch (error) {
       console.error('Geocoding failed:', error);
     }

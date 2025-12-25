@@ -38,11 +38,16 @@ export function useVehiclePhotos(vehicleId: string): UseVehiclePhotosReturn {
   const { token: authToken } = useAuthToken();
 
   const fetchPhotos = useCallback(async (currentFilters = filters) => {
-    if (!vehicleId) return;
+    if (!vehicleId || !authToken) {
+      console.log('useVehiclePhotos: Impossible de récupérer les photos - vehicleId ou authToken manquant');
+      setError('Authentification requise');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
+      console.log('useVehiclePhotos: Récupération des photos pour vehicleId:', vehicleId);
 
       const queryParams = new URLSearchParams();
       queryParams.append('entityType', 'vehicle');
@@ -98,6 +103,12 @@ export function useVehiclePhotos(vehicleId: string): UseVehiclePhotosReturn {
   }, [vehicleId, authToken, filters]);
 
   const addPhoto = useCallback(async (data: PhotoUploadData): Promise<Photo | null> => {
+    if (!authToken) {
+      console.log('useVehiclePhotos: Impossible d\'ajouter une photo - authToken manquant');
+      setError('Authentification requise');
+      return null;
+    }
+
     try {
       setError(null);
       setUploading(true);
@@ -166,6 +177,12 @@ export function useVehiclePhotos(vehicleId: string): UseVehiclePhotosReturn {
   }, [vehicleId, authToken]);
 
   const deletePhoto = useCallback(async (photoId: string): Promise<boolean> => {
+    if (!authToken) {
+      console.log('useVehiclePhotos: Impossible de supprimer la photo - authToken manquant');
+      setError('Authentification requise');
+      return false;
+    }
+
     try {
       setError(null);
       
@@ -196,6 +213,12 @@ export function useVehiclePhotos(vehicleId: string): UseVehiclePhotosReturn {
   }, [vehicleId, authToken]);
 
   const updatePhoto = useCallback(async (photoId: string, data: Partial<Photo>): Promise<Photo | null> => {
+    if (!authToken) {
+      console.log('useVehiclePhotos: Impossible de modifier la photo - authToken manquant');
+      setError('Authentification requise');
+      return null;
+    }
+
     try {
       setError(null);
       
