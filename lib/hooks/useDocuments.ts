@@ -49,6 +49,11 @@ export const useDocuments = (initialFilters: DocumentFilters = {}): UseDocuments
       }
     });
 
+    // Ajouter support pour attachedId si fourni
+    if (filtersToUse.attachedId) {
+      params.append('attachedId', filtersToUse.attachedId);
+    }
+
     return params.toString();
   }, []);
 

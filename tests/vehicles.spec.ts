@@ -75,6 +75,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
             const firstRow = page.locator('tbody tr').first();
             await firstRow.click();
             await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
+            await expect(page.getByText('Chargement du véhicule...')).toBeHidden({ timeout: 15000 });
         });
 
         test('Affichage de l\'onglet Overview par défaut', async () => {
@@ -127,6 +128,8 @@ test.describe('Module Véhicules - Tests E2E', () => {
             const firstRow = page.locator('tbody tr').first();
             await firstRow.click();
             await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
+            // Wait for loading to finish
+            await expect(page.getByText('Chargement du véhicule...')).toBeHidden({ timeout: 15000 });
         });
 
         test('Sidebar droite avec Comments, Photos, Documents', async () => {
@@ -134,24 +137,37 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await expect(page.locator('[data-testid="right-sidebar"]')).toBeVisible();
 
             // Comments panel should be active by default
-            await expect(page.locator('text=Comments')).toBeVisible();
+            await expect(page.locator('h3:has-text("Commentaires")')).toBeVisible();
             await expect(page.locator('[data-testid="sidebar-comments-btn"]')).toBeVisible();
         });
 
         test('Basculer entre les panneaux de la sidebar', async () => {
             // Click on Photos button
             await page.click('[data-testid="sidebar-photos-btn"]');
-            await expect(page.locator('text=Photos').first()).toBeVisible();
-            await expect(page.locator('text=Drag and drop files to upload')).toBeVisible();
+            await expect(page.locator('h3:has-text("Photos")')).toBeVisible();
+            await expect(page.locator('[data-testid="upload-area-photos"]')).toBeVisible();
 
             // Click on Documents button
             await page.click('[data-testid="sidebar-documents-btn"]');
-            await expect(page.locator('text=Documents').first()).toBeVisible();
-            await expect(page.locator('text=No documents found')).toBeVisible();
+            await expect(page.locator('h3:has-text("Documents")')).toBeVisible();
+            await expect(page.locator('text=Aucun document trouvé')).toBeVisible();
 
             // Click back on Comments
             await page.click('[data-testid="sidebar-comments-btn"]');
-            await expect(page.locator('input[placeholder="Add a Comment"]')).toBeVisible();
+            await expect(page.locator('input[placeholder="Ajouter un commentaire..."]')).toBeVisible();
+        });
+
+        test('Replier la sidebar', async () => {
+            // Comments is active by default
+            await expect(page.locator('[data-testid="sidebar-panel-content"]')).toBeVisible();
+
+            // Click comments button again to collapse
+            await page.click('[data-testid="sidebar-comments-btn"]');
+            await expect(page.locator('[data-testid="sidebar-panel-content"]')).toBeHidden();
+
+            // Click again to expand
+            await page.click('[data-testid="sidebar-comments-btn"]');
+            await expect(page.locator('[data-testid="sidebar-panel-content"]')).toBeVisible();
         });
     });
 

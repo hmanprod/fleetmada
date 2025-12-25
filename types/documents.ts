@@ -79,6 +79,7 @@ export interface DocumentFilters {
   search?: string;
   mimeType?: string;
   attachedTo?: string;
+  attachedId?: string;
   labels?: string[];
   sortBy?: 'createdAt' | 'updatedAt' | 'fileName' | 'fileSize';
   sortOrder?: 'asc' | 'desc';

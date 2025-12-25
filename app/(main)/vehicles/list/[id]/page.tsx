@@ -307,9 +307,7 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                 <RightSidebar
                     activePanel={activeSidebarPanel}
                     onPanelChange={setActiveSidebarPanel}
-                    newComment={newComment}
-                    onCommentChange={setNewComment}
-                    onAddComment={handleAddComment}
+                    vehicleId={params.id}
                 />
             </div>
 
