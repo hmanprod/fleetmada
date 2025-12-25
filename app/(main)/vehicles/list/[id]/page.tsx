@@ -10,6 +10,11 @@ import { VehicleTabs } from './components/VehicleTabs';
 import { VehicleOverview } from './components/VehicleOverview';
 import { VehicleSpecs } from './components/VehicleSpecs';
 import { VehicleFinancial } from './components/VehicleFinancial';
+import { VehicleRenewals } from './components/VehicleRenewals';
+import { VehicleIssues } from './components/VehicleIssues';
+import { VehicleAssignments } from './components/VehicleAssignments';
+import { VehicleServiceReminders } from './components/VehicleServiceReminders';
+import { VehicleMeterHistory } from './components/VehicleMeterHistory';
 import { DataTable } from './components/DataTable';
 import { ArchiveModal, InspectionFormsModal, ServiceProgramsModal } from './components/Modals';
 import { RightSidebar } from './components/RightSidebar';
@@ -79,31 +84,53 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
             setDataLoading(true);
             const api = new VehiclesAPIService();
             try {
-                const dataMap: Record<string, { setter: keyof typeof dataStates; method: keyof VehiclesAPIService }> = {
-                    'work-orders': { setter: 'workOrders', method: 'getWorkOrders' },
-                    'renewal-reminders': { setter: 'renewals', method: 'getRenewals' },
-                    'issues': { setter: 'issues', method: 'getIssues' },
-                    'fuel-history': { setter: 'fuelEntries', method: 'getFuelEntries' },
-                    'parts-history': { setter: 'partsHistory', method: 'getPartsHistory' },
-                    'inspection-history': { setter: 'inspections', method: 'getInspections' },
-                    'service-reminders': { setter: 'reminders', method: 'getServiceReminders' },
-                    'meter-history': { setter: 'meterHistory', method: 'getMeterHistory' },
-                    'assignment-history': { setter: 'assignments', method: 'getAssignments' },
-                    'expense-history': { setter: 'expenses', method: 'getExpenses' },
-                    'service-history': { setter: 'serviceHistory', method: 'getServiceHistory' },
-                };
-
-                const config = dataMap[activeTab as keyof typeof dataMap];
-                if (config) {
-                    // Simplified approach - just use the specific methods
-                    if (activeTab === 'service-history') {
-                        const data = await api.getServiceHistory(vehicle.id);
-                        setDataStates(prev => ({ ...prev, serviceHistory: data }));
-                    } else if (activeTab === 'work-orders') {
-                        const data = await api.getWorkOrders(vehicle.id);
-                        setDataStates(prev => ({ ...prev, workOrders: data }));
-                    }
-                    // Add other specific methods as needed
+                switch (activeTab) {
+                    case 'service-history':
+                        const serviceData = await api.getServiceHistory(vehicle.id);
+                        setDataStates(prev => ({ ...prev, serviceHistory: serviceData }));
+                        break;
+                    case 'work-orders':
+                        const workOrdersData = await api.getWorkOrders(vehicle.id);
+                        setDataStates(prev => ({ ...prev, workOrders: workOrdersData }));
+                        break;
+                    case 'inspection-history':
+                        const inspectionsData = await api.getInspections(vehicle.id);
+                        setDataStates(prev => ({ ...prev, inspections: inspectionsData }));
+                        break;
+                    case 'service-reminders':
+                        const remindersData = await api.getServiceReminders(vehicle.id);
+                        setDataStates(prev => ({ ...prev, reminders: remindersData }));
+                        break;
+                    case 'renewal-reminders':
+                        const renewalsData = await api.getRenewals(vehicle.id);
+                        setDataStates(prev => ({ ...prev, renewals: renewalsData }));
+                        break;
+                    case 'issues':
+                        const issuesData = await api.getIssues(vehicle.id);
+                        setDataStates(prev => ({ ...prev, issues: issuesData }));
+                        break;
+                    case 'meter-history':
+                        const meterData = await api.getMeterHistory(vehicle.id);
+                        setDataStates(prev => ({ ...prev, meterHistory: meterData }));
+                        break;
+                    case 'fuel-history':
+                        const fuelData = await api.getFuelEntries(vehicle.id);
+                        setDataStates(prev => ({ ...prev, fuelEntries: fuelData }));
+                        break;
+                    case 'assignment-history':
+                        const assignmentsData = await api.getAssignments(vehicle.id);
+                        setDataStates(prev => ({ ...prev, assignments: assignmentsData }));
+                        break;
+                    case 'expense-history':
+                        const expensesData = await api.getExpenses(vehicle.id);
+                        setDataStates(prev => ({ ...prev, expenses: expensesData }));
+                        break;
+                    case 'parts-history':
+                        const partsData = await api.getPartsHistory(vehicle.id);
+                        setDataStates(prev => ({ ...prev, partsHistory: partsData }));
+                        break;
+                    default:
+                        break;
                 }
             } catch (err) {
                 console.error("Error fetching tab data", err);
@@ -211,7 +238,102 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                         )}
                     />
                 );
-            // Add more tab cases as needed
+            case 'inspection-history':
+                return (
+                    <DataTable
+                        title="inspection history"
+                        columns={['Inspection', 'Form', 'Date', 'Meter', 'Status', 'Failed Items', 'Submitted By']}
+                        data={dataStates.inspections || []}
+                        renderRow={(inspection) => (
+                            <tr key={inspection.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap font-medium text-[#008751]">#{inspection.id.slice(-6)}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{inspection.form || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{new Date(inspection.date || inspection.createdAt).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{inspection.meter?.toLocaleString() || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${inspection.status === 'PASSED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {inspection.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">{inspection.failedItems || 0}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{inspection.submittedBy || '-'}</td>
+                            </tr>
+                        )}
+                    />
+                );
+            case 'service-reminders':
+                return <VehicleServiceReminders vehicleId={params.id} data={dataStates.reminders || []} />;
+            case 'renewal-reminders':
+                return <VehicleRenewals vehicleId={params.id} data={dataStates.renewals || []} />;
+            case 'issues':
+                return <VehicleIssues vehicleId={params.id} data={dataStates.issues || []} />;
+            case 'meter-history':
+                return <VehicleMeterHistory vehicleId={params.id} data={dataStates.meterHistory || []} />;
+            case 'fuel-history':
+                return (
+                    <DataTable
+                        title="fuel history"
+                        columns={['Date', 'Quantity', 'Cost', 'Price/Unit', 'Odometer', 'Vendor']}
+                        data={dataStates.fuelEntries || []}
+                        renderRow={(entry) => (
+                            <tr key={entry.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">{new Date(entry.date).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap font-medium">{entry.quantity?.toLocaleString()} L</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{entry.cost?.toLocaleString()} Ar</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{entry.pricePerUnit?.toLocaleString()} Ar/L</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{entry.odometer?.toLocaleString() || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{entry.vendor?.name || '-'}</td>
+                            </tr>
+                        )}
+                    />
+                );
+            case 'assignment-history':
+                return <VehicleAssignments vehicleId={params.id} data={dataStates.assignments || []} />;
+            case 'expense-history':
+                return (
+                    <DataTable
+                        title="expense history"
+                        columns={['Date', 'Type', 'Amount', 'Vendor', 'Reference', 'Notes']}
+                        data={dataStates.expenses || []}
+                        renderRow={(expense) => (
+                            <tr key={expense.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">{new Date(expense.date).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{expense.type || expense.category || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap font-medium">{expense.amount?.toLocaleString()} Ar</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{expense.vendor?.name || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{expense.reference || '-'}</td>
+                                <td className="px-6 py-4">{expense.notes || '-'}</td>
+                            </tr>
+                        )}
+                    />
+                );
+            case 'location-history':
+                return (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                        <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-500">Location tracking requires GPS integration.</p>
+                        <p className="text-sm text-gray-400 mt-1">Connect a GPS device to view location history.</p>
+                    </div>
+                );
+            case 'parts-history':
+                return (
+                    <DataTable
+                        title="parts history"
+                        columns={['Date', 'Part Name', 'Part Number', 'Quantity', 'Unit Cost', 'Total', 'Work Order']}
+                        data={dataStates.partsHistory || []}
+                        renderRow={(part) => (
+                            <tr key={part.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">{new Date(part.date).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap font-medium">{part.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{part.partNumber || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{part.quantity}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{part.unitCost?.toLocaleString() || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap font-medium">{part.totalCost?.toLocaleString() || '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-[#008751]">#{part.workOrderId?.slice(-6) || '-'}</td>
+                            </tr>
+                        )}
+                    />
+                );
             default:
                 return (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
