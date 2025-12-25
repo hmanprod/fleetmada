@@ -5,7 +5,7 @@ import { Search, ExternalLink, ChevronLeft, ChevronRight, Settings } from 'lucid
 
 interface ServiceReminder {
     id: string;
-    serviceTask: string;
+    serviceTask: string | null | undefined;
     status: string;
     nextDue?: string;
     dueMeter?: number;
@@ -26,7 +26,7 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
     const [taskFilter, setTaskFilter] = useState<string>('Service Task');
 
     const filteredData = data.filter(item => {
-        const matchesSearch = item.serviceTask.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (item.serviceTask || '').toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
 
@@ -114,7 +114,7 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                             filteredData.map((item) => (
                                 <tr key={item.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3 text-sm text-[#008751] font-medium underline cursor-pointer">
-                                        {item.serviceTask}
+                                        {item.serviceTask || '—'}
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(item.status)}`}>

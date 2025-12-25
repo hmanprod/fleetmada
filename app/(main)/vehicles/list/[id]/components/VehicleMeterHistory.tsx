@@ -6,9 +6,9 @@ import { Search, ExternalLink, ChevronLeft, ChevronRight, Settings } from 'lucid
 interface MeterEntry {
     id: string;
     date: string;
-    value: number;
+    value: number | null | undefined;
     unit?: string;
-    type: string;
+    type: string | null | undefined;
     void?: boolean;
     autoVoidReason?: string;
     voidStatus?: string;
@@ -29,7 +29,7 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
 
     const filteredData = data.filter(item => {
         const matchesSearch = item.source?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.type.toLowerCase().includes(searchTerm.toLowerCase());
+            (item.type || '').toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
 

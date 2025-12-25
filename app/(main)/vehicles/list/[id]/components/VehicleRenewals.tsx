@@ -7,11 +7,11 @@ interface Renewal {
     id: string;
     date: string;
     future?: boolean;
-    type: string;
-    notes: string;
+    type: string | null | undefined;
+    notes: string | null | undefined;
     vendor?: string;
     source: string;
-    amount: number;
+    amount: number | null | undefined;
 }
 
 interface VehicleRenewalsProps {
@@ -24,8 +24,8 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
     const [filter, setFilter] = useState<'Past/Future' | 'Past' | 'Future'>('Past/Future');
 
     const filteredData = data.filter(item => {
-        const matchesSearch = item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.notes.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (item.type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
 
@@ -97,11 +97,11 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
                                         {new Date(item.date).toLocaleDateString()}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-500">—</td>
-                                    <td className="px-4 py-3 text-sm text-gray-900">{item.type}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-900">{item.notes}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-900">{item.type || '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-900">{item.notes || '—'}</td>
                                     <td className="px-4 py-3 text-sm text-gray-500">—</td>
                                     <td className="px-4 py-3 text-sm text-gray-900">{item.source}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-900">MGA {item.amount.toLocaleString()}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-900">MGA {(item.amount ?? 0).toLocaleString()}</td>
                                 </tr>
                             ))
                         )}
