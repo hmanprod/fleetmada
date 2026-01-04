@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useVehicles } from '@/lib/hooks/useVehicles';
 import { VehiclesAPIService, type Vehicle } from '@/lib/services/vehicles-api';
 import type { VehicleListQuery } from '@/lib/validations/vehicle-validations';
+import { FiltersSidebar } from './components/FiltersSidebar';
+import { type FilterCriterion } from './components/FilterCard';
 
 export default function VehicleList() {
   const router = useRouter();
@@ -26,6 +28,9 @@ export default function VehicleList() {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [vehicleToArchive, setVehicleToArchive] = useState<Vehicle | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
+
+  // État pour la sidebar de filtres
+  const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
 
   const { vehicles, loading, error, fetchVehicles, hasNext, hasPrev, pagination } = useVehicles({
     query: filters,
@@ -49,6 +54,32 @@ export default function VehicleList() {
     setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
   };
 
+  // Gestion de l'application des filtres avancés
+  const handleApplyFilters = (criteria: FilterCriterion[]) => {
+    const newFilters: Partial<VehicleListQuery> = {
+      status: undefined,
+      type: undefined,
+      ownership: undefined,
+      group: undefined,
+      operator: undefined,
+      make: undefined,
+      model: undefined,
+      year: undefined,
+      purchaseVendor: undefined,
+    };
+
+    criteria.forEach(c => {
+      const value = Array.isArray(c.value) ? c.value.join(',') : c.value;
+      if (value) {
+        // @ts-ignore - mapping field string to query key
+        newFilters[c.field] = value;
+      }
+    });
+
+    handleFilter(newFilters);
+    setIsFiltersSidebarOpen(false);
+  };
+
   // Charger plus de véhicules
   const loadMore = () => {
     if (hasNext && !loading) {
@@ -65,15 +96,15 @@ export default function VehicleList() {
 
   const handleConfirmArchive = async () => {
     if (!vehicleToArchive) return;
-    
+
     setIsArchiving(true);
     try {
       const apiService = new VehiclesAPIService();
       await apiService.archiveVehicle(vehicleToArchive.id);
-      
+
       // Rafraîchir la liste des véhicules
       await fetchVehicles();
-      
+
       setIsArchiveModalOpen(false);
       setVehicleToArchive(null);
     } catch (error) {
@@ -146,7 +177,10 @@ export default function VehicleList() {
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50">
+          <button
+            onClick={() => setIsFiltersSidebarOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors"
+          >
             <Filter size={18} /> Filtres
           </button>
         </div>
@@ -190,7 +224,9 @@ export default function VehicleList() {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">{vehicle.name}</div>
-                            <div className="text-xs text-gray-500">{vehicle.vin}</div>
+                            <div className="text-xs text-gray-500">
+                              {vehicle.vin}{vehicle.licensePlate ? ` • ${vehicle.licensePlate}` : ''}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -230,21 +266,21 @@ export default function VehicleList() {
 
                           {/* Dropdown Menu */}
                           <div className="absolute right-0 mt-0 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-20 hidden group-hover:block">
-                            
+
                             <button
                               onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}`); }}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
                               <Eye size={14} /> View
                             </button>
-                            
+
                             <button
                               onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}/edit`); }}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
                               <Settings size={14} /> Edit
                             </button>
-                            
+
                             <button
                               onClick={(e) => handleArchiveClick(vehicle, e)}
                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -294,7 +330,7 @@ export default function VehicleList() {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">Confirmer l'archivage</h3>
-              <button 
+              <button
                 onClick={handleCancelArchive}
                 className="text-gray-400 hover:text-gray-600"
                 disabled={isArchiving}
@@ -341,6 +377,13 @@ export default function VehicleList() {
           </div>
         </div>
       )}
+
+      {/* Sidebar de Filtres */}
+      <FiltersSidebar
+        isOpen={isFiltersSidebarOpen}
+        onClose={() => setIsFiltersSidebarOpen(false)}
+        onApply={handleApplyFilters}
+      />
     </div>
   );
 }

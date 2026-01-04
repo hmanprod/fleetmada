@@ -61,6 +61,8 @@ export interface Vehicle {
   // Computed/Other
   group?: string
   operator?: string
+  licensePlate?: string
+  passengerCount?: number
   lastMeterReading?: number
   lastMeterDate?: string
   lastMeterUnit?: string

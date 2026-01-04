@@ -40,12 +40,12 @@ interface DataTableProps {
     searchPlaceholder?: string;
 }
 
-export function DataTable({ 
-    title, 
-    columns, 
-    data, 
-    renderRow, 
-    searchPlaceholder = "Search" 
+export function DataTable({
+    title,
+    columns,
+    data,
+    renderRow,
+    searchPlaceholder = "Search"
 }: DataTableProps) {
     return (
         <div className="space-y-4">
@@ -62,7 +62,7 @@ export function DataTable({
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
                     <TableHeader columns={columns} />
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {data.length === 0 ? (
+                        {!data || !Array.isArray(data) || data.length === 0 ? (
                             <tr>
                                 <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500">
                                     <div className="space-y-2">

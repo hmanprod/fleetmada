@@ -30,6 +30,7 @@ const DocumentListQuerySchema = z.object({
   search: z.string().optional(),
   mimeType: z.string().optional(),
   attachedTo: z.string().optional(),
+  attachedId: z.string().optional(),
   labels: z.string().optional(),
   sortBy: z.enum(['createdAt', 'updatedAt', 'fileName', 'fileSize']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc')
@@ -192,6 +193,7 @@ export async function GET(request: NextRequest) {
           searchFilters,
           query.mimeType ? { mimeType: { contains: query.mimeType } } : {},
           query.attachedTo ? { attachedTo: query.attachedTo } : {},
+          query.attachedId ? { attachedId: query.attachedId } : {},
           query.labels ? { labels: { hasSome: query.labels.split(',').map((l: string) => l.trim()) } } : {}
         ].filter(condition => Object.keys(condition).length > 0)
       };

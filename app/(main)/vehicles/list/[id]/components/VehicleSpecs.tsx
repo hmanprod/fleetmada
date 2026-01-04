@@ -63,12 +63,18 @@ export function VehicleSpecs({ vehicle }: VehicleSpecsProps) {
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left Column */}
                 <div>
+                    <Section title="Identification">
+                        <DetailRow label="VIN" value={vehicle.vin} />
+                        <DetailRow label="Plaque d'immatriculation" value={vehicle.licensePlate} />
+                        <DetailRow label="Compteur actuel" value={formatNumber(vehicle.meterReading, ` ${vehicle.primaryMeter || 'mi'}`)} />
+                    </Section>
+
                     <Section title="Dimensions">
                         <DetailRow label="Width" value={formatNumber(vehicle.width, ' mm')} />
                         <DetailRow label="Height" value={formatNumber(vehicle.height, ' mm')} />
                         <DetailRow label="Length" value={formatNumber(vehicle.length, ' mm')} />
                         <DetailRow label="Interior Volume" value={formatNumber(vehicle.interiorVolume, ' L')} />
-                        <DetailRow label="Passenger Volume" value={formatNumber(vehicle.passengerVolume, ' L')} />
+                        <DetailRow label="Nombre de passagers" value={vehicle.passengerCount} />
                         <DetailRow label="Cargo Volume" value={formatNumber(vehicle.cargoVolume, ' L')} />
                         <DetailRow label="Ground Clearance" value={formatNumber(vehicle.groundClearance, ' mm')} />
                         <DetailRow label="Bed Length" value={formatNumber(vehicle.bedLength, ' mm')} />

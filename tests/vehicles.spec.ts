@@ -85,21 +85,21 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await expect(overviewTab).toHaveClass(/text-\[#008751\]/);
 
             // Details section should be visible
-            await expect(page.locator('text=Details')).toBeVisible();
+            await expect(page.locator('text=Détails')).toBeVisible();
         });
 
         test('Navigation entre les onglets principaux', async () => {
             // Click on Specs tab
             await page.click('[data-testid="tab-specs"]');
-            await expect(page.locator('text=Specifications')).toBeVisible();
+            await expect(page.locator('text=Spécifications')).toBeVisible();
 
             // Click on Financial tab
             await page.click('[data-testid="tab-financial"]');
-            await expect(page.locator('text=Purchase & Financial')).toBeVisible();
+            await expect(page.locator('text=Achat et financier')).toBeVisible();
 
             // Click on Service History tab
             await page.click('[data-testid="tab-service-history"]');
-            await expect(page.locator('th:has-text("Work Order")')).toBeVisible();
+            await expect(page.locator('th:has-text("Ordre de travail")')).toBeVisible();
 
             // Click on Inspection History tab
             await page.click('[data-testid="tab-inspection-history"]');
@@ -111,14 +111,14 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await page.click('[data-testid="more-tabs-button"]');
 
             // Verify dropdown items are visible
-            await expect(page.locator('text=Renewal Reminders')).toBeVisible();
-            await expect(page.locator('text=Issues')).toBeVisible();
-            await expect(page.locator('text=Meter History')).toBeVisible();
-            await expect(page.locator('text=Fuel History')).toBeVisible();
+            await expect(page.locator('text=Rappels de renouvellement')).toBeVisible();
+            await expect(page.locator('text=Problèmes')).toBeVisible();
+            await expect(page.locator('text=Historique des compteurs')).toBeVisible();
+            await expect(page.locator('text=Historique du carburant')).toBeVisible();
 
             // Click on Fuel History
-            await page.click('text=Fuel History');
-            await expect(page.locator('th:has-text("Fuel Economy")')).toBeVisible();
+            await page.click('text=Historique du carburant');
+            await expect(page.locator('th:has-text("Économie de carburant")')).toBeVisible();
         });
     });
 
@@ -180,7 +180,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await expect(page.locator('h1')).toContainText(/affectations|assignments/i);
 
             // Vérifier la présence du bouton de nouvelle affectation
-            const addButton = page.locator('button:has-text("Add Assignment")');
+            const addButton = page.locator('button:has-text("Ajouter une affectation")');
             await expect(addButton).toBeVisible();
         });
     });
@@ -225,6 +225,32 @@ test.describe('Module Véhicules - Tests E2E', () => {
             // Vérifier la présence de graphiques ou tableaux
             // Vérifier la présence de graphiques ou tableaux
             await expect(page.locator('.recharts-responsive-container, .recharts-wrapper').first()).toBeVisible();
+        });
+    });
+
+    test.describe('Création de véhicule', () => {
+        test('Création complète d\'un nouveau véhicule', async () => {
+            await page.goto('/vehicles/list/create');
+            await expect(page).toHaveURL(/\/vehicles\/list\/create/);
+
+            const vehicleName = `Test Vehicle ${randomSuffix}`;
+            const vehicleVin = `VIN${randomSuffix}`;
+
+            // Fill Identification tab
+            await page.fill('input[placeholder="Entrez un surnom..."]', vehicleName);
+            await page.fill('label:has-text("VIN/SN") + input', vehicleVin);
+            await page.fill('label:has-text("Année") + input', '2024');
+            await page.fill('label:has-text("Marque") + input', 'Toyota');
+            await page.fill('label:has-text("Modèle") + input', 'Corolla');
+
+            await page.selectOption('select:near(label:has-text("Type"))', { label: 'Voiture' });
+
+            // Click Save
+            await page.click('button:has-text("Enregistrer")');
+
+            // Verify success and redirection
+            await expect(page).toHaveURL(/\/vehicles\/list\/[a-zA-Z0-9]+/, { timeout: 30000 });
+            await expect(page.locator('h1')).toContainText(vehicleName);
         });
     });
 

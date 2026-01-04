@@ -1,0 +1,327 @@
+
+> fleetmada-next@0.1.0 build
+> next build
+
+   ▲ Next.js 14.1.0
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+Compiler edge-server unexpectedly exited with code: null and signal: SIGTERM
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/108) ...
+[Verify User API] Erreur: ex [Error]: Dynamic server usage: Page couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.eP [as staticGenerationBailout] (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29358)
+    at i (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34692)
+    at Object.get (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34788)
+    at l (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/.next/server/app/api/auth/verify-user/route.js:1:563)
+    at /Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:42490
+    at /Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/server/lib/trace/tracer.js:133:36
+    at NoopContextManager.with (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:7062)
+    at ContextAPI.with (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:518)
+    at NoopTracer.startActiveSpan (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18093)
+    at ProxyTracer.startActiveSpan (/Users/heryr/Desktop/HTTPDOCS/fleetmada/web-nextjs/node_modules/next/dist/compiled/@opentelemetry/api/index.js:1:18854) {
+  description: "Page couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+   Generating static pages (27/108) 
+   Generating static pages (54/108) 
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/login". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/login". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/inspections/schedules". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/inspections/schedules". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/documents/upload". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/documents/upload". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/fuel/history". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/fuel/history". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/fuel/charging/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/fuel/charging/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/contacts/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/contacts/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/inspections/forms". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/inspections/forms". Read more: https://nextjs.org/docs/messages/prerender-error
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/issues/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/issues/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/onboarding". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/onboarding". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/documents". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/documents". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/inspections". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/inspections". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/contacts". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/contacts". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/fuel/charging". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/fuel/charging". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/inspections/history/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/inspections/history/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/reminders/vehicle-renewals/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/reminders/vehicle-renewals/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/reminders/service/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/reminders/service/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/inspections/forms/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/inspections/forms/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/places/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/places/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/parts". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/parts". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/places". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/places". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/fuel/history/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/fuel/history/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/issues". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/issues". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/history/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/history/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+   Generating static pages (81/108) 
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/reminders/vehicle-renewals". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/reminders/vehicle-renewals". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/history". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/history". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/reminders/service". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/reminders/service". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/dashboard". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/dashboard". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/settings/login-password". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/settings/login-password". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/parts/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/parts/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/work-orders/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/work-orders/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/inspections/history". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/inspections/history". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/reports". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/reports". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/tasks". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/tasks". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/programs/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/programs/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/programs". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/programs". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/tasks/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/tasks/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/expense". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/expense". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/assignments". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/assignments". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/settings/user-profile". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/settings/user-profile". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/settings/general". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/settings/general". Read more: https://nextjs.org/docs/messages/prerender-error
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/list/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/list/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/expense/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/expense/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/service/work-orders". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/service/work-orders". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/list". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/list". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/meter-history". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/meter-history". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vendors/create". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vendors/create". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vendors". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vendors". Read more: https://nextjs.org/docs/messages/prerender-error
+
+
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/vehicles/replacement". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+
+Error occurred prerendering page "/vehicles/replacement". Read more: https://nextjs.org/docs/messages/prerender-error
+
+ ✓ Generating static pages (108/108) 
+
+> Export encountered errors on following paths:
+	/(auth)/login/page: /login
+	/(auth)/onboarding/page: /onboarding
+	/(main)/contacts/create/page: /contacts/create
+	/(main)/contacts/page: /contacts
+	/(main)/dashboard/page: /dashboard
+	/(main)/documents/page: /documents
+	/(main)/documents/upload/page: /documents/upload
+	/(main)/fuel/charging/create/page: /fuel/charging/create
+	/(main)/fuel/charging/page: /fuel/charging
+	/(main)/fuel/history/create/page: /fuel/history/create
+	/(main)/fuel/history/page: /fuel/history
+	/(main)/inspections/forms/create/page: /inspections/forms/create
+	/(main)/inspections/forms/page: /inspections/forms
+	/(main)/inspections/history/create/page: /inspections/history/create
+	/(main)/inspections/history/page: /inspections/history
+	/(main)/inspections/page: /inspections
+	/(main)/inspections/schedules/page: /inspections/schedules
+	/(main)/issues/create/page: /issues/create
+	/(main)/issues/page: /issues
+	/(main)/parts/create/page: /parts/create
+	/(main)/parts/page: /parts
+	/(main)/places/create/page: /places/create
+	/(main)/places/page: /places
+	/(main)/reminders/service/create/page: /reminders/service/create
+	/(main)/reminders/service/page: /reminders/service
+	/(main)/reminders/vehicle-renewals/create/page: /reminders/vehicle-renewals/create
+	/(main)/reminders/vehicle-renewals/page: /reminders/vehicle-renewals
+	/(main)/reports/page: /reports
+	/(main)/service/history/create/page: /service/history/create
+	/(main)/service/history/page: /service/history
+	/(main)/service/page: /service
+	/(main)/service/programs/create/page: /service/programs/create
+	/(main)/service/programs/page: /service/programs
+	/(main)/service/tasks/create/page: /service/tasks/create
+	/(main)/service/tasks/page: /service/tasks
+	/(main)/service/work-orders/create/page: /service/work-orders/create
+	/(main)/service/work-orders/page: /service/work-orders
+	/(main)/settings/general/page: /settings/general
+	/(main)/settings/login-password/page: /settings/login-password
+	/(main)/settings/user-profile/page: /settings/user-profile
+	/(main)/vehicles/assignments/page: /vehicles/assignments
+	/(main)/vehicles/expense/create/page: /vehicles/expense/create
+	/(main)/vehicles/expense/page: /vehicles/expense
+	/(main)/vehicles/list/create/page: /vehicles/list/create
+	/(main)/vehicles/list/page: /vehicles/list
+	/(main)/vehicles/meter-history/page: /vehicles/meter-history
+	/(main)/vehicles/replacement/page: /vehicles/replacement
+	/(main)/vendors/create/page: /vendors/create
+	/(main)/vendors/page: /vendors

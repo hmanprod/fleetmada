@@ -50,8 +50,14 @@ export function VehicleHeader({
                                 <span>{vehicle.type}</span>
                                 <span>•</span>
                                 <span>{vehicle.year} {vehicle.make} {vehicle.model}</span>
+                                {vehicle.licensePlate && (
+                                    <>
+                                        <span>•</span>
+                                        <span className="font-medium text-gray-700">{vehicle.licensePlate}</span>
+                                    </>
+                                )}
                                 <span>•</span>
-                                <span className="text-[#008751] underline">{vehicle.lastMeterReading?.toLocaleString() || '0'} {vehicle.lastMeterUnit || 'mi'}</span>
+                                <span className="text-[#008751] underline">{(vehicle.meterReading || vehicle.lastMeterReading || 0).toLocaleString()} {vehicle.primaryMeter || vehicle.lastMeterUnit || 'mi'}</span>
                                 <span>•</span>
                                 {getStatusBadge(vehicle.status)}
                             </div>

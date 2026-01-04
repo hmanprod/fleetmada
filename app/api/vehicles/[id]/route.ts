@@ -229,7 +229,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         labels: vehicle.labels || [],
         serviceProgram: vehicle.serviceProgram,
         image: vehicle.image,
+        licensePlate: vehicle.licensePlate,
         meterReading: vehicle.meterReading,
+        passengerCount: vehicle.passengerCount,
         // Lifecycle
         inServiceDate: vehicle.inServiceDate,
         inServiceOdometer: vehicle.inServiceOdometer,
@@ -473,24 +475,42 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         }
       }
 
-      // Préparation des données de mise à jour
-      const updateFields: any = { ...body }
+      // Préparation des données de mise à jour - Seuls les champs valides pour Prisma
+      const validFields = [
+        'name', 'vin', 'type', 'year', 'make', 'model', 'status', 'image', 'meterReading',
+        'bodyType', 'bodySubtype', 'msrp', 'width', 'height', 'length', 'interiorVolume',
+        'passengerVolume', 'cargoVolume', 'groundClearance', 'bedLength', 'curbWeight',
+        'grossVehicleWeight', 'towingCapacity', 'maxPayload', 'epaCity', 'epaHighway',
+        'epaCombined', 'fuelQuality', 'fuelTankCapacity', 'fuelTank2Capacity', 'oilCapacity',
+        'engineDescription', 'engineBrand', 'engineAspiration', 'engineBlockType',
+        'engineBore', 'engineCamType', 'engineCompression', 'engineCylinders',
+        'engineDisplacement', 'fuelInduction', 'maxHp', 'maxTorque', 'redlineRpm',
+        'engineStroke', 'engineValves', 'transmissionDescription', 'transmissionBrand',
+        'transmissionType', 'transmissionGears', 'driveType', 'brakeSystem',
+        'frontTrackWidth', 'rearTrackWidth', 'wheelbase', 'frontWheelDiameter',
+        'rearWheelDiameter', 'rearAxleType', 'frontTireType', 'frontTirePsi',
+        'rearTireType', 'rearTirePsi', 'ownership', 'labels', 'serviceProgram',
+        'inServiceDate', 'inServiceOdometer', 'estimatedServiceLifeMonths',
+        'estimatedServiceLifeMiles', 'estimatedResaleValue', 'outOfServiceDate',
+        'outOfServiceOdometer', 'purchaseVendor', 'purchaseDate', 'purchasePrice',
+        'purchaseOdometer', 'purchaseNotes', 'loanLeaseType', 'primaryMeter',
+        'fuelUnit', 'measurementUnits', 'group', 'operator', 'licensePlate', 'passengerCount'
+      ];
 
-      // Conversion des dates
-      if (updateFields.inServiceDate) {
-        updateFields.inServiceDate = new Date(updateFields.inServiceDate)
-      }
-      if (updateFields.purchaseDate) {
-        updateFields.purchaseDate = new Date(updateFields.purchaseDate)
-      }
-      if (updateFields.outOfServiceDate) {
-        updateFields.outOfServiceDate = new Date(updateFields.outOfServiceDate)
-      }
+      const updateFields: any = {};
 
-      // Suppression des champs non modifiables
-      delete updateFields.id
-      delete updateFields.userId
-      delete updateFields.createdAt
+      Object.keys(body).forEach(key => {
+        if (validFields.includes(key)) {
+          let value = body[key];
+
+          // Conversion des dates
+          if (['inServiceDate', 'purchaseDate', 'outOfServiceDate'].includes(key) && value) {
+            updateFields[key] = new Date(value);
+          } else {
+            updateFields[key] = value;
+          }
+        }
+      });
 
       // Mise à jour du véhicule
       const updatedVehicle = await prisma.vehicle.update({

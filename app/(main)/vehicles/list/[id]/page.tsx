@@ -56,24 +56,24 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
 
     // Tabs configuration
     const visibleTabs = [
-        { id: 'overview', label: 'Overview' },
-        { id: 'specs', label: 'Specs' },
-        { id: 'financial', label: 'Financial' },
-        { id: 'service-history', label: 'Service History' },
-        { id: 'inspection-history', label: 'Inspection History' },
-        { id: 'work-orders', label: 'Work Orders' },
-        { id: 'service-reminders', label: 'Service Reminders' },
+        { id: 'overview', label: 'Aperçu' },
+        { id: 'specs', label: 'Spécifications' },
+        { id: 'financial', label: 'Financier' },
+        { id: 'service-history', label: 'Historique de service' },
+        { id: 'inspection-history', label: 'Historique d\'inspection' },
+        { id: 'work-orders', label: 'Ordres de travail' },
+        { id: 'service-reminders', label: 'Rappels de service' },
     ];
 
     const moreTabs = [
-        { id: 'renewal-reminders', label: 'Renewal Reminders', icon: Calendar },
-        { id: 'issues', label: 'Issues', icon: AlertTriangle },
-        { id: 'meter-history', label: 'Meter History', icon: Activity },
-        { id: 'fuel-history', label: 'Fuel History', icon: Fuel },
-        { id: 'assignment-history', label: 'Assignment History', icon: History },
-        { id: 'expense-history', label: 'Expense History', icon: DollarSign },
-        { id: 'location-history', label: 'Location History', icon: MapPin },
-        { id: 'parts-history', label: 'Parts History', icon: Package },
+        { id: 'renewal-reminders', label: 'Rappels de renouvellement', icon: Calendar },
+        { id: 'issues', label: 'Problèmes', icon: AlertTriangle },
+        { id: 'meter-history', label: 'Historique des compteurs', icon: Activity },
+        { id: 'fuel-history', label: 'Historique du carburant', icon: Fuel },
+        { id: 'assignment-history', label: 'Historique des affectations', icon: History },
+        { id: 'expense-history', label: 'Historique des dépenses', icon: DollarSign },
+        { id: 'location-history', label: 'Historique de localisation', icon: MapPin },
+        { id: 'parts-history', label: 'Historique des pièces', icon: Package },
     ];
 
     // Fetch data based on active tab
@@ -200,22 +200,22 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                 return (
                     <DataTable
                         title="historique de service"
-                        columns={['Work Order', 'Actual Completion Date', 'Meter', 'Service Tasks', 'Issues', 'Vendor', 'Labels', 'Total']}
+                        columns={['Ordre de travail', 'Date de fin effective', 'Compteur', 'Tâches de service', 'Problèmes', 'Fournisseur', 'Étiquettes', 'Total']}
                         data={dataStates.serviceHistory}
                         renderRow={(entry) => (
                             <tr key={entry.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap font-medium text-[#008751]">#{entry.id.slice(-6)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{new Date(entry.date).toLocaleDateString()}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{entry.meter?.toLocaleString()}</td>
-                                <td className="px-6 py-4">{entry.tasks?.length || 0} tasks</td>
-                                <td className="px-6 py-4">{entry.issues?.length || 0} issues</td>
+                                <td className="px-6 py-4">{entry.tasks?.length || 0} tâches</td>
+                                <td className="px-6 py-4">{entry.issues?.length || 0} problèmes</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{entry.vendor?.name || '-'}</td>
                                 <td className="px-6 py-4 flex gap-1">
                                     {entry.labels?.map((label: string, i: number) => (
                                         <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{label}</span>
                                     ))}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap font-medium">{(entry.totalCost || 0).toLocaleString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap font-medium">{(entry.totalCost || 0).toLocaleString()} Ar</td>
                             </tr>
                         )}
                     />
@@ -223,15 +223,15 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
             case 'work-orders':
                 return (
                     <DataTable
-                        title="work orders"
-                        columns={['ID', 'Status', 'Priority', 'Assigned To', 'Due Date', 'Description']}
+                        title="ordres de travail"
+                        columns={['ID', 'Statut', 'Priorité', 'Assigné à', 'Date d\'échéance', 'Description']}
                         data={dataStates.workOrders}
                         renderRow={(workOrder) => (
                             <tr key={workOrder.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap font-medium text-[#008751]">#{workOrder.id.slice(-6)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{workOrder.status}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{workOrder.priority}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{workOrder.assignedTo || 'Unassigned'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{workOrder.assignedTo || 'Non assigné'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{workOrder.dueDate ? new Date(workOrder.dueDate).toLocaleDateString() : '-'}</td>
                                 <td className="px-6 py-4">{workOrder.description}</td>
                             </tr>
@@ -241,8 +241,8 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
             case 'inspection-history':
                 return (
                     <DataTable
-                        title="inspection history"
-                        columns={['Inspection', 'Form', 'Date', 'Meter', 'Status', 'Failed Items', 'Submitted By']}
+                        title="historique d'inspection"
+                        columns={['Inspection', 'Formulaire', 'Date', 'Compteur', 'Statut', 'Éléments échoués', 'Soumis par']}
                         data={dataStates.inspections || []}
                         renderRow={(inspection) => (
                             <tr key={inspection.id} className="hover:bg-gray-50">
@@ -252,7 +252,7 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                                 <td className="px-6 py-4 whitespace-nowrap">{inspection.meter?.toLocaleString() || '-'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${inspection.status === 'PASSED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                        {inspection.status}
+                                        {inspection.status === 'PASSED' ? 'RÉUSSI' : 'ÉCHOUÉ'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">{inspection.failedItems || 0}</td>
@@ -272,8 +272,8 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
             case 'fuel-history':
                 return (
                     <DataTable
-                        title="fuel history"
-                        columns={['Date', 'Quantity', 'Cost', 'Price/Unit', 'Odometer', 'Vendor']}
+                        title="historique du carburant"
+                        columns={['Date', 'Quantité', 'Coût', 'Prix/Unité', 'Odomètre', 'Fournisseur']}
                         data={dataStates.fuelEntries || []}
                         renderRow={(entry) => (
                             <tr key={entry.id} className="hover:bg-gray-50">
@@ -292,8 +292,8 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
             case 'expense-history':
                 return (
                     <DataTable
-                        title="expense history"
-                        columns={['Date', 'Type', 'Amount', 'Vendor', 'Reference', 'Notes']}
+                        title="historique des dépenses"
+                        columns={['Date', 'Type', 'Montant', 'Fournisseur', 'Référence', 'Notes']}
                         data={dataStates.expenses || []}
                         renderRow={(expense) => (
                             <tr key={expense.id} className="hover:bg-gray-50">
@@ -311,15 +311,15 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                 return (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
                         <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-500">Location tracking requires GPS integration.</p>
-                        <p className="text-sm text-gray-400 mt-1">Connect a GPS device to view location history.</p>
+                        <p className="text-gray-500">Le suivi de localisation nécessite une intégration GPS.</p>
+                        <p className="text-sm text-gray-400 mt-1">Connectez un appareil GPS pour voir l'historique de localisation.</p>
                     </div>
                 );
             case 'parts-history':
                 return (
                     <DataTable
-                        title="parts history"
-                        columns={['Date', 'Part Name', 'Part Number', 'Quantity', 'Unit Cost', 'Total', 'Work Order']}
+                        title="historique des pièces"
+                        columns={['Date', 'Nom de la pièce', 'Numéro de pièce', 'Quantité', 'Coût unitaire', 'Total', 'Ordre de travail']}
                         data={dataStates.partsHistory || []}
                         renderRow={(part) => (
                             <tr key={part.id} className="hover:bg-gray-50">

@@ -45,6 +45,8 @@ export const CreateVehicleSchema = z.object({
   // Computed/Other
   group: z.string().optional(),
   operator: z.string().optional(),
+  licensePlate: z.string().optional(),
+  passengerCount: z.number().int().min(0).optional(),
 })
 
 // Schéma pour la mise à jour d'un véhicule
@@ -57,11 +59,15 @@ export const VehicleListQuerySchema = z.object({
   page: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1)).default('1'),
   limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(100)).default('10'),
   search: z.string().optional(),
-  status: VehicleStatusSchema.optional(),
-  type: z.string().optional(),
-  ownership: OwnershipSchema.optional(),
+  status: z.string().optional(), // Can be multiple ACTIVE,MAINTENANCE
+  type: z.string().optional(),   // Can be multiple Voiture,Camion
+  ownership: z.string().optional(),
   group: z.string().optional(),
   operator: z.string().optional(),
+  make: z.string().optional(),
+  model: z.string().optional(),
+  year: z.string().optional(), // Can be multiple 2021,2022 or range? Let's start with multiple
+  purchaseVendor: z.string().optional(),
   sortBy: z.enum(['name', 'year', 'status', 'createdAt', 'updatedAt']).default('name'),
   sortOrder: z.enum(['asc', 'desc']).default('asc'),
 })

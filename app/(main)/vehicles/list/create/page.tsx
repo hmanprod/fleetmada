@@ -49,12 +49,43 @@ export default function CreateVehicle() {
                 return;
             }
 
-            // Préparation des données pour l'API
-            const vehicleData = {
+            // Préparation et nettoyage des données pour l'API
+            // On filtre les chaînes vides, null, et undefined pour les champs optionnels
+            // Zod attend soit une valeur valide (ex: datetime), soit undefined, mais pas null ou chaine vide
+            const cleanData = (obj: any) => {
+                const cleaned: any = {};
+                Object.keys(obj).forEach(key => {
+                    let value = obj[key];
+
+                    // Si c'est une chaîne vide, null ou undefined, on omet le champ
+                    if (value === '' || value === null || value === undefined) {
+                        return;
+                    }
+
+                    // Traitement spécial pour les dates attendues par Zod .datetime()
+                    // Les inputs HTML renvoient YYYY-MM-DD, Zod attend ISO string
+                    if (['inServiceDate', 'outOfServiceDate', 'purchaseDate'].includes(key) && typeof value === 'string' && value.length === 10) {
+                        value = `${value}T00:00:00Z`;
+                    }
+
+                    if (key === 'year') {
+                        cleaned[key] = Number(value);
+                    } else if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+                        const child = cleanData(value);
+                        if (Object.keys(child).length > 0) cleaned[key] = child;
+                    } else {
+                        cleaned[key] = value;
+                    }
+                });
+                return cleaned;
+            };
+
+            const vehicleData = cleanData({
                 ...formData,
-                year: Number(formData.year),
                 labels: formData.labels || [],
-            } as CreateVehicleInput;
+            }) as CreateVehicleInput;
+
+            console.log('Données envoyées à l\'API:', vehicleData);
 
             const newVehicle = await createVehicle(vehicleData);
             setSaveStatus('success');
@@ -64,9 +95,22 @@ export default function CreateVehicle() {
                 router.push(`/vehicles/list/${newVehicle.id}`);
             }, 1000);
 
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erreur lors de la création du véhicule:', err);
             setSaveStatus('error');
+            // Si l'erreur vient de la validation API (Zod), on pourrait tenter de l'afficher
+            if (err.details) {
+                try {
+                    const details = JSON.parse(err.details);
+                    const apiErrors: Record<string, string> = {};
+                    details.forEach((d: any) => {
+                        apiErrors[d.path.join('.')] = d.message;
+                    });
+                    setValidationErrors(prev => ({ ...prev, ...apiErrors }));
+                } catch (e) {
+                    // Ignorer si le parse échoue
+                }
+            }
         }
     };
 
@@ -96,8 +140,8 @@ export default function CreateVehicle() {
                             <ArrowLeft size={24} />
                         </button>
                         <div>
-                            <div className="text-sm text-gray-500 mb-1">Vehicles</div>
-                            <h1 className="text-2xl font-bold text-gray-900">New Vehicle</h1>
+                            <div className="text-sm text-gray-500 mb-1">Véhicules</div>
+                            <h1 className="text-2xl font-bold text-gray-900">Nouveau véhicule</h1>
                         </div>
                     </div>
                     <div className="flex gap-3">
@@ -105,7 +149,7 @@ export default function CreateVehicle() {
                             onClick={() => router.back()}
                             className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
                         >
-                            Cancel
+                            Annuler
                         </button>
                         <button
                             onClick={handleSave}
@@ -137,12 +181,11 @@ export default function CreateVehicle() {
                 {/* Sidebar */}
                 <div className="w-64 flex-shrink-0">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 py-2 overflow-hidden sticky top-28">
-                        <TabButton id="details" label="Details" icon={FileText} />
+                        <TabButton id="details" label="Détails" icon={FileText} />
                         <TabButton id="maintenance" label="Maintenance" icon={PenTool} />
-                        <TabButton id="lifecycle" label="Lifecycle" icon={RefreshCw} />
-                        <TabButton id="financial" label="Financial" icon={BarChart3} />
-                        <TabButton id="specifications" label="Specifications" icon={LayoutList} />
-                        <TabButton id="settings" label="Settings" icon={Settings} />
+                        <TabButton id="lifecycle" label="Cycle de vie" icon={RefreshCw} />
+                        <TabButton id="financial" label="Financier" icon={BarChart3} />
+                        <TabButton id="specifications" label="Spécifications" icon={LayoutList} />
                     </div>
                 </div>
 
@@ -152,7 +195,7 @@ export default function CreateVehicle() {
                     {/* Details Tab */}
                     {activeTab === 'details' && (
                         <div className="space-y-6">
-                            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            {/*<div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">Add with a VIN</h2>
                                 <div className="space-y-4">
                                     <div>
@@ -171,62 +214,130 @@ export default function CreateVehicle() {
                                         <p className="text-xs text-gray-500 mt-1">Vehicle Identification Number or Serial Number. <a href="#" className="text-[#008751]">Learn More</a></p>
                                     </div>
                                 </div>
-                            </div>
+                            </div>*/}
 
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">Identification</h2>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Name <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Nom du véhicule <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
-                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
+                                            className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751] ${validationErrors.name ? 'border-red-500' : 'border-gray-300'}`}
                                             value={formData.name || ''}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Enter a nickname to distinguish this vehicle in Fleetio. <a href="#" className="text-[#008751]">Learn More</a></p>
+                                        {validationErrors.name && <p className="text-xs text-red-500 mt-1">{validationErrors.name}</p>}
+                                        <p className="text-xs text-gray-500 mt-1">Entrez un surnom pour distinguer ce véhicule dans Fleetio. <a href="#" className="text-[#008751]">En savoir plus</a></p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">VIN/SN <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751] ${validationErrors.vin ? 'border-red-500' : 'border-gray-300'}`}
+                                            value={formData.vin || ''}
+                                            onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
+                                        />
+                                        {validationErrors.vin && <p className="text-xs text-red-500 mt-1">{validationErrors.vin}</p>}
+                                        <p className="text-xs text-gray-500 mt-1">Numéro d'identification du véhicule ou numéro de série.</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Plaque d'immatriculation</label>
+                                        <input
+                                            type="text"
+                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
+                                            value={formData.licensePlate || ''}
+                                            onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Lecture actuelle du compteur</label>
+                                        <input
+                                            type="number"
+                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
+                                            value={formData.meterReading || ''}
+                                            onChange={(e) => setFormData({ ...formData, meterReading: Number(e.target.value) })}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Année <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="number"
+                                                className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751] ${validationErrors.year ? 'border-red-500' : 'border-gray-300'}`}
+                                                value={formData.year || ''}
+                                                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                            />
+                                            {validationErrors.year && <p className="text-xs text-red-500 mt-1">{validationErrors.year}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Marque <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751] ${validationErrors.make ? 'border-red-500' : 'border-gray-300'}`}
+                                                value={formData.make || ''}
+                                                onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                                            />
+                                            {validationErrors.make && <p className="text-xs text-red-500 mt-1">{validationErrors.make}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Modèle <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751] ${validationErrors.model ? 'border-red-500' : 'border-gray-300'}`}
+                                                value={formData.model || ''}
+                                                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                                            />
+                                            {validationErrors.model && <p className="text-xs text-red-500 mt-1">{validationErrors.model}</p>}
+                                        </div>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Type <span className="text-red-500">*</span></label>
                                         <select
-                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
+                                            className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751] ${validationErrors.type ? 'border-red-500' : 'border-gray-300'}`}
                                             value={formData.type || 'Car'}
                                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                         >
-                                            <option value="Car">Car</option>
-                                            <option value="Truck">Truck</option>
-                                            <option value="Van">Van</option>
+                                            <option value="Car">Voiture</option>
+                                            <option value="Truck">Camion</option>
+                                            <option value="Pickup">Pickup</option>
+                                            <option value="Van">Fourgonnette</option>
                                             <option value="Bus">Bus</option>
                                         </select>
-                                        <p className="text-xs text-gray-500 mt-1">Categorize this vehicle</p>
+                                        {validationErrors.type && <p className="text-xs text-red-500 mt-1">{validationErrors.type}</p>}
+                                        <p className="text-xs text-gray-500 mt-1">Catégorisez ce véhicule</p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Status <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Statut <span className="text-red-500">*</span></label>
                                         <select
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
-                                            value={formData.status || 'Active'}
+                                            value={formData.status || 'ACTIVE'}
                                             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                         >
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
-                                            <option value="In Shop">In Shop</option>
-                                            <option value="Out of Service">Out of Service</option>
+                                            <option value="ACTIVE">Actif</option>
+                                            <option value="INACTIVE">Inactif</option>
+                                            <option value="MAINTENANCE">En atelier</option>
+                                            <option value="DISPOSED">Hors service</option>
                                         </select>
-                                        <p className="text-xs text-gray-500 mt-1">Vehicle's status. <a href="#" className="text-[#008751]">Learn More</a></p>
+                                        <p className="text-xs text-gray-500 mt-1">Statut du véhicule. <a href="#" className="text-[#008751]">En savoir plus</a></p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Ownership <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Propriété <span className="text-red-500">*</span></label>
                                         <select
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.ownership || 'Owned'}
                                             onChange={(e) => setFormData({ ...formData, ownership: e.target.value })}
                                         >
-                                            <option value="Owned">Owned</option>
-                                            <option value="Leased">Leased</option>
-                                            <option value="Rented">Rented</option>
+                                            <option value="Owned">Possédé</option>
+                                            <option value="Leased">En leasing</option>
+                                            <option value="Rented">Loué</option>
                                         </select>
                                     </div>
                                 </div>
@@ -237,11 +348,11 @@ export default function CreateVehicle() {
                     {/* Maintenance Tab */}
                     {activeTab === 'maintenance' && (
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">Maintenance Schedule</h2>
+                            <h2 className="text-lg font-bold text-gray-900 mb-4">Programme d'entretien</h2>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">Choose a Service Program</label>
-                                    <p className="text-xs text-gray-500 mb-4">Service Programs automatically manage Service Reminders for Vehicles that share common preventative maintenance needs.</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">Choisir un programme de service</label>
+                                    <p className="text-xs text-gray-500 mb-4">Les programmes de service gèrent automatiquement les rappels de service pour les véhicules partageant des besoins de maintenance préventive communs.</p>
 
                                     <div className={`p-4 rounded border-2 cursor-pointer mb-3 flex items-center gap-3 transition-colors
                          ${!formData.serviceProgram ? 'border-[#008751] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
@@ -252,15 +363,15 @@ export default function CreateVehicle() {
                                             {!formData.serviceProgram && <div className="w-2.5 h-2.5 rounded-full bg-[#008751]" />}
                                         </div>
                                         <div className="flex-1 flex justify-between">
-                                            <span className="font-medium text-gray-900">None</span>
-                                            <span className="text-gray-500 text-sm">No Service Reminders will be created</span>
+                                            <span className="font-medium text-gray-900">Aucun</span>
+                                            <span className="text-gray-500 text-sm">Aucun rappel de service ne sera créé</span>
                                         </div>
                                     </div>
 
                                     <div className="p-4 rounded border border-gray-200 cursor-not-allowed opacity-60">
                                         <div className="flex items-center gap-3">
                                             <div className="w-5 h-5 rounded-full border border-gray-300"></div>
-                                            <span className="font-medium text-gray-400">Choose an existing Service Program (Mock disabled)</span>
+                                            <span className="font-medium text-gray-400">Choisir un programme existant (Désactivé)</span>
                                         </div>
                                     </div>
                                 </div>
@@ -272,36 +383,36 @@ export default function CreateVehicle() {
                     {activeTab === 'lifecycle' && (
                         <div className="space-y-6">
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">In-Service</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Mise en service</h2>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">In-Service Date</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date de mise en service</label>
                                         <input
                                             type="date"
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.inServiceDate || ''}
                                             onChange={(e) => setFormData({ ...formData, inServiceDate: e.target.value })}
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Date vehicle entered active fleet service</p>
+                                        <p className="text-xs text-gray-500 mt-1">Date à laquelle le véhicule est entré en service actif</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">In-Service Odometer</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Compteur à la mise en service</label>
                                         <input
                                             type="number"
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.inServiceOdometer || ''}
                                             onChange={(e) => setFormData({ ...formData, inServiceOdometer: Number(e.target.value) })}
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Odometer reading on in-service date</p>
+                                        <p className="text-xs text-gray-500 mt-1">Lecture du compteur à la date de mise en service</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Vehicle Life Estimates</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Estimations de vie du véhicule</h2>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Service Life in Months</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Durée de vie estimée (en mois)</label>
                                         <input
                                             type="number"
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
@@ -310,7 +421,7 @@ export default function CreateVehicle() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Resale Value</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Valeur de revente estimée</label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Ar</span>
                                             <input
@@ -325,10 +436,10 @@ export default function CreateVehicle() {
                             </div>
 
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Out-of-Service</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Hors service</h2>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Out-of-Service Date</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Date de retrait du service</label>
                                         <input
                                             type="date"
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
@@ -345,12 +456,12 @@ export default function CreateVehicle() {
                     {activeTab === 'financial' && (
                         <div className="space-y-6">
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Purchase Details</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Détails de l'achat</h2>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Vendor</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fournisseur d'achat</label>
                                         <input
-                                            type="text" placeholder="Please select"
+                                            type="text" placeholder="Veuillez sélectionner"
                                             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
                                             value={formData.purchaseVendor || ''}
                                             onChange={(e) => setFormData({ ...formData, purchaseVendor: e.target.value })}
@@ -358,7 +469,7 @@ export default function CreateVehicle() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Date d'achat</label>
                                             <input
                                                 type="date"
                                                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]"
@@ -367,7 +478,7 @@ export default function CreateVehicle() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Price</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Prix d'achat</label>
                                             <div className="relative">
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Ar</span>
                                                 <input
@@ -392,7 +503,7 @@ export default function CreateVehicle() {
                             </div>
 
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Loan/Lease</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Prêt/Leasing</h2>
                                 <div className="flex border border-gray-200 rounded">
                                     {(['Loan', 'Lease', 'None'] as string[]).map((type) => (
                                         <div
@@ -406,10 +517,12 @@ export default function CreateVehicle() {
                                                 {formData.loanLeaseType === type && <div className="w-2.5 h-2.5 rounded-full bg-[#008751]" />}
                                             </div>
                                             <div>
-                                                <div className="font-medium text-gray-900">{type}</div>
+                                                <div className="font-medium text-gray-900">
+                                                    {type === 'None' ? 'Aucun' : type === 'Loan' ? 'Prêt' : 'Leasing'}
+                                                </div>
                                                 <div className="text-xs text-gray-500">
-                                                    {type === 'None' ? 'This vehicle is not being financed' :
-                                                        type === 'Loan' ? 'This vehicle is associated with a loan' : 'This vehicle is being leased'}
+                                                    {type === 'None' ? 'Ce véhicule n\'est pas financé' :
+                                                        type === 'Loan' ? 'Ce véhicule est associé à un prêt' : 'Ce véhicule est sous contrat de leasing'}
                                                 </div>
                                             </div>
                                         </div>
@@ -419,51 +532,6 @@ export default function CreateVehicle() {
                         </div>
                     )}
 
-                    {/* Settings Tab */}
-                    {activeTab === 'settings' && (
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">Settings</h2>
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Primary Meter <span className="text-red-500">*</span></label>
-                                    <p className="text-xs text-gray-500 mb-3">Select how you measure utilization for this vehicle.</p>
-                                    <div className="space-y-2">
-                                        {['Miles', 'Kilometers', 'Hours'].map((unit) => (
-                                            <label key={unit} className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="primaryMeter"
-                                                    className="text-[#008751] focus:ring-[#008751]"
-                                                    checked={formData.primaryMeter === unit}
-                                                    onChange={() => setFormData({ ...formData, primaryMeter: unit })}
-                                                />
-                                                <span className="text-sm text-gray-700">{unit}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Fuel Unit <span className="text-red-500">*</span></label>
-                                    <p className="text-xs text-gray-500 mb-3">Sets the volume units used when entering fuel entries.</p>
-                                    <div className="space-y-2">
-                                        {['Gallons (US)', 'Gallons (UK)', 'Liters'].map((unit) => (
-                                            <label key={unit} className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="fuelUnit"
-                                                    className="text-[#008751] focus:ring-[#008751]"
-                                                    checked={formData.fuelUnit === unit}
-                                                    onChange={() => setFormData({ ...formData, fuelUnit: unit })}
-                                                />
-                                                <span className="text-sm text-gray-700">{unit}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Specifications Tab */}
                     {activeTab === 'specifications' && (
@@ -473,58 +541,58 @@ export default function CreateVehicle() {
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">Dimensions</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Width (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Largeur (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.width || ''} onChange={(e) => setFormData({ ...formData, width: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Height (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Hauteur (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.height || ''} onChange={(e) => setFormData({ ...formData, height: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Length (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Longueur (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.length || ''} onChange={(e) => setFormData({ ...formData, length: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Interior Volume (L)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Volume intérieur (L)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.interiorVolume || ''} onChange={(e) => setFormData({ ...formData, interiorVolume: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Passenger Volume (L)</label>
-                                        <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.passengerVolume || ''} onChange={(e) => setFormData({ ...formData, passengerVolume: Number(e.target.value) })} />
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de passagers</label>
+                                        <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#008751] focus:ring-1 focus:ring-[#008751]" value={formData.passengerCount || ''} onChange={(e) => setFormData({ ...formData, passengerCount: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Volume (L)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Volume de chargement (L)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.cargoVolume || ''} onChange={(e) => setFormData({ ...formData, cargoVolume: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Ground Clearance (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Garde au sol (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.groundClearance || ''} onChange={(e) => setFormData({ ...formData, groundClearance: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Bed Length (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Longueur de la caisse (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.bedLength || ''} onChange={(e) => setFormData({ ...formData, bedLength: Number(e.target.value) })} />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Weight & Performance */}
+                            {/* Poids et performance */}
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Weight & Performance</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Poids et performance</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Curb Weight (kg)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Poids à vide (kg)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.curbWeight || ''} onChange={(e) => setFormData({ ...formData, curbWeight: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Gross Vehicle Weight (kg)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Poids nominal brut (kg)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.grossVehicleWeight || ''} onChange={(e) => setFormData({ ...formData, grossVehicleWeight: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Towing Capacity (kg)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacité de remorquage (kg)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.towingCapacity || ''} onChange={(e) => setFormData({ ...formData, towingCapacity: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Max Payload (kg)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Charge utile maximale (kg)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.maxPayload || ''} onChange={(e) => setFormData({ ...formData, maxPayload: Number(e.target.value) })} />
                                     </div>
                                 </div>
@@ -567,46 +635,46 @@ export default function CreateVehicle() {
 
                             {/* Engine */}
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Engine</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Moteur</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Description</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Description du moteur</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineDescription || ''} onChange={(e) => setFormData({ ...formData, engineDescription: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Brand</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Marque du moteur</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineBrand || ''} onChange={(e) => setFormData({ ...formData, engineBrand: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Aspiration</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Aspiration du moteur</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineAspiration || ''} onChange={(e) => setFormData({ ...formData, engineAspiration: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Block Type</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Type de bloc moteur</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineBlockType || ''} onChange={(e) => setFormData({ ...formData, engineBlockType: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Cylinders</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Cylindres</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineCylinders || ''} onChange={(e) => setFormData({ ...formData, engineCylinders: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Displacement (L)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Cylindrée (L)</label>
                                         <input type="number" step="0.1" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineDisplacement || ''} onChange={(e) => setFormData({ ...formData, engineDisplacement: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Max HP</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Puissance max (HP)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.maxHp || ''} onChange={(e) => setFormData({ ...formData, maxHp: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Max Torque (Nm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Couple max (Nm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.maxTorque || ''} onChange={(e) => setFormData({ ...formData, maxTorque: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Redline RPM</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Régime max (RPM)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.redlineRpm || ''} onChange={(e) => setFormData({ ...formData, redlineRpm: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Engine Valves</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Soupapes</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.engineValves || ''} onChange={(e) => setFormData({ ...formData, engineValves: Number(e.target.value) })} />
                                     </div>
                                 </div>
@@ -617,25 +685,25 @@ export default function CreateVehicle() {
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">Transmission</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Transmission Description</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Description de la transmission</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.transmissionDescription || ''} onChange={(e) => setFormData({ ...formData, transmissionDescription: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Transmission Brand</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Marque de la transmission</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.transmissionBrand || ''} onChange={(e) => setFormData({ ...formData, transmissionBrand: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Transmission Type</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Type de transmission</label>
                                         <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.transmissionType || ''} onChange={(e) => setFormData({ ...formData, transmissionType: e.target.value })}>
-                                            <option value="">Select...</option>
-                                            <option value="Manual">Manual</option>
-                                            <option value="Automatic">Automatic</option>
+                                            <option value="">Sélectionner...</option>
+                                            <option value="Manual">Manuelle</option>
+                                            <option value="Automatic">Automatique</option>
                                             <option value="CVT">CVT</option>
                                             <option value="DCT">DCT</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Transmission Gears</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de rapports</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.transmissionGears || ''} onChange={(e) => setFormData({ ...formData, transmissionGears: Number(e.target.value) })} />
                                     </div>
                                 </div>
@@ -643,56 +711,56 @@ export default function CreateVehicle() {
 
                             {/* Wheels & Tires */}
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Wheels & Tires</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Roues et pneus</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Drive Type</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Type de propulsion</label>
                                         <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.driveType || ''} onChange={(e) => setFormData({ ...formData, driveType: e.target.value })}>
-                                            <option value="">Select...</option>
-                                            <option value="FWD">Front-Wheel Drive (FWD)</option>
-                                            <option value="RWD">Rear-Wheel Drive (RWD)</option>
-                                            <option value="AWD">All-Wheel Drive (AWD)</option>
-                                            <option value="4WD">Four-Wheel Drive (4WD)</option>
+                                            <option value="">Sélectionner...</option>
+                                            <option value="FWD">Traction avant (FWD)</option>
+                                            <option value="RWD">Propulsion arrière (RWD)</option>
+                                            <option value="AWD">Transmission intégrale (AWD)</option>
+                                            <option value="4WD">Quatre roues motrices (4WD)</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Brake System</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Système de freinage</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.brakeSystem || ''} onChange={(e) => setFormData({ ...formData, brakeSystem: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Wheelbase (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Empattement (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.wheelbase || ''} onChange={(e) => setFormData({ ...formData, wheelbase: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Front Track Width (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Voie avant (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.frontTrackWidth || ''} onChange={(e) => setFormData({ ...formData, frontTrackWidth: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Rear Track Width (mm)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Voie arrière (mm)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.rearTrackWidth || ''} onChange={(e) => setFormData({ ...formData, rearTrackWidth: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Front Wheel Diameter (in)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Diamètre roue avant (po)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.frontWheelDiameter || ''} onChange={(e) => setFormData({ ...formData, frontWheelDiameter: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Rear Wheel Diameter (in)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Diamètre roue arrière (po)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.rearWheelDiameter || ''} onChange={(e) => setFormData({ ...formData, rearWheelDiameter: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Front Tire Type</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Type de pneu avant</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.frontTireType || ''} onChange={(e) => setFormData({ ...formData, frontTireType: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Front Tire PSI</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pression pneu avant (PSI)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.frontTirePsi || ''} onChange={(e) => setFormData({ ...formData, frontTirePsi: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Rear Tire Type</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Type de pneu arrière</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.rearTireType || ''} onChange={(e) => setFormData({ ...formData, rearTireType: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Rear Tire PSI</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pression pneu arrière (PSI)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.rearTirePsi || ''} onChange={(e) => setFormData({ ...formData, rearTirePsi: Number(e.target.value) })} />
                                     </div>
                                 </div>

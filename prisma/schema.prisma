@@ -83,6 +83,7 @@ model Vehicle {
   model                       String
   status                      VehicleStatus       @default(ACTIVE)
   image                       String?
+  licensePlate                String?             @unique
   meterReading                Float?
   // Specs - Dimensions
   bodyType                    String?
@@ -93,6 +94,7 @@ model Vehicle {
   length                      Float?
   interiorVolume              Float?
   passengerVolume             Float?
+  passengerCount              Int?
   cargoVolume                 Float?
   groundClearance             Float?
   bedLength                   Float?

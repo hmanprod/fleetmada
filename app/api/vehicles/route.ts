@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
-  CreateVehicleSchema, 
+import {
+  CreateVehicleSchema,
   VehicleListQuerySchema,
   type CreateVehicleInput,
-  type VehicleListQuery 
+  type VehicleListQuery
 } from '@/lib/validations/vehicle-validations'
 import jwt from 'jsonwebtoken'
 
@@ -55,16 +55,33 @@ const buildVehicleFilters = (query: VehicleListQuery, userId: string) => {
     ]
   }
 
+  // Helper function to handle comma-separated values for Prisma 'in' operator
+  const handleMultiValue = (value: string | undefined, field: string) => {
+    if (value) {
+      const values = value.split(',').map(v => v.trim()).filter(Boolean)
+      if (values.length > 1) {
+        filters[field] = { in: values }
+      } else if (values.length === 1) {
+        // For single values, we can use exact match or 'in' with one element
+        // status and ownership are enums in DB, so we use 'in' to be safe or type check
+        filters[field] = values[0]
+      }
+    }
+  }
+
   if (query.status) {
-    filters.status = query.status
+    const statuses = query.status.split(',') as any[]
+    filters.status = { in: statuses }
   }
 
   if (query.type) {
-    filters.type = { contains: query.type, mode: 'insensitive' }
+    const types = query.type.split(',')
+    filters.type = { in: types }
   }
 
   if (query.ownership) {
-    filters.ownership = query.ownership
+    const ownerships = query.ownership.split(',')
+    filters.ownership = { in: ownerships }
   }
 
   if (query.group) {
@@ -75,20 +92,40 @@ const buildVehicleFilters = (query: VehicleListQuery, userId: string) => {
     filters.operator = { contains: query.operator, mode: 'insensitive' }
   }
 
+  if (query.make) {
+    const makes = query.make.split(',')
+    filters.make = { in: makes }
+  }
+
+  if (query.model) {
+    const models = query.model.split(',')
+    filters.model = { in: models }
+  }
+
+  if (query.year) {
+    const years = query.year.split(',').map(y => parseInt(y))
+    filters.year = { in: years }
+  }
+
+  if (query.purchaseVendor) {
+    const vendors = query.purchaseVendor.split(',')
+    filters.purchaseVendor = { in: vendors }
+  }
+
   return filters
 }
 
 // Fonction utilitaire pour construire l'ordre de tri
 const buildOrderBy = (query: VehicleListQuery) => {
   const orderBy: any = {}
-  
-  if (query.sortBy === 'name' || query.sortBy === 'year' || query.sortBy === 'status' || 
-      query.sortBy === 'createdAt' || query.sortBy === 'updatedAt') {
+
+  if (query.sortBy === 'name' || query.sortBy === 'year' || query.sortBy === 'status' ||
+    query.sortBy === 'createdAt' || query.sortBy === 'updatedAt') {
     orderBy[query.sortBy] = query.sortOrder
   } else {
     orderBy.name = 'asc'
   }
-  
+
   return orderBy
 }
 
@@ -139,22 +176,22 @@ export async function GET(request: NextRequest) {
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url)
     const queryParams: any = {}
-    
+
     for (const [key, value] of searchParams.entries()) {
       queryParams[key] = value
     }
 
     const query = VehicleListQuerySchema.parse(queryParams)
-    
+
     const offset = (query.page - 1) * query.limit
 
-    logAction('GET Vehicles', userId, { 
-      userId, 
-      page: query.page, 
+    logAction('GET Vehicles', userId, {
+      userId,
+      page: query.page,
       limit: query.limit,
-      filters: { 
-        search: query.search, 
-        status: query.status, 
+      filters: {
+        search: query.search,
+        status: query.status,
         type: query.type,
         ownership: query.ownership,
         group: query.group,
@@ -215,7 +252,7 @@ export async function GET(request: NextRequest) {
 
           // Calcul des coûts récents (30 derniers jours)
           const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-          
+
           const [fuelCosts, serviceCosts, chargingCosts, expenseCosts] = await Promise.all([
             prisma.fuelEntry.aggregate({
               where: {
@@ -247,10 +284,10 @@ export async function GET(request: NextRequest) {
             })
           ])
 
-          const recentCosts = (fuelCosts._sum.cost || 0) + 
-                            (serviceCosts._sum.totalCost || 0) + 
-                            (chargingCosts._sum.cost || 0) + 
-                            (expenseCosts._sum.amount || 0)
+          const recentCosts = (fuelCosts._sum.cost || 0) +
+            (serviceCosts._sum.totalCost || 0) +
+            (chargingCosts._sum.cost || 0) +
+            (expenseCosts._sum.amount || 0)
 
           return {
             id: vehicle.id,
@@ -265,7 +302,9 @@ export async function GET(request: NextRequest) {
             labels: vehicle.labels || [],
             serviceProgram: vehicle.serviceProgram,
             image: vehicle.image,
+            licensePlate: vehicle.licensePlate,
             meterReading: vehicle.meterReading,
+            passengerCount: vehicle.passengerCount,
             // Lifecycle
             inServiceDate: vehicle.inServiceDate,
             inServiceOdometer: vehicle.inServiceOdometer,
@@ -310,8 +349,8 @@ export async function GET(request: NextRequest) {
 
       const totalPages = Math.ceil(totalCount / query.limit)
 
-      logAction('GET Vehicles - Success', userId, { 
-        userId, 
+      logAction('GET Vehicles - Success', userId, {
+        userId,
         totalCount,
         page: query.page,
         totalPages
@@ -408,8 +447,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const vehicleData = CreateVehicleSchema.parse(body)
 
-    logAction('POST Vehicles', userId, { 
-      userId, 
+    logAction('POST Vehicles', userId, {
+      userId,
       vehicleName: vehicleData.name,
       vehicleVin: vehicleData.vin
     })
@@ -443,8 +482,8 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      logAction('POST Vehicles - Success', userId, { 
-        userId, 
+      logAction('POST Vehicles - Success', userId, {
+        userId,
         vehicleId: newVehicle.id,
         vehicleName: newVehicle.name
       })
@@ -471,7 +510,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Vehicles - Validation error', userId, {
