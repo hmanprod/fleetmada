@@ -70,4 +70,49 @@ test.describe('Vehicle Filters - Advanced filtering', () => {
         await page.locator('button', { hasText: 'Clear all' }).click();
         await expect(page.locator('p', { hasText: 'No filters applied.' })).toBeVisible();
     });
+
+    test('Should update a vehicle with specialized fields', async ({ page }) => {
+        await page.goto('/vehicles/list');
+        // Wait for the table to have rows
+        await page.waitForSelector('table tbody tr', { timeout: 20000 });
+
+        // Find the first vehicle row and click it (it has an onClick handler to go to detail)
+        const firstRow = page.locator('table tbody tr').first();
+        await firstRow.click();
+
+        // Wait for detail page (URL should contain the ID which is usually a CUID starting with cm)
+        await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
+
+        // Find "Edit Vehicle" button in the header (exact match to avoid "Edit Vehicle Settings")
+        const editButton = page.getByRole('button', { name: 'Edit Vehicle', exact: true });
+        await editButton.waitFor({ state: 'visible' });
+        await editButton.click();
+
+        // Now on edit page
+        await page.waitForURL(/\/edit/);
+
+        // Go to specifications tab
+        await page.locator('button', { hasText: 'Spécifications' }).click();
+
+        // Fill passenger count
+        // Using locator with near as a fallback, or just finding the input after the text
+        await page.fill('input:near(label:has-text("Nombre de passagers"))', '7');
+
+        // Go to details tab
+        await page.locator('button', { hasText: 'Détails' }).click();
+
+        // Fill license plate
+        await page.fill('input:near(label:has-text("Plaque d\'immatriculation"))', 'ABC-123-FIX');
+
+        // Save
+        const saveButton = page.locator('button', { hasText: 'Enregistrer' });
+        await saveButton.click();
+
+        // Should show success or redirect back to detail page
+        // The button text changes to "Mis à jour !" for 1s before redirecting
+        await Promise.race([
+            page.locator('button', { hasText: 'Mis à jour !' }).waitFor({ state: 'visible' }),
+            page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+(?!\/edit)/)
+        ]);
+    });
 });
