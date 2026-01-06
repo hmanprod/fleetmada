@@ -31,6 +31,7 @@ export default function VehicleList() {
 
   // État pour la sidebar de filtres
   const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
+  const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
 
   const { vehicles, loading, error, fetchVehicles, hasNext, hasPrev, pagination } = useVehicles({
     query: filters,
@@ -56,6 +57,7 @@ export default function VehicleList() {
 
   // Gestion de l'application des filtres avancés
   const handleApplyFilters = (criteria: FilterCriterion[]) => {
+    setActiveCriteria(criteria);
     const newFilters: Partial<VehicleListQuery> = {
       status: undefined,
       type: undefined,
@@ -383,6 +385,7 @@ export default function VehicleList() {
         isOpen={isFiltersSidebarOpen}
         onClose={() => setIsFiltersSidebarOpen(false)}
         onApply={handleApplyFilters}
+        initialFilters={activeCriteria}
       />
     </div>
   );

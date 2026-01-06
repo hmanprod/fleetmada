@@ -46,7 +46,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
             await expect(page).toHaveURL(/\/vehicles\/list/);
 
             // Vérifier le titre de la page
-            await expect(page.locator('h1')).toContainText(/véhicules|vehicles/i);
+            await expect(page.locator('h1').filter({ hasText: /véhicules|vehicles/i })).toBeVisible();
 
             // Vérifier la présence du tableau
             await expect(page.locator('table')).toBeVisible();
@@ -112,7 +112,7 @@ test.describe('Module Véhicules - Tests E2E', () => {
 
             // Verify dropdown items are visible
             await expect(page.locator('text=Rappels de renouvellement')).toBeVisible();
-            await expect(page.locator('text=Problèmes')).toBeVisible();
+            await expect(page.getByRole('button', { name: 'Problèmes' })).toBeVisible();
             await expect(page.locator('text=Historique des compteurs')).toBeVisible();
             await expect(page.locator('text=Historique du carburant')).toBeVisible();
 

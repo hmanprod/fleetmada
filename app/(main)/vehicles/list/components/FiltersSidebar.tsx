@@ -8,6 +8,7 @@ interface FiltersSidebarProps {
     isOpen: boolean;
     onClose: () => void;
     onApply: (filters: FilterCriterion[]) => void;
+    initialFilters?: FilterCriterion[];
 }
 
 const AVAILABLE_FILTERS = [
@@ -41,8 +42,15 @@ const POPULAR_FILTERS = [
     { field: 'group', label: 'Vehicle Group' },
 ];
 
-export function FiltersSidebar({ isOpen, onClose, onApply }: FiltersSidebarProps) {
-    const [activeFilters, setActiveFilters] = useState<FilterCriterion[]>([]);
+export function FiltersSidebar({ isOpen, onClose, onApply, initialFilters = [] }: FiltersSidebarProps) {
+    const [activeFilters, setActiveFilters] = useState<FilterCriterion[]>(initialFilters);
+
+    // Sync state when initialFilters changes or when sidebar opens
+    React.useEffect(() => {
+        if (isOpen) {
+            setActiveFilters(initialFilters);
+        }
+    }, [isOpen, initialFilters]);
 
     const addFilter = (fieldKey: string) => {
         const filterDef = AVAILABLE_FILTERS.find(f => f.field === fieldKey);

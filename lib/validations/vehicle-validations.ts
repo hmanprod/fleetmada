@@ -57,7 +57,7 @@ export const UpdateVehicleSchema = CreateVehicleSchema.partial().extend({
 // Schéma pour les paramètres de requête de liste
 export const VehicleListQuerySchema = z.object({
   page: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1)).default('1'),
-  limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(100)).default('10'),
+  limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(500)).default('10'),
   search: z.string().optional(),
   status: z.string().optional(), // Can be multiple ACTIVE,MAINTENANCE
   type: z.string().optional(),   // Can be multiple Voiture,Camion

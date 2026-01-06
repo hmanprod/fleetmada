@@ -1,15 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronLeft, ChevronRight, X, Calendar, Clock, User, Car } from 'lucide-react';
-import { MOCK_VEHICLES, MOCK_ASSIGNMENTS, Assignment, Vehicle } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter, MoreHorizontal, ChevronLeft, ChevronRight, X, Calendar, Clock, User, Car, Loader2, AlertCircle } from 'lucide-react';
+import { Assignment, Vehicle } from '../types';
+import { useAuthToken } from '@/lib/hooks/useAuthToken';
+import { FiltersSidebar } from '../list/components/FiltersSidebar';
+import { type FilterCriterion } from '../list/components/FilterCard';
+import { type VehicleListQuery } from '@/lib/validations/vehicle-validations';
+
+interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 export default function VehicleAssignmentsPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
-  const [assignments, setAssignments] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const { token, loading: tokenLoading } = useAuthToken();
+
+  // Filtering State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<VehicleListQuery>({
+    page: 1,
+    limit: 100, // Reduced from 500 to stay within standard limits
+    search: '',
+    sortBy: 'name',
+    sortOrder: 'asc'
+  });
+  const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
+  const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
 
   // Modal Form State
   const [assignmentForm, setAssignmentForm] = useState<Partial<Assignment>>({
@@ -22,6 +50,112 @@ export default function VehicleAssignmentsPage() {
   const hours = Array.from({ length: 24 }, (_, i) => i); // 0 to 23 hours
   const daysOfWeek = Array.from({ length: 7 }, (_, i) => i);
   const daysInMonth = Array.from({ length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() }, (_, i) => i + 1);
+
+
+  const fetchData = async (query?: VehicleListQuery) => {
+    if (!token) return;
+    setIsLoading(true);
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      const params = new URLSearchParams();
+      if (query) {
+        Object.entries(query).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, value.toString());
+          }
+        });
+      }
+
+      console.log(`fetching from: /api/vehicles?${params.toString()}`);
+
+      const [vehiclesRes, assignmentsRes, contactsRes] = await Promise.all([
+        fetch(`/api/vehicles?${params.toString()}`, { headers }),
+        fetch('/api/assignments', { headers }),
+        fetch('/api/contacts', { headers })
+      ]);
+
+      if (!vehiclesRes.ok) console.error('Vehicles API error:', vehiclesRes.status);
+      if (!assignmentsRes.ok) console.error('Assignments API error:', assignmentsRes.status);
+      if (!contactsRes.ok) console.error('Contacts API error:', contactsRes.status);
+
+      const vehiclesData = await vehiclesRes.json().catch(() => ({ success: false, error: 'Invalid JSON' }));
+      const assignmentsData = await assignmentsRes.json().catch(() => ({ success: false, error: 'Invalid JSON' }));
+      const contactsData = await contactsRes.json().catch(() => ({ success: false, error: 'Invalid JSON' }));
+
+      console.log('Vehicles success:', vehiclesData.success, 'Count:', vehiclesData.data?.vehicles?.length);
+
+      if (vehiclesData.success && vehiclesData.data) {
+        setVehicles(vehiclesData.data.vehicles || []);
+      } else {
+        console.error('Failed to fetch vehicles:', vehiclesData.error);
+        setVehicles([]);
+      }
+
+      if (assignmentsData.success && Array.isArray(assignmentsData.data)) {
+        const mappedAssignments = assignmentsData.data.map((a: any) => ({
+          ...a,
+          startDate: a.startDate?.split('T')[0] || new Date().toISOString().split('T')[0],
+          startTime: a.startDate ? new Date(a.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+          endDate: a.endDate?.split('T')[0],
+          endTime: a.endDate ? new Date(a.endDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : undefined
+        }));
+        setAssignments(mappedAssignments);
+      } else {
+        console.error('Failed to fetch assignments:', assignmentsData.error);
+        setAssignments([]);
+      }
+
+      if (contactsData.success && contactsData.data) {
+        setContacts(contactsData.data.contacts || []);
+      } else {
+        console.error('Failed to fetch contacts:', contactsData.error);
+        setContacts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchData(filters);
+    }
+  }, [token, filters]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setFilters(prev => ({ ...prev, search: value, page: 1 }));
+  };
+
+  const handleApplyFilters = (criteria: FilterCriterion[]) => {
+    setActiveCriteria(criteria);
+
+    const newFilters: Partial<VehicleListQuery> = {
+      status: undefined,
+      type: undefined,
+      ownership: undefined,
+      group: undefined,
+      operator: undefined,
+      make: undefined,
+      model: undefined,
+      year: undefined,
+      purchaseVendor: undefined,
+    };
+
+    criteria.forEach(c => {
+      const value = Array.isArray(c.value) ? c.value.join(',') : c.value;
+      if (value) {
+        // @ts-ignore
+        newFilters[c.field] = value;
+      }
+    });
+
+    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
+    setIsFiltersSidebarOpen(false);
+  };
 
   // Check if a vehicle is assigned at a specific time/date
   const getAssignmentAtSlot = (vehicleId: string, slotIndex: number) => {
@@ -48,30 +182,46 @@ export default function VehicleAssignmentsPage() {
     }
   };
 
-  const handleSaveAssignment = () => {
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+
+  const handleSaveAssignment = async () => {
     if (!assignmentForm.vehicleId || !assignmentForm.operator) return;
 
-    if (editingAssignmentId) {
-      setAssignments(assignments.map(a =>
-        a.id === editingAssignmentId
-          ? { ...a, ...assignmentForm } as Assignment
-          : a
-      ));
-    } else {
-      const assignment: Assignment = {
-        id: Math.random().toString(36).substr(2, 9),
-        vehicleId: assignmentForm.vehicleId,
-        operator: assignmentForm.operator,
-        startDate: assignmentForm.startDate!,
-        startTime: assignmentForm.startTime!,
-        endDate: assignmentForm.endDate,
-        endTime: assignmentForm.endTime,
-        comments: assignmentForm.comments
-      };
-      setAssignments([...assignments, assignment]);
-    }
+    setIsSaving(true);
+    setAssignmentError(null);
+    try {
+      const method = editingAssignmentId ? 'PUT' : 'POST';
+      const url = `/api/vehicles/${assignmentForm.vehicleId}/assignments`;
 
-    handleCloseModal();
+      const payload = {
+        ...assignmentForm,
+        id: editingAssignmentId,
+        startDate: `${assignmentForm.startDate}T${assignmentForm.startTime}:00Z`,
+        endDate: assignmentForm.endDate ? `${assignmentForm.endDate}T${assignmentForm.endTime}:00Z` : null
+      };
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        await fetchData(); // Refresh data from server
+        handleCloseModal();
+      } else {
+        setAssignmentError(result.error || 'Failed to save assignment');
+      }
+    } catch (error) {
+      console.error('Error saving assignment:', error);
+      setAssignmentError('An error occurred while saving. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEditAssignment = (assignment: Assignment) => {
@@ -117,6 +267,15 @@ export default function VehicleAssignmentsPage() {
     setCurrentDate(newDate);
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 text-[#008751] animate-spin mb-2" />
+        <p className="text-gray-500 font-medium">Loading assignments...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col bg-white">
       {/* Header */}
@@ -130,7 +289,7 @@ export default function VehicleAssignmentsPage() {
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
           >
             <Plus size={20} /> Add Assignment
           </button>
@@ -140,9 +299,18 @@ export default function VehicleAssignmentsPage() {
           <div className="flex gap-4 items-center">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input type="text" placeholder="Search..." className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]" />
+              <input
+                type="text"
+                placeholder="Search vehicles..."
+                className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
             </div>
-            <button className="border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+            <button
+              onClick={() => setIsFiltersSidebarOpen(true)}
+              className="border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+            >
               <Filter size={14} /> Filters
             </button>
           </div>
@@ -151,34 +319,34 @@ export default function VehicleAssignmentsPage() {
             <div className="flex bg-gray-100 p-1 rounded">
               <button
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-1 rounded text-sm font-medium transition-all ${viewMode === 'day' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 Day
               </button>
               <button
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-1 rounded text-sm font-medium transition-all ${viewMode === 'week' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 Week
               </button>
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === 'month' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`px-3 py-1 rounded text-sm font-medium transition-all ${viewMode === 'month' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 Month
               </button>
             </div>
-            <button 
-                onClick={() => setCurrentDate(new Date())} 
-                className="px-3 py-1 text-sm font-medium p-2 text-gray-900 bg-gray-100 rounded transition-colors"
-              >
-                Today
-              </button>
+            <button
+              onClick={() => setCurrentDate(new Date())}
+              className="px-3 py-1 text-sm font-medium p-2 text-gray-900 bg-gray-100 rounded transition-colors hover:bg-gray-200"
+            >
+              Today
+            </button>
             <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-2 py-1">
-              <button onClick={() => navigateDate(-1)} className="p-1 hover:bg-gray-100 rounded"><ChevronLeft size={16} /></button>
-              
+              <button onClick={() => navigateDate(-1)} className="p-1 hover:bg-gray-100 rounded transition-colors"><ChevronLeft size={16} /></button>
+
               <span className="text-sm font-medium w-32 text-center">{formatDate(currentDate)}</span>
-              <button onClick={() => navigateDate(1)} className="p-1 hover:bg-gray-100 rounded"><ChevronRight size={16} /></button>
+              <button onClick={() => navigateDate(1)} className="p-1 hover:bg-gray-100 rounded transition-colors"><ChevronRight size={16} /></button>
             </div>
           </div>
         </div>
@@ -191,7 +359,11 @@ export default function VehicleAssignmentsPage() {
           <div className="h-10 border-b border-gray-200 flex items-center px-4 bg-gray-50 text-sm font-medium text-gray-500 sticky top-0">
             Vehicle
           </div>
-          {MOCK_VEHICLES.map(vehicle => (
+          {vehicles.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-gray-500 text-sm">No vehicles found matching filters.</p>
+            </div>
+          ) : vehicles.map(vehicle => (
             <div key={vehicle.id} className="h-16 border-b border-gray-100 px-4 flex items-center hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-gray-500">
@@ -201,8 +373,8 @@ export default function VehicleAssignmentsPage() {
                   <div className="font-medium text-sm text-gray-900 truncate">{vehicle.name}</div>
                   <div className="text-xs text-gray-500 flex items-center gap-1">
                     <div className={`w-2 h-2 rounded-full 
-                                   ${vehicle.status === 'Active' ? 'bg-green-500' :
-                        vehicle.status === 'In Shop' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                   ${(vehicle.status === 'Active' || vehicle.status === 'ACTIVE' || (vehicle.status as string) === 'active') ? 'bg-green-500' :
+                        (vehicle.status === 'In Shop' || vehicle.status === 'MAINTENANCE' || (vehicle.status as string) === 'maintenance') ? 'bg-yellow-500' : 'bg-red-500'}`}
                     />
                     {vehicle.status}
                   </div>
@@ -215,7 +387,7 @@ export default function VehicleAssignmentsPage() {
         {/* Timeline Area */}
         <div className="flex-1 overflow-x-auto overflow-y-auto relative">
           {/* Time Header */}
-          <div className="h-10 border-b border-gray-200 flex min-w-max sticky top-0 bg-white z-10">
+          <div className="h-10 border-b border-gray-200 flex min-w-max sticky top-0 bg-white z-10 shadow-sm">
             {viewMode === 'day' && hours.map(hour => (
               <div key={hour} className="w-20 border-r border-gray-100 px-2 py-2 text-xs text-gray-500 text-center">
                 {hour === 0 ? '12am' : hour === 12 ? '12pm' : hour > 12 ? `${hour - 12}pm` : `${hour}am`}
@@ -239,7 +411,7 @@ export default function VehicleAssignmentsPage() {
 
           {/* Grid Body */}
           <div className="min-w-max">
-            {MOCK_VEHICLES.map(vehicle => (
+            {vehicles.map(vehicle => (
               <div key={vehicle.id} className="h-16 border-b border-gray-100 flex relative">
                 {viewMode === 'day' && hours.map(hour => {
                   const assignment = getAssignmentAtSlot(vehicle.id, hour);
@@ -292,7 +464,10 @@ export default function VehicleAssignmentsPage() {
 
             {/* Current Time Line (Only in Day view) */}
             {viewMode === 'day' && (
-              <div className="absolute top-0 bottom-0 left-[calc(80px*16.5)] border-l-2 border-red-400 z-0 pointer-events-none">
+              <div
+                className="absolute top-0 bottom-0 border-l-2 border-red-400 z-0 pointer-events-none"
+                style={{ left: `calc(80px * ${new Date().getHours() + new Date().getMinutes() / 60})` }}
+              >
                 <div className="w-2 h-2 bg-red-400 rounded-full -ml-[5px] mt-10"></div>
               </div>
             )}
@@ -303,28 +478,39 @@ export default function VehicleAssignmentsPage() {
       {/* Add Assignment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">
                 {editingAssignmentId ? 'Edit Assignment' : 'Add Assignment'}
               </h3>
-              <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={isSaving}
+              >
                 <X size={20} />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
+              {assignmentError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  {assignmentError}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Vehicle <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <Car className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <select
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded focus:ring-[#008751] focus:border-[#008751]"
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded focus:ring-[#008751] focus:border-[#008751] bg-white transition-all disabled:opacity-50"
                     value={assignmentForm.vehicleId || ''}
+                    disabled={isSaving}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, vehicleId: e.target.value })}
                   >
                     <option value="">Please select</option>
-                    {MOCK_VEHICLES.map(v => (
+                    {vehicles.map(v => (
                       <option key={v.id} value={v.id}>{v.name} ({v.vin})</option>
                     ))}
                   </select>
@@ -336,15 +522,24 @@ export default function VehicleAssignmentsPage() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <select
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded focus:ring-[#008751] focus:border-[#008751]"
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded focus:ring-[#008751] focus:border-[#008751] bg-white transition-all disabled:opacity-50"
                     value={assignmentForm.operator || ''}
-                    onChange={(e) => setAssignmentForm({ ...assignmentForm, operator: e.target.value })}
+                    disabled={isSaving}
+                    onChange={(e) => {
+                      const selectedContact = contacts.find(c => `${c.firstName} ${c.lastName}` === e.target.value);
+                      setAssignmentForm({
+                        ...assignmentForm,
+                        operator: e.target.value,
+                        contactId: selectedContact?.id
+                      });
+                    }}
                   >
                     <option value="">Please select</option>
-                    {/* In real app this would come from a users list */}
-                    <option value="John Doe">John Doe</option>
-                    <option value="Jane Smith">Jane Smith</option>
-                    <option value="Mike Johnson">Mike Johnson</option>
+                    {contacts.map(c => (
+                      <option key={c.id} value={`${c.firstName} ${c.lastName}`}>
+                        {c.firstName} {c.lastName}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -355,14 +550,16 @@ export default function VehicleAssignmentsPage() {
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <input type="date" className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded text-sm"
+                      <input type="date" className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
                         value={assignmentForm.startDate}
+                        disabled={isSaving}
                         onChange={(e) => setAssignmentForm({ ...assignmentForm, startDate: e.target.value })} />
                     </div>
                     <div className="relative w-24">
                       <Clock className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <input type="time" className="w-full pl-7 pr-1 py-2 border border-gray-300 rounded text-sm"
+                      <input type="time" className="w-full pl-7 pr-1 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
                         value={assignmentForm.startTime}
+                        disabled={isSaving}
                         onChange={(e) => setAssignmentForm({ ...assignmentForm, startTime: e.target.value })} />
                     </div>
                   </div>
@@ -372,14 +569,16 @@ export default function VehicleAssignmentsPage() {
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <input type="date" className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded text-sm"
-                        value={assignmentForm.endDate}
+                      <input type="date" className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
+                        value={assignmentForm.endDate || ''}
+                        disabled={isSaving}
                         onChange={(e) => setAssignmentForm({ ...assignmentForm, endDate: e.target.value })} />
                     </div>
                     <div className="relative w-24">
                       <Clock className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <input type="time" className="w-full pl-7 pr-1 py-2 border border-gray-300 rounded text-sm"
-                        value={assignmentForm.endTime}
+                      <input type="time" className="w-full pl-7 pr-1 py-2 border border-gray-300 rounded text-sm disabled:opacity-50"
+                        value={assignmentForm.endTime || ''}
+                        disabled={isSaving}
                         onChange={(e) => setAssignmentForm({ ...assignmentForm, endTime: e.target.value })} />
                     </div>
                   </div>
@@ -389,31 +588,72 @@ export default function VehicleAssignmentsPage() {
               <div>
                 <textarea
                   placeholder="Add an optional comment"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751]"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751] transition-all disabled:opacity-50"
                   rows={3}
                   value={assignmentForm.comments || ''}
+                  disabled={isSaving}
                   onChange={(e) => setAssignmentForm({ ...assignmentForm, comments: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
-              <button
-                onClick={handleCloseModal}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveAssignment}
-                className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm"
-              >
-                {editingAssignmentId ? 'Update Assignment' : 'Save Assignment'}
-              </button>
+            <div className="px-6 py-4 bg-gray-50 flex justify-between items-center border-t border-gray-200">
+              <div className="flex gap-3">
+                {editingAssignmentId && (
+                  <button
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to delete this assignment?')) {
+                        setIsSaving(true);
+                        try {
+                          const response = await fetch(`/api/vehicles/${assignmentForm.vehicleId}/assignments?id=${editingAssignmentId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+                          if (response.ok) {
+                            await fetchData();
+                            handleCloseModal();
+                          }
+                        } catch (e) {
+                          console.error('Delete failed:', e);
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-700 font-medium text-sm transition-colors disabled:opacity-50"
+                    disabled={isSaving}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors disabled:opacity-50"
+                  disabled={isSaving}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAssignment}
+                  disabled={isSaving || !assignmentForm.vehicleId || !assignmentForm.operator}
+                  className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
+                >
+                  {isSaving && <Loader2 size={16} className="animate-spin" />}
+                  {editingAssignmentId ? 'Update Assignment' : 'Save Assignment'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+      <FiltersSidebar
+        isOpen={isFiltersSidebarOpen}
+        onClose={() => setIsFiltersSidebarOpen(false)}
+        onApply={handleApplyFilters}
+        initialFilters={activeCriteria}
+      />
     </div>
   );
 }

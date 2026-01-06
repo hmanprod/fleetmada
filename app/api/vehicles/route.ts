@@ -181,8 +181,16 @@ export async function GET(request: NextRequest) {
       queryParams[key] = value
     }
 
-    const query = VehicleListQuerySchema.parse(queryParams)
+    const result = VehicleListQuerySchema.safeParse(queryParams)
+    if (!result.success) {
+      logAction('GET Vehicles - Validation Error', userId, result.error.format())
+      return NextResponse.json(
+        { success: false, error: 'Paramètres de requête invalides', details: result.error.format() },
+        { status: 400 }
+      )
+    }
 
+    const query = result.data
     const offset = (query.page - 1) * query.limit
 
     logAction('GET Vehicles', userId, {
@@ -302,9 +310,9 @@ export async function GET(request: NextRequest) {
             labels: vehicle.labels || [],
             serviceProgram: vehicle.serviceProgram,
             image: vehicle.image,
-            licensePlate: vehicle.licensePlate,
-            meterReading: vehicle.meterReading,
-            passengerCount: vehicle.passengerCount,
+            licensePlate: (vehicle as any).licensePlate,
+            meterReading: (vehicle as any).meterReading,
+            passengerCount: (vehicle as any).passengerCount,
             // Lifecycle
             inServiceDate: vehicle.inServiceDate,
             inServiceOdometer: vehicle.inServiceOdometer,

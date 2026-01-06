@@ -1,4 +1,4 @@
-export type VehicleStatus = 'Active' | 'Inactive' | 'In Shop' | 'Out of Service' | 'Sold';
+export type VehicleStatus = 'Active' | 'Inactive' | 'In Shop' | 'Out of Service' | 'Sold' | 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'DISPOSED';
 export type VehicleType = 'Car' | 'Truck' | 'Van' | 'Bus' | 'Trailer' | 'Forklift' | 'Other';
 export type Ownership = 'Owned' | 'Leased' | 'Rented' | 'Customer';
 export type LoanLeaseType = 'Loan' | 'Lease' | 'None';
@@ -102,6 +102,7 @@ export const MOCK_VEHICLES: Vehicle[] = [
 export interface Assignment {
     id: string;
     vehicleId: string;
+    contactId?: string;
     operator: string;
     startDate: string; // ISO Date string (YYYY-MM-DD)
     startTime: string; // Time string (HH:MM)
