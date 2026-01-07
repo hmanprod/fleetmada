@@ -1,13 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, ChevronRight, X, Calendar, AlertCircle, Trash2, History, Ban, Edit2 } from 'lucide-react';
-import { MOCK_VEHICLES, MOCK_METER_ENTRIES, MeterEntry } from '../types';
+import React, { useState, useEffect } from 'react';
+import {
+  Search, Plus, Filter, MoreHorizontal, X,
+  Calendar, AlertCircle, Trash2, History, Ban, Edit2,
+  Loader2, ChevronLeft, ChevronRight, Car
+} from 'lucide-react';
+import { useAuthToken } from '@/lib/hooks/useAuthToken';
+import { type MeterEntry, type Vehicle } from '../types';
+import { type MeterEntriesQuery } from '@/lib/validations/vehicle-validations';
+import { FiltersSidebar } from '../components/filters/FiltersSidebar';
+import { type FilterCriterion } from '../components/filters/FilterCard';
+import { METER_HISTORY_FIELDS } from '../components/filters/filter-definitions';
 
 export default function VehicleMeterPage() {
-  const [entries, setEntries] = useState<MeterEntry[]>(MOCK_METER_ENTRIES);
+  const { token } = useAuthToken();
+  const [entries, setEntries] = useState<(MeterEntry & { vehicle?: any })[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+  const [filters, setFilters] = useState<MeterEntriesQuery>({
+    page: 1,
+    limit: 50,
+    sortBy: 'date',
+    sortOrder: 'desc'
+  });
+
+  const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
+  const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -20,50 +44,174 @@ export default function VehicleMeterPage() {
     date: new Date().toISOString().split('T')[0],
     isVoid: false,
     type: 'Primary',
-    unit: 'hrs' // Default from screenshot
+    unit: 'hrs'
   });
 
-  const getVehicleName = (id: string) => {
-    return MOCK_VEHICLES.find(v => v.id === id)?.name || 'Unknown Vehicle';
-  };
+  const fetchData = async (currentFilters: MeterEntriesQuery) => {
+    if (!token) return;
+    setIsLoading(true);
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const params = new URLSearchParams();
+      Object.entries(currentFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
 
-  const filteredEntries = entries.filter(entry => {
-    const vehicleName = getVehicleName(entry.vehicleId).toLowerCase();
-    return vehicleName.includes(searchTerm.toLowerCase());
-  });
+      const [entriesRes, vehiclesRes] = await Promise.all([
+        fetch(`/api/meter-entries?${params.toString()}`, { headers }),
+        fetch('/api/vehicles?limit=500', { headers })
+      ]);
 
-  const handleSave = () => {
-    if (!formData.vehicleId || !formData.date || !formData.value) return;
+      const entriesData = await entriesRes.json();
+      const vehiclesData = await vehiclesRes.json();
 
-    if (editingEntry) {
-      // Update existing
-      setEntries(entries.map(e => e.id === editingEntry.id ? { ...e, ...formData } as MeterEntry : e));
-    } else {
-      // Create new
-      const newEntry: MeterEntry = {
-        id: Math.random().toString(36).substr(2, 9),
-        vehicleId: formData.vehicleId,
-        date: formData.date,
-        value: Number(formData.value),
-        type: 'Primary',
-        unit: 'hr', // Mock unit
-        isVoid: formData.isVoid || false,
-        source: 'Manual',
-        voidStatus: '-',
-        autoVoidReason: '-'
-      };
-      setEntries([newEntry, ...entries]);
+      if (entriesData.success) {
+        setEntries(entriesData.data.meterEntries);
+      }
+      if (vehiclesData.success) {
+        setVehicles(vehiclesData.data.vehicles);
+      }
+    } catch (err) {
+      console.error('Error fetching meter data:', err);
+      setError('Failed to load meter history');
+    } finally {
+      setIsLoading(false);
     }
-    closeModal();
   };
 
-  const handleVoid = (id: string) => {
-    setEntries(entries.map(e => e.id === id ? { ...e, isVoid: !e.isVoid } : e));
+  useEffect(() => {
+    if (token) {
+      fetchData(filters);
+    }
+  }, [token, filters]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setFilters(prev => ({ ...prev, search: value, page: 1 }));
+  };
+
+  const handleApplyFilters = (criteria: FilterCriterion[]) => {
+    setActiveCriteria(criteria);
+
+    // Convert criteria to query parameters
+    const newFilters: any = {};
+
+    criteria.forEach(c => {
+      const key = c.field;
+      const value = c.value;
+      const operator = c.operator;
+
+      if (operator === 'between') {
+        if (value.from) newFilters[`${key}_gte`] = value.from;
+        if (value.to) newFilters[`${key}_lte`] = value.to;
+      } else if (operator === 'is' || operator === 'contains') {
+        newFilters[key] = value;
+      } else if (operator === 'is_any_of') {
+        newFilters[key] = Array.isArray(value) ? value.join(',') : value;
+      } else {
+        // Handle other operators as needed, potentially by passing operator suffix
+        newFilters[`${key}_${operator}`] = value;
+      }
+    });
+
+    setFilters(prev => ({
+      ...prev,
+      // Reset common filters that might have been cleared
+      type: newFilters.type,
+      void: newFilters.void,
+      ...newFilters,
+      page: 1
+    }));
+    setIsFiltersSidebarOpen(false);
+  };
+
+  const getVehicleName = (id: string, vehicleData?: any) => {
+    if (vehicleData?.name) return vehicleData.name;
+    return vehicles.find(v => v.id === id)?.name || 'Unknown Vehicle';
+  };
+
+  const handleSave = async () => {
+    if (!formData.vehicleId || !formData.date || !formData.value || !token) return;
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const method = editingEntry ? 'PUT' : 'POST';
+      const url = editingEntry
+        ? `/api/vehicles/${formData.vehicleId}/meter-entries/${editingEntry.id}`
+        : `/api/vehicles/${formData.vehicleId}/meter-entries`;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          date: new Date(formData.date || '').toISOString(),
+          value: Number(formData.value),
+          type: 'MILEAGE'
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        fetchData(filters);
+        closeModal();
+      } else {
+        setError(data.error || 'Failed to save meter entry');
+      }
+    } catch (err) {
+      console.error('Error saving meter entry:', err);
+      setError('Failed to save meter entry');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleVoid = async (entry: any) => {
+    if (!token) return;
+    try {
+      const response = await fetch(`/api/vehicles/${entry.vehicleId}/meter-entries/${entry.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          void: !entry.isVoid
+        })
+      });
+
+      if (response.ok) {
+        fetchData(filters);
+      }
+    } catch (err) {
+      console.error('Error voiding entry:', err);
+    }
     setActiveMenu(null);
   };
 
-  const handleDelete = (id: string) => {
-    setEntries(entries.filter(e => e.id !== id));
+  const handleDelete = async (entryId: string) => {
+    if (!token) return;
+    const entry = entries.find(e => e.id === entryId);
+    if (!entry) return;
+
+    try {
+      const response = await fetch(`/api/vehicles/${entry.vehicleId}/meter-entries/${entryId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        fetchData(filters);
+      }
+    } catch (err) {
+      console.error('Error deleting entry:', err);
+    }
     setIsDeleteConfirmOpen(null);
     setActiveMenu(null);
   };
@@ -73,21 +221,27 @@ export default function VehicleMeterPage() {
       date: new Date().toISOString().split('T')[0],
       isVoid: false,
       type: 'Primary',
-      unit: 'hr'
+      unit: 'hrs'
     });
     setEditingEntry(null);
+    setError(null);
     setIsAddModalOpen(true);
   };
 
   const openEditModal = (entry: MeterEntry) => {
-    setFormData({ ...entry });
+    setFormData({
+      ...entry,
+      date: new Date(entry.date).toISOString().split('T')[0]
+    });
     setEditingEntry(entry);
+    setError(null);
     setIsAddModalOpen(true);
   };
 
   const closeModal = () => {
     setIsAddModalOpen(false);
     setEditingEntry(null);
+    setError(null);
   };
 
   return (
@@ -115,15 +269,30 @@ export default function VehicleMeterPage() {
             placeholder="Search meter readings..."
             className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+        <button
+          onClick={() => setIsFiltersSidebarOpen(true)}
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+        >
           <Filter size={14} /> Filters
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded flex items-center gap-3">
+          <AlertCircle size={20} />
+          <p>{error}</p>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10">
+            <Loader2 className="animate-spin text-[#008751]" size={32} />
+          </div>
+        )}
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200 font-medium">
@@ -134,22 +303,26 @@ export default function VehicleMeterPage() {
               <th className="p-4">Meter Type</th>
               <th className="p-4">Void</th>
               <th className="p-4">Source</th>
-              <th className="p-4">Void Status</th>
-              <th className="p-4">Auto-Void Reason</th>
               <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="text-sm divide-y divide-gray-100">
-            {filteredEntries.map((entry) => (
+            {entries.length > 0 ? entries.map((entry) => (
               <tr
                 key={entry.id}
                 className={`hover:bg-gray-50 cursor-pointer transition-colors ${entry.isVoid ? 'opacity-60 bg-gray-50' : ''}`}
                 onClick={() => openEditModal(entry)}
               >
                 <td className="p-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="rounded border-gray-300" /></td>
-                <td className={`p-4 font-medium text-[#008751] hover:underline ${entry.isVoid ? 'line-through text-gray-400' : ''}`}>{getVehicleName(entry.vehicleId)}</td>
-                <td className={`p-4 text-gray-700 underline decoration-dotted ${entry.isVoid ? 'line-through' : ''}`}>{new Date(entry.date).toLocaleDateString()}</td>
-                <td className={`p-4 text-gray-900 font-medium ${entry.isVoid ? 'line-through' : ''}`}>{entry.value.toLocaleString()} {entry.unit}</td>
+                <td className={`p-4 font-medium text-[#008751] hover:underline ${entry.isVoid ? 'line-through text-gray-400' : ''}`}>
+                  {getVehicleName(entry.vehicleId, entry.vehicle)}
+                </td>
+                <td className={`p-4 text-gray-700 underline decoration-dotted ${entry.isVoid ? 'line-through' : ''}`}>
+                  {new Date(entry.date).toLocaleDateString()}
+                </td>
+                <td className={`p-4 text-gray-900 font-medium ${entry.isVoid ? 'line-through' : ''}`}>
+                  {entry.value.toLocaleString()} {entry.unit || 'hrs'}
+                </td>
                 <td className="p-4 text-gray-500">{entry.type}</td>
                 <td className="p-4 text-gray-500">
                   {entry.isVoid ? (
@@ -158,9 +331,7 @@ export default function VehicleMeterPage() {
                     </span>
                   ) : '—'}
                 </td>
-                <td className="p-4 text-[#008751] hover:underline">{entry.source || '—'}</td>
-                <td className="p-4 text-gray-400">{entry.voidStatus || '—'}</td>
-                <td className="p-4 text-gray-400">{entry.autoVoidReason || '—'}</td>
+                <td className="p-4 text-[#008751] hover:underline">{entry.source || 'Manual'}</td>
                 <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="relative">
                     <button
@@ -170,7 +341,7 @@ export default function VehicleMeterPage() {
                       <MoreHorizontal size={18} />
                     </button>
                     {activeMenu === entry.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 py-1">
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 py-1 text-left">
                         <button
                           onClick={() => openEditModal(entry)}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -178,7 +349,7 @@ export default function VehicleMeterPage() {
                           <Edit2 size={14} className="mr-2" /> Edit
                         </button>
                         <button
-                          onClick={() => handleVoid(entry.id)}
+                          onClick={() => handleVoid(entry)}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           <Ban size={14} className="mr-2" /> {entry.isVoid ? 'Unvoid' : 'Void'}
@@ -201,8 +372,7 @@ export default function VehicleMeterPage() {
                   </div>
                 </td>
               </tr>
-            ))}
-            {filteredEntries.length === 0 && (
+            )) : !isLoading && (
               <tr>
                 <td colSpan={10} className="p-12 text-center text-gray-500">
                   No meter readings found matching your search.
@@ -211,6 +381,15 @@ export default function VehicleMeterPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination placeholder */}
+      <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
+        <div>Showing {entries.length} entries</div>
+        <div className="flex gap-2">
+          <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled><ChevronLeft size={16} /></button>
+          <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled><ChevronRight size={16} /></button>
+        </div>
       </div>
 
       {/* Add/Edit Modal */}
@@ -230,7 +409,7 @@ export default function VehicleMeterPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
                 {editingEntry ? (
                   <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded text-sm text-gray-900">
-                    <span className="bg-gray-300 text-gray-600 px-1 rounded text-xs">Vehicle</span>
+                    <Car size={16} className="text-gray-400" />
                     {getVehicleName(formData.vehicleId || '')}
                   </div>
                 ) : (
@@ -240,38 +419,17 @@ export default function VehicleMeterPage() {
                     onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
                   >
                     <option value="">Please select</option>
-                    {MOCK_VEHICLES.map(v => (
+                    {vehicles.map(v => (
                       <option key={v.id} value={v.id}>{v.name} ({v.vin})</option>
                     ))}
                   </select>
                 )}
               </div>
 
-              {editingEntry && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                  <div className="text-[#008751] text-sm font-medium">{formData.source}</div>
-                </div>
-              )}
-
-              {editingEntry && (
-                <div className="bg-blue-50 border border-blue-100 rounded p-4 flex gap-3">
-                  <AlertCircle className="text-blue-500 flex-shrink-0" size={20} />
-                  <div className="text-sm text-blue-900">
-                    <p className="font-medium mb-1">As a reference, here are some existing Meter Entries around {new Date(formData.date || '').toDateString()}:</p>
-                    <ul className="list-disc pl-4 space-y-1 text-blue-800">
-                      <li>Thu, Dec 11, 2025 → 62</li>
-                      <li>Fri, Dec 12, 2025 → 70</li>
-                    </ul>
-                    <a href="#" className="text-blue-600 hover:underline mt-2 inline-block">View all Meter History for this Vehicle</a>
-                  </div>
-                </div>
-              )}
-
               {/* Meter Details */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {editingEntry ? 'Meter Value' : 'Primary Meter'} <span className="text-red-500">*</span>
+                  Meter Value <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4 items-center">
                   <div className="relative flex-1">
@@ -281,7 +439,7 @@ export default function VehicleMeterPage() {
                       value={formData.value || ''}
                       onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">hr</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">{formData.unit || 'hrs'}</span>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -293,7 +451,6 @@ export default function VehicleMeterPage() {
                     <span className="text-sm text-gray-700">Void</span>
                   </label>
                 </div>
-                {!editingEntry && <p className="text-xs text-gray-500 mt-1">Last updated: 80 hr (a day ago)</p>}
               </div>
 
               <div>
@@ -313,22 +470,17 @@ export default function VehicleMeterPage() {
             <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
               <button
                 onClick={closeModal}
-                className={`px-4 py-2 hover:bg-gray-100 rounded font-medium text-gray-700 ${editingEntry ? 'border border-green-600 text-green-700 bg-white hover:bg-green-50' : ''}`}
+                className="px-4 py-2 hover:bg-gray-100 rounded font-medium text-gray-700 border border-gray-300 bg-white"
               >
-                {editingEntry ? 'Close' : 'Cancel'}
+                Cancel
               </button>
-              {!editingEntry && (
-                <button
-                  className="bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded hover:bg-gray-50"
-                >
-                  Save and Add Another
-                </button>
-              )}
               <button
                 onClick={handleSave}
-                className={`bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm ${editingEntry ? 'bg-gray-200 text-gray-400 hover:bg-gray-200 cursor-not-allowed' : ''}`}
+                disabled={isSaving}
+                className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
               >
-                Save {editingEntry ? '' : ''}
+                {isSaving && <Loader2 className="animate-spin" size={16} />}
+                Save
               </button>
             </div>
           </div>
@@ -359,54 +511,13 @@ export default function VehicleMeterPage() {
         </div>
       )}
 
-      {/* Record History Modal (Simulated) */}
-      {isHistoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">Record History</h3>
-              <button onClick={() => setIsHistoryModalOpen(null)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-bold">Created</p>
-                    <p className="text-xs text-gray-500">Dec 20, 2025 10:30 AM by John Doe</p>
-                  </div>
-                </div>
-                {isHistoryModalOpen.isVoid && (
-                  <div className="flex gap-4">
-                    <div className="w-2 bg-red-500 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-bold">Marked as Void</p>
-                      <p className="text-xs text-gray-500">Dec 22, 2025 02:15 PM by Jane Smith</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex gap-4">
-                  <div className="w-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-bold">Last Viewed</p>
-                    <p className="text-xs text-gray-500">Today 09:45 AM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={() => setIsHistoryModalOpen(null)}
-                className="px-4 py-2 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FiltersSidebar
+        isOpen={isFiltersSidebarOpen}
+        onClose={() => setIsFiltersSidebarOpen(false)}
+        onApply={handleApplyFilters}
+        initialFilters={activeCriteria}
+        availableFields={METER_HISTORY_FIELDS}
+      />
     </div>
   );
 }

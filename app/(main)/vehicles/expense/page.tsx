@@ -3,10 +3,16 @@
 import React, { useState } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, FileText, Image as ImageIcon, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { FiltersSidebar } from '../components/filters/FiltersSidebar';
+import { type FilterCriterion } from '../components/filters/FilterCard';
+import { EXPENSE_FIELDS } from '../components/filters/filter-definitions';
 import { MOCK_VEHICLES, MOCK_EXPENSE_ENTRIES } from '../types';
 
 export default function VehicleExpensePage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [isFiltersSidebarOpen, setIsFiltersSidebarOpen] = useState(false);
+    const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
+
 
     const getVehicleName = (id: string) => {
         return MOCK_VEHICLES.find(v => v.id === id)?.name || 'Unknown Vehicle';
@@ -16,8 +22,31 @@ export default function VehicleExpensePage() {
         const vehicleName = getVehicleName(entry.vehicleId).toLowerCase();
         const type = entry.type.toLowerCase();
         const query = searchTerm.toLowerCase();
-        return vehicleName.includes(query) || type.includes(query);
+        const matchesSearch = vehicleName.includes(query) || type.includes(query);
+
+        if (!matchesSearch) return false;
+
+        // Apply filters
+        return activeCriteria.every(criterion => {
+            const entryValue = String(entry[criterion.field as keyof typeof entry] || '').toLowerCase();
+            const filterValue = String(criterion.value).toLowerCase();
+
+            switch (criterion.operator) {
+                case 'is':
+                    return entryValue === filterValue;
+                case 'contains':
+                    return entryValue.includes(filterValue);
+                // Add logic for other operators if needed for MOCK data
+                default:
+                    return true;
+            }
+        });
     });
+
+    const handleApplyFilters = (criteria: FilterCriterion[]) => {
+        setActiveCriteria(criteria);
+        setIsFiltersSidebarOpen(false);
+    };
 
     return (
         <div className="p-6 max-w-[1800px] mx-auto">
@@ -50,7 +79,10 @@ export default function VehicleExpensePage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <button
+                    onClick={() => setIsFiltersSidebarOpen(true)}
+                    className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
                     <Filter size={14} /> Filters
                 </button>
             </div>
@@ -107,6 +139,13 @@ export default function VehicleExpensePage() {
                     </tbody>
                 </table>
             </div>
-        </div>
+            <FiltersSidebar
+                isOpen={isFiltersSidebarOpen}
+                onClose={() => setIsFiltersSidebarOpen(false)}
+                onApply={handleApplyFilters}
+                initialFilters={activeCriteria}
+                availableFields={EXPENSE_FIELDS}
+            />
+        </div >
     );
 }

@@ -57,20 +57,20 @@ export const UpdateVehicleSchema = CreateVehicleSchema.partial().extend({
 // Schéma pour les paramètres de requête de liste
 export const VehicleListQuerySchema = z.object({
   page: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1)).default('1'),
-  limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(500)).default('10'),
+  limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(500)).default('20'),
   search: z.string().optional(),
-  status: z.string().optional(), // Can be multiple ACTIVE,MAINTENANCE
-  type: z.string().optional(),   // Can be multiple Voiture,Camion
+  status: z.string().optional(),
+  type: z.string().optional(),
   ownership: z.string().optional(),
   group: z.string().optional(),
   operator: z.string().optional(),
   make: z.string().optional(),
   model: z.string().optional(),
-  year: z.string().optional(), // Can be multiple 2021,2022 or range? Let's start with multiple
+  year: z.string().optional(),
   purchaseVendor: z.string().optional(),
-  sortBy: z.enum(['name', 'year', 'status', 'createdAt', 'updatedAt']).default('name'),
+  sortBy: z.string().default('name'),
   sortOrder: z.enum(['asc', 'desc']).default('asc'),
-})
+}).passthrough()
 
 // Schéma pour la création d'une entrée de compteur
 export const CreateMeterEntrySchema = z.object({
@@ -93,14 +93,15 @@ export const UpdateMeterEntrySchema = CreateMeterEntrySchema.partial().extend({
 // Schéma pour les paramètres de requête de liste des compteurs
 export const MeterEntriesQuerySchema = z.object({
   page: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1)).default('1'),
-  limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(100)).default('20'),
-  type: MeterTypeSchema.optional(),
+  limit: z.string().transform((val) => parseInt(val)).pipe(z.number().min(1).max(500)).default('20'),
+  type: z.string().optional(),
   void: z.string().transform((val) => val === 'true').optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  sortBy: z.enum(['date', 'value', 'createdAt']).default('date'),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  search: z.string().optional(),
+  sortBy: z.string().default('date'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
-})
+}).passthrough()
 
 // Schéma pour la création d'une assignation
 export const CreateVehicleAssignmentSchema = z.object({

@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, ChevronLeft, ChevronRight, X, Calendar, Clock, User, Car, Loader2, AlertCircle } from 'lucide-react';
 import { Assignment, Vehicle } from '../types';
 import { useAuthToken } from '@/lib/hooks/useAuthToken';
-import { FiltersSidebar } from '../list/components/FiltersSidebar';
-import { type FilterCriterion } from '../list/components/FilterCard';
+import { FiltersSidebar } from '../components/filters/FiltersSidebar';
+import { type FilterCriterion } from '../components/filters/FilterCard';
+import { ASSIGNMENT_FIELDS } from '../components/filters/filter-definitions';
 import { type VehicleListQuery } from '@/lib/validations/vehicle-validations';
 
 interface Contact {
@@ -653,6 +654,7 @@ export default function VehicleAssignmentsPage() {
         onClose={() => setIsFiltersSidebarOpen(false)}
         onApply={handleApplyFilters}
         initialFilters={activeCriteria}
+        availableFields={ASSIGNMENT_FIELDS}
       />
     </div>
   );

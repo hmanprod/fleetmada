@@ -55,62 +55,35 @@ const buildVehicleFilters = (query: VehicleListQuery, userId: string) => {
     ]
   }
 
-  // Helper function to handle comma-separated values for Prisma 'in' operator
-  const handleMultiValue = (value: string | undefined, field: string) => {
-    if (value) {
-      const values = value.split(',').map(v => v.trim()).filter(Boolean)
-      if (values.length > 1) {
-        filters[field] = { in: values }
-      } else if (values.length === 1) {
-        // For single values, we can use exact match or 'in' with one element
-        // status and ownership are enums in DB, so we use 'in' to be safe or type check
-        filters[field] = values[0]
-      }
+  // Dynamic Filters parsing
+  Object.keys(query).forEach(key => {
+    const value = query[key]
+    if (value === undefined || value === null || value === '' || key === 'page' || key === 'limit' || key === 'search' || key === 'sortBy' || key === 'sortOrder') return
+
+    // Handle range suffixes
+    if (key.endsWith('_gte')) {
+      const field = key.replace('_gte', '')
+      const isDateField = ['inServiceDate', 'purchaseDate', 'outOfServiceDate'].includes(field)
+      filters[field] = { ...filters[field], gte: isDateField ? new Date(value as string) : (isNaN(Number(value)) ? value : Number(value)) }
+    } else if (key.endsWith('_lte')) {
+      const field = key.replace('_lte', '')
+      const isDateField = ['inServiceDate', 'purchaseDate', 'outOfServiceDate'].includes(field)
+      filters[field] = { ...filters[field], lte: isDateField ? new Date(value as string) : (isNaN(Number(value)) ? value : Number(value)) }
     }
-  }
-
-  if (query.status) {
-    const statuses = query.status.split(',') as any[]
-    filters.status = { in: statuses }
-  }
-
-  if (query.type) {
-    const types = query.type.split(',')
-    filters.type = { in: types }
-  }
-
-  if (query.ownership) {
-    const ownerships = query.ownership.split(',')
-    filters.ownership = { in: ownerships }
-  }
-
-  if (query.group) {
-    filters.group = { contains: query.group, mode: 'insensitive' }
-  }
-
-  if (query.operator) {
-    filters.operator = { contains: query.operator, mode: 'insensitive' }
-  }
-
-  if (query.make) {
-    const makes = query.make.split(',')
-    filters.make = { in: makes }
-  }
-
-  if (query.model) {
-    const models = query.model.split(',')
-    filters.model = { in: models }
-  }
-
-  if (query.year) {
-    const years = query.year.split(',').map(y => parseInt(y))
-    filters.year = { in: years }
-  }
-
-  if (query.purchaseVendor) {
-    const vendors = query.purchaseVendor.split(',')
-    filters.purchaseVendor = { in: vendors }
-  }
+    // Handle multi-value fields (comma separated)
+    else if (typeof value === 'string' && value.includes(',')) {
+      const values = value.split(',').map(v => v.trim())
+      filters[key] = { in: values }
+    }
+    // Handle specific fields with contains mode
+    else if (['group', 'operator', 'make', 'model', 'purchaseVendor'].includes(key) && typeof value === 'string') {
+      filters[key] = { contains: value, mode: 'insensitive' }
+    }
+    // Default exact match
+    else {
+      filters[key] = value
+    }
+  })
 
   return filters
 }

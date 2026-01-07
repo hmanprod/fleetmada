@@ -67,6 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
         { id: 'vehicles-list', label: 'Liste des véhicules', href: '/vehicles/list', view: ViewState.VEHICLES_LIST },
         { id: 'vehicle-assignments', label: 'Affectations', href: '/vehicles/assignments', view: ViewState.VEHICLE_ASSIGNMENTS },
         { id: 'meter-history', label: 'Historique compteur', href: '/vehicles/meter-history', view: ViewState.METER_HISTORY },
+        { id: 'expense', label: 'Dépenses', href: '/vehicles/expense', view: ViewState.EXPENSE_HISTORY },
         { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement', view: ViewState.REPLACEMENT_ANALYSIS },
       ]
     },
