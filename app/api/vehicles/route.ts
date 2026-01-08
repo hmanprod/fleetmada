@@ -43,7 +43,7 @@ const validateToken = (token: string): TokenPayload | null => {
 // Fonction utilitaire pour construire les filtres de recherche
 const buildVehicleFilters = (query: VehicleListQuery, userId: string) => {
   const filters: any = {
-    userId
+    // userId
   }
 
   if (query.search) {

@@ -12,6 +12,9 @@ import useInspections from '@/lib/hooks/useInspections';
 import { useVehicles } from '@/lib/hooks/useVehicles';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 import type { InspectionFilters } from '@/lib/services/inspections-api';
+import { FiltersSidebar } from '../components/filters/FiltersSidebar';
+import { FilterCriterion } from '../components/filters/FilterCard';
+import { INSPECTION_HISTORY_FIELDS } from '../components/filters/filter-definitions';
 
 export default function InspectionHistoryPage() {
     const router = useRouter();
@@ -41,23 +44,15 @@ export default function InspectionHistoryPage() {
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedCompliance, setSelectedCompliance] = useState('');
     const [scoreRange, setScoreRange] = useState({ min: '', max: '' });
-    const [showFilters, setShowFilters] = useState(false);
+
+    // Advanced Filters State
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
+
     const [activeTab, setActiveTab] = useState<'all' | 'failed'>('all');
 
-    // Charger les inspections au montage
-    useEffect(() => {
-        const initialFilters: InspectionFilters = {
-            status: 'COMPLETED',
-            page: 1,
-            limit: 20,
-            sortBy: 'updatedAt',
-            sortOrder: 'desc'
-        };
-        fetchInspections(initialFilters);
-    }, []);
-
-    // Appliquer les filtres
-    useEffect(() => {
+    // Mettre à jour les filtres combinés
+    const applyAllFilters = (criteria: FilterCriterion[] = activeCriteria) => {
         const newFilters: InspectionFilters = {
             status: activeTab === 'failed' ? 'COMPLETED' : 'COMPLETED',
             page: 1,
@@ -71,19 +66,36 @@ export default function InspectionHistoryPage() {
         if (selectedTemplate) newFilters.inspectionTemplateId = selectedTemplate;
         if (selectedStatus) newFilters.status = selectedStatus as any;
 
-        // Filtres par date
-        if (dateRange.start) {
-            // TODO: Implémenter filtrage par date côté API
-        }
+        // Apply advanced filters from criteria
+        criteria.forEach(c => {
+            // Map advanced filters to API params
+            if (c.field === 'status' && !selectedStatus) {
+                newFilters.status = (Array.isArray(c.value) ? c.value[0] : c.value) as any;
+            }
+            if (c.field === 'vehicleId' && !selectedVehicle) {
+                newFilters.vehicleId = c.value as string;
+            }
+            if (c.field === 'inspectionTemplateId' && !selectedTemplate) {
+                newFilters.inspectionTemplateId = c.value as string;
+            }
+            // For dates and scores, if API handles them:
+            // if (c.field === 'scheduledDate') ...
+        });
 
-        // Filtres par score
-        if (scoreRange.min) {
-            // TODO: Implémenter filtrage par score côté API
-        }
-
-        setFilters(newFilters);
         fetchInspections(newFilters);
-    }, [searchQuery, selectedVehicle, selectedTemplate, selectedStatus, selectedCompliance, scoreRange, dateRange, activeTab]);
+    };
+
+    // Effect for Quick Filters & Tab changes
+    useEffect(() => {
+        applyAllFilters(activeCriteria);
+    }, [searchQuery, selectedVehicle, selectedTemplate, selectedStatus, selectedCompliance, activeTab]);
+
+    // Handle Advanced Filters Apply
+    const handleApplyFilters = (criteria: FilterCriterion[]) => {
+        setActiveCriteria(criteria);
+        setIsFiltersOpen(false);
+        applyAllFilters(criteria);
+    };
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -144,6 +156,15 @@ export default function InspectionHistoryPage() {
         setSelectedStatus('');
         setSelectedCompliance('');
         setScoreRange({ min: '', max: '' });
+        setActiveCriteria([]);
+
+        // Reset fetch to default
+        const defaultFilters: InspectionFilters = {
+            status: activeTab === 'failed' ? 'COMPLETED' : 'COMPLETED',
+            page: 1,
+            limit: 20
+        };
+        fetchInspections(defaultFilters);
     };
 
     // Statistiques
@@ -182,7 +203,14 @@ export default function InspectionHistoryPage() {
     }
 
     return (
-        <div className="p-6 max-w-[1800px] mx-auto">
+        <div className="p-6 max-w-[1800px] mx-auto relative">
+            <FiltersSidebar
+                isOpen={isFiltersOpen}
+                onClose={() => setIsFiltersOpen(false)}
+                onApply={handleApplyFilters}
+                initialFilters={activeCriteria}
+                availableFields={INSPECTION_HISTORY_FIELDS}
+            />
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
@@ -206,7 +234,7 @@ export default function InspectionHistoryPage() {
                         onClick={() => router.push('/inspections/history/create')}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                     >
-                        <FileText size={20} /> Nouvelle Inspection
+                        <FileText size={20} /> Planifier Inspection
                     </button>
                 </div>
             </div>
@@ -305,13 +333,18 @@ export default function InspectionHistoryPage() {
                         </div>
 
                         <button
-                            onClick={() => setShowFilters(!showFilters)}
+                            onClick={() => setIsFiltersOpen(true)}
                             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded border border-gray-300"
                         >
                             <Filter size={16} /> Filtres Avancés
+                            {activeCriteria.length > 0 && (
+                                <span className="bg-[#008751] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                    {activeCriteria.length}
+                                </span>
+                            )}
                         </button>
 
-                        {(searchQuery || selectedVehicle || selectedTemplate || selectedCompliance) && (
+                        {(searchQuery || selectedVehicle || selectedTemplate || selectedCompliance || activeCriteria.length > 0) && (
                             <button
                                 onClick={clearFilters}
                                 className="ml-2 text-sm text-gray-500 hover:text-gray-700"
@@ -321,59 +354,6 @@ export default function InspectionHistoryPage() {
                         )}
                     </div>
                 </div>
-
-                {/* Filtres avancés */}
-                {showFilters && (
-                    <div className="p-4 bg-gray-50 border-t border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {/* Période */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
-                                <input
-                                    type="date"
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    value={dateRange.start}
-                                    onChange={(e) => handleDateRangeChange('start', e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
-                                <input
-                                    type="date"
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    value={dateRange.end}
-                                    onChange={(e) => handleDateRangeChange('end', e.target.value)}
-                                />
-                            </div>
-
-                            {/* Score */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Score min (%)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    value={scoreRange.min}
-                                    onChange={(e) => handleScoreRangeChange('min', e.target.value)}
-                                    placeholder="0"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Score max (%)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    value={scoreRange.max}
-                                    onChange={(e) => handleScoreRangeChange('max', e.target.value)}
-                                    placeholder="100"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Tableau */}

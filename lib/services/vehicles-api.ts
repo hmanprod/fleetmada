@@ -259,6 +259,22 @@ export interface VehicleExpensesResponse {
   }>
 }
 
+export interface GlobalExpensesResponse {
+  expenses: (ExpenseEntry & { vehicle: { id: string; name: string; vin: string }; vendor?: { id: string; name: string } })[]
+  pagination: {
+    page: number
+    limit: number
+    totalCount: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+  stats: {
+    totalAmount: number
+    count: number
+  }
+}
+
 // Configuration de base pour les requêtes
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
@@ -670,7 +686,46 @@ export class VehiclesAPIService {
     }
   }
 
+
+
+
   // === EXPENSES ===
+
+  /**
+   * Récupère toutes les dépenses (global)
+   */
+  async getAllExpenses(query?: any): Promise<GlobalExpensesResponse> {
+    try {
+      const params = new URLSearchParams()
+
+      if (query) {
+        Object.entries(query).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, value.toString())
+          }
+        })
+      }
+
+      const response = await fetch(`${this.baseUrl}/expenses?${params}`, {
+        headers: getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors de la récupération des dépenses')
+      }
+
+      return data.data
+    } catch (error) {
+      handleApiError(error)
+      throw error
+    }
+  }
 
   /**
    * Récupère les dépenses d'un véhicule

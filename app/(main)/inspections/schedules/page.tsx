@@ -5,10 +5,15 @@ import { Search, Plus, Filter, MoreHorizontal, Calendar, Clock, MapPin, User, Ar
 import { useRouter } from 'next/navigation';
 import useInspections from '@/lib/hooks/useInspections';
 import type { InspectionFilters } from '@/lib/services/inspections-api';
+import { FiltersSidebar } from '../components/filters/FiltersSidebar';
+import { FilterCriterion } from '../components/filters/FilterCard';
+import { INSPECTION_SCHEDULE_FIELDS } from '../components/filters/filter-definitions';
 
 export default function InspectionSchedulesPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
 
     const {
         inspections,
@@ -47,6 +52,28 @@ export default function InspectionSchedulesPage() {
         fetchInspections(newFilters);
     };
 
+    const handleApplyFilters = (criteria: FilterCriterion[]) => {
+        setActiveCriteria(criteria);
+        setIsFiltersOpen(false);
+
+        const newFilters: any = {
+            page: 1,
+            limit: 20,
+            status: 'SCHEDULED',
+            sortBy: 'scheduledDate',
+            sortOrder: 'asc'
+        };
+        if (searchQuery) newFilters.search = searchQuery;
+
+        criteria.forEach(c => {
+            // Mapping
+            if (c.field === 'vehicleId') newFilters.vehicleId = c.value;
+            if (c.field === 'inspectionTemplateId') newFilters.inspectionTemplateId = c.value;
+        });
+
+        fetchInspections(newFilters);
+    };
+
     const formatDate = (date: Date | string) => {
         const d = new Date(date);
         return d.toLocaleDateString('fr-FR', {
@@ -74,7 +101,14 @@ export default function InspectionSchedulesPage() {
     }
 
     return (
-        <div className="p-6 max-w-[1800px] mx-auto">
+        <div className="p-6 max-w-[1800px] mx-auto relative">
+            <FiltersSidebar
+                isOpen={isFiltersOpen}
+                onClose={() => setIsFiltersOpen(false)}
+                onApply={handleApplyFilters}
+                initialFilters={activeCriteria}
+                availableFields={INSPECTION_SCHEDULE_FIELDS}
+            />
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
@@ -119,6 +153,18 @@ export default function InspectionSchedulesPage() {
                         onChange={(e) => handleSearch(e.target.value)}
                     />
                 </div>
+
+                <button
+                    onClick={() => setIsFiltersOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded border border-gray-300"
+                >
+                    <Filter size={16} /> Filtres
+                    {activeCriteria.length > 0 && (
+                        <span className="bg-[#008751] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {activeCriteria.length}
+                        </span>
+                    )}
+                </button>
 
                 <div className="flex-1 text-right text-sm text-gray-500">
                     {pagination ? `${pagination.page * pagination.limit - pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} sur ${pagination.totalCount}` : '0'}

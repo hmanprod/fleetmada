@@ -8,10 +8,15 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
+import { FiltersSidebar } from '../components/filters/FiltersSidebar';
+import { FilterCriterion } from '../components/filters/FilterCard';
+import { TEMPLATE_FIELDS } from '../components/filters/filter-definitions';
 
 export default function InspectionFormsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
 
     const {
         templates,
@@ -30,6 +35,21 @@ export default function InspectionFormsPage() {
     useEffect(() => {
         fetchTemplates();
     }, []);
+
+    const handleApplyFilters = (criteria: FilterCriterion[]) => {
+        setActiveCriteria(criteria);
+        setIsFiltersOpen(false);
+
+        const newFilters: any = { page: 1, limit: 50 };
+        if (searchQuery) newFilters.search = searchQuery;
+
+        criteria.forEach(c => {
+            if (c.field === 'name') newFilters.search = c.value; // Basic mapping
+            // API might need update to support specific fields like category
+        });
+
+        fetchTemplates(newFilters);
+    };
 
     const handleCreate = () => {
         router.push('/inspections/forms/create');
@@ -77,7 +97,14 @@ export default function InspectionFormsPage() {
     }
 
     return (
-        <div className="p-6 max-w-[1800px] mx-auto space-y-6">
+        <div className="p-6 max-w-[1800px] mx-auto space-y-6 relative">
+            <FiltersSidebar
+                isOpen={isFiltersOpen}
+                onClose={() => setIsFiltersOpen(false)}
+                onApply={handleApplyFilters}
+                initialFilters={activeCriteria}
+                availableFields={TEMPLATE_FIELDS}
+            />
             {/* Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
@@ -123,8 +150,16 @@ export default function InspectionFormsPage() {
                 </div>
 
                 <div className="flex gap-2 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none bg-white border border-gray-200 px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
-                        <Filter size={16} /> Catégories
+                    <button
+                        onClick={() => setIsFiltersOpen(true)}
+                        className="flex-1 md:flex-none bg-white border border-gray-200 px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+                    >
+                        <Filter size={16} /> Filtres
+                        {activeCriteria.length > 0 && (
+                            <span className="bg-[#008751] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                {activeCriteria.length}
+                            </span>
+                        )}
                     </button>
                     <button className="flex-1 md:flex-none bg-white border border-gray-200 px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
                         <LayoutGrid size={16} /> Vue

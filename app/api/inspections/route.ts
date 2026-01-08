@@ -18,7 +18,7 @@ const InspectionCreateSchema = z.object({
   inspectionTemplateId: z.string().min(1, 'Modèle d\'inspection requis'),
   title: z.string().min(1, 'Titre requis'),
   description: z.string().optional(),
-  scheduledDate: z.string().datetime().optional(),
+  scheduledDate: z.string().optional(),
   inspectorName: z.string().optional(),
   location: z.string().optional(),
   notes: z.string().optional()
@@ -65,7 +65,7 @@ const validateToken = (token: string): TokenPayload | null => {
 // Fonction utilitaire pour construire les filtres de recherche
 const buildInspectionFilters = (query: InspectionListQuery, userId: string) => {
   const filters: any = {
-    userId
+    // userId // Allow all authenticated users to see inspections
   }
 
   if (query.search) {
@@ -95,14 +95,14 @@ const buildInspectionFilters = (query: InspectionListQuery, userId: string) => {
 // Fonction utilitaire pour construire l'ordre de tri
 const buildOrderBy = (query: InspectionListQuery) => {
   const orderBy: any = {}
-  
-  if (query.sortBy === 'createdAt' || query.sortBy === 'updatedAt' || 
-      query.sortBy === 'scheduledDate' || query.sortBy === 'status' || query.sortBy === 'title') {
+
+  if (query.sortBy === 'createdAt' || query.sortBy === 'updatedAt' ||
+    query.sortBy === 'scheduledDate' || query.sortBy === 'status' || query.sortBy === 'title') {
     orderBy[query.sortBy] = query.sortOrder
   } else {
     orderBy.createdAt = 'desc'
   }
-  
+
   return orderBy
 }
 
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url)
     const queryParams: any = {}
-    
+
     for (const [key, value] of searchParams.entries()) {
       queryParams[key] = value
     }
@@ -161,13 +161,13 @@ export async function GET(request: NextRequest) {
     const query = InspectionListQuerySchema.parse(queryParams)
     const offset = (query.page - 1) * query.limit
 
-    logAction('GET Inspections', userId, { 
-      userId, 
-      page: query.page, 
+    logAction('GET Inspections', userId, {
+      userId,
+      page: query.page,
       limit: query.limit,
-      filters: { 
-        search: query.search, 
-        status: query.status, 
+      filters: {
+        search: query.search,
+        status: query.status,
         vehicleId: query.vehicleId,
         inspectionTemplateId: query.inspectionTemplateId
       }
@@ -226,8 +226,8 @@ export async function GET(request: NextRequest) {
 
       const totalPages = Math.ceil(totalCount / query.limit)
 
-      logAction('GET Inspections - Success', userId, { 
-        userId, 
+      logAction('GET Inspections - Success', userId, {
+        userId,
         totalCount,
         page: query.page,
         totalPages
@@ -324,8 +324,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const inspectionData = InspectionCreateSchema.parse(body)
 
-    logAction('POST Inspections', userId, { 
-      userId, 
+    logAction('POST Inspections', userId, {
+      userId,
       title: inspectionData.title,
       vehicleId: inspectionData.vehicleId,
       templateId: inspectionData.inspectionTemplateId
@@ -335,8 +335,7 @@ export async function POST(request: NextRequest) {
       // Vérifier que le véhicule existe et appartient à l'utilisateur
       const existingVehicle = await prisma.vehicle.findFirst({
         where: {
-          id: inspectionData.vehicleId,
-          userId
+          id: inspectionData.vehicleId
         },
         select: {
           id: true,
@@ -345,8 +344,8 @@ export async function POST(request: NextRequest) {
       })
 
       if (!existingVehicle) {
-        logAction('POST Inspections - Vehicle not found', userId, { 
-          vehicleId: inspectionData.vehicleId 
+        logAction('POST Inspections - Vehicle not found', userId, {
+          vehicleId: inspectionData.vehicleId
         })
         return NextResponse.json(
           { success: false, error: 'Véhicule non trouvé' },
@@ -366,8 +365,8 @@ export async function POST(request: NextRequest) {
       })
 
       if (!existingTemplate) {
-        logAction('POST Inspections - Template not found', userId, { 
-          templateId: inspectionData.inspectionTemplateId 
+        logAction('POST Inspections - Template not found', userId, {
+          templateId: inspectionData.inspectionTemplateId
         })
         return NextResponse.json(
           { success: false, error: 'Modèle d\'inspection non trouvé' },
@@ -410,8 +409,8 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      logAction('POST Inspections - Success', userId, { 
-        userId, 
+      logAction('POST Inspections - Success', userId, {
+        userId,
         inspectionId: newInspection.id,
         title: newInspection.title
       })
@@ -438,7 +437,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Inspections - Validation error', userId, {

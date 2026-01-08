@@ -131,7 +131,7 @@ export default function NewInspectionPage() {
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
                         <ArrowLeft size={16} /> Historique
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Nouvelle Inspection</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Planifier une nouvelle Inspection</h1>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Annuler</button>

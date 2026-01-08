@@ -830,49 +830,191 @@ async function main() {
     include: { items: true }
   });
 
+  const mechanicalTemplate = await prisma.inspectionTemplate.create({
+    data: {
+      name: 'Inspection Mécanique Complète',
+      category: 'Mécanique',
+      description: 'Inspection approfondie du moteur, de la transmission et du châssis',
+      items: {
+        create: [
+          { name: 'Huile Moteur', category: 'Moteur', description: 'Niveau et qualité', isRequired: true, sortOrder: 1 },
+          { name: 'Courroies', category: 'Moteur', description: 'Tension et usure', isRequired: true, sortOrder: 2 },
+          { name: 'Amortisseurs', category: 'Châssis', description: 'Fuites ou dommages', isRequired: true, sortOrder: 3 },
+          { name: 'Échappement', category: 'Châssis', description: 'Rouille ou trous', isRequired: true, sortOrder: 4 },
+        ]
+      }
+    },
+    include: { items: true }
+  });
+
+  const preTripTemplate = await prisma.inspectionTemplate.create({
+    data: {
+      name: 'Contrôle Technique Pré-départ',
+      category: 'Opérationnel',
+      description: 'Liste de contrôle rapide avant un long trajet',
+      items: {
+        create: [
+          { name: 'Papiers du véhicule', category: 'Administratif', description: 'Carte grise, assurance, visite technique', isRequired: true, sortOrder: 1 },
+          { name: 'Kit de secours', category: 'Sécurité', description: 'Triangle, gilet, extincteur', isRequired: true, sortOrder: 2 },
+          { name: 'Propreté', category: 'Intérieur', description: 'Cabine propre', isRequired: false, sortOrder: 3 },
+        ]
+      }
+    },
+    include: { items: true }
+  });
+
   // Créer des inspections de test
   console.log('🔍 Création des inspections de test...');
-  await Promise.all([
-    prisma.inspection.create({
-      data: {
-        vehicleId: vehicles[0].id,
-        userId: adminUser.id,
-        inspectionTemplateId: inspectionTemplate.id,
-        title: 'Inspection Toyota Hilux - Hebdomadaire',
-        status: 'SCHEDULED',
-        scheduledDate: new Date('2024-12-25'),
-        inspectorName: 'Jean Rakoto',
+
+  // 1. Scheduled Inspections (API would create items, simulating here)
+  await prisma.inspection.create({
+    data: {
+      vehicleId: vehicles[0].id,
+      userId: adminUser.id,
+      inspectionTemplateId: inspectionTemplate.id,
+      title: 'Inspection Toyota Hilux - Hebdomadaire',
+      status: 'SCHEDULED',
+      scheduledDate: new Date(Date.now() + 86400000 * 3), // +3 days
+      inspectorName: 'Jean Rakoto',
+      items: {
+        create: inspectionTemplate.items.map(item => ({
+          templateItemId: item.id,
+          name: item.name,
+          category: item.category,
+          description: item.description,
+          isRequired: item.isRequired,
+          sortOrder: item.sortOrder
+        }))
       }
-    }),
-    prisma.inspection.create({
-      data: {
-        vehicleId: vehicles[1].id,
-        userId: adminUser.id,
-        inspectionTemplateId: inspectionTemplate.id,
-        title: 'Inspection Nissan Pathfinder - Mensuelle',
-        status: 'DRAFT',
-        scheduledDate: new Date('2024-12-28'),
-        inspectorName: 'Jean Rakoto',
+    }
+  });
+
+  // 2. Draft Inspection
+  await prisma.inspection.create({
+    data: {
+      vehicleId: vehicles[1].id,
+      userId: adminUser.id,
+      inspectionTemplateId: inspectionTemplate.id,
+      title: 'Inspection Nissan Pathfinder - Mensuelle',
+      status: 'DRAFT',
+      scheduledDate: new Date(Date.now() + 86400000 * 5), // +5 days
+      inspectorName: 'Jean Rakoto',
+      items: {
+        create: inspectionTemplate.items.map(item => ({
+          templateItemId: item.id,
+          name: item.name,
+          category: item.category,
+          description: item.description,
+          isRequired: item.isRequired,
+          sortOrder: item.sortOrder
+        }))
       }
-    }),
-    prisma.inspection.create({
+    }
+  });
+
+  // 3. Completed (Passed) - Create inspection link items first
+  const passedInspection = await prisma.inspection.create({
+    data: {
+      vehicleId: vehicles[0].id,
+      userId: adminUser.id,
+      inspectionTemplateId: inspectionTemplate.id,
+      title: 'Contrôle Retour Mission',
+      status: 'COMPLETED',
+      scheduledDate: new Date(Date.now() - 86400000 * 2),
+      startedAt: new Date(Date.now() - 86400000 * 2 + 1000 * 60 * 60 * 10), // -2 days + 10h
+      completedAt: new Date(Date.now() - 86400000 * 2 + 1000 * 60 * 60 * 10 + 1000 * 45 * 60), // + 45min
+      inspectorName: 'Jean Rakoto',
+      location: 'Parc Auto Antsahavola',
+      complianceStatus: 'COMPLIANT',
+      overallScore: 100,
+      items: {
+        create: inspectionTemplate.items.map(item => ({
+          templateItemId: item.id,
+          name: item.name,
+          category: item.category,
+          description: item.description,
+          isRequired: item.isRequired,
+          sortOrder: item.sortOrder,
+          status: 'PASSED'
+        }))
+      }
+    },
+    include: { items: true }
+  });
+
+  // Add results to passed inspection
+  await Promise.all(passedInspection.items.map(item =>
+    prisma.inspectionResult.create({
       data: {
-        vehicleId: vehicles[2].id,
-        userId: adminUser.id,
-        inspectionTemplateId: inspectionTemplate.id,
-        title: 'Inspection Mitsubishi L200 - Sécurité',
-        status: 'SCHEDULED',
-        scheduledDate: new Date('2024-12-20'),
-        inspectorName: 'Jean Rakoto',
+        inspectionId: passedInspection.id,
+        inspectionItemId: item.id,
+        resultValue: 'OK',
+        isCompliant: true
       }
     })
-  ]);
+  ));
+
+  // 4. Completed (Failed)
+  const failedInspection = await prisma.inspection.create({
+    data: {
+      vehicleId: vehicles[3].id, // Ford Transit
+      userId: transportManager.id,
+      inspectionTemplateId: mechanicalTemplate.id,
+      title: 'Inspection Suite Panne',
+      status: 'COMPLETED',
+      scheduledDate: new Date(Date.now() - 86400000 * 5),
+      startedAt: new Date(Date.now() - 86400000 * 5 + 1000 * 60 * 60 * 14),
+      completedAt: new Date(Date.now() - 86400000 * 5 + 1000 * 60 * 60 * 15 + 1000 * 30 * 60),
+      inspectorName: 'Garage Central',
+      location: 'Garage Central',
+      complianceStatus: 'NON_COMPLIANT',
+      overallScore: 65,
+      items: {
+        create: mechanicalTemplate.items.map(item => ({
+          templateItemId: item.id,
+          name: item.name,
+          category: item.category,
+          description: item.description,
+          isRequired: item.isRequired,
+          sortOrder: item.sortOrder,
+          status: ['Huile Moteur', 'Amortisseurs'].includes(item.name) ? 'FAILED' : 'PASSED'
+        }))
+      }
+    },
+    include: { items: true }
+  });
+
+  // Add results to failed inspection
+  const failedItems = failedInspection.items || [];
+  for (const item of failedItems) {
+    let isCompliant = true;
+    let notes: string | undefined = undefined;
+    let resultValue = 'OK';
+
+    if (item.name === 'Huile Moteur') {
+      isCompliant = false;
+      resultValue = 'Bas niveau';
+      notes = 'Fuite détectée';
+    } else if (item.name === 'Amortisseurs') {
+      isCompliant = false;
+      resultValue = 'Usé';
+      notes = 'À changer rapidement';
+    }
+
+    await prisma.inspectionResult.create({
+      data: {
+        inspectionId: failedInspection.id,
+        inspectionItemId: item.id,
+        resultValue,
+        isCompliant,
+        notes
+      }
+    });
+  }
 
   console.log('✅ Seeding terminé avec succès!');
   console.log('\n📊 Résumé des données créées:');
   console.log(`- Entreprises: 3`);
-  console.log(`- Utilisateurs: 5 (admin + utilisateurs)`);
-  console.log(`- Véhicules: ${vehicles.length}`);
   console.log(`- Entrées carburant: ${fuelEntries.length}`);
   console.log(`- Entrées recharge: ${chargingEntries.length}`);
   console.log(`- Fournisseurs: ${vendors.length}`);
