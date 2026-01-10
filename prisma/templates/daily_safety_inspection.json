@@ -1,0 +1,73 @@
+{
+    "inspection_checklist": {
+        "metadata": {
+            "title": "Inspection Quotidienne Sécurité",
+            "category": "Sécurité",
+            "description": "Vérification de routine des éléments de sécurité du véhicule",
+            "editable": true,
+            "checklist_type": "daily_safety_inspection"
+        },
+        "sections": [
+            {
+                "section_id": 1,
+                "section_name": "Mécanique",
+                "items": [
+                    {
+                        "item_id": "freins",
+                        "item_name": "Freins",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "Vérifier l'état des plaquettes et le liquide",
+                        "pass_label": "Conforme",
+                        "fail_label": "Non Conforme"
+                    }
+                ]
+            },
+            {
+                "section_id": 2,
+                "section_name": "Extérieur",
+                "items": [
+                    {
+                        "item_id": "pneus",
+                        "item_name": "Pneus",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "Vérifier la pression et l'usure",
+                        "pass_label": "Conforme",
+                        "fail_label": "Non Conforme"
+                    }
+                ]
+            },
+            {
+                "section_id": 3,
+                "section_name": "Électricité",
+                "items": [
+                    {
+                        "item_id": "phares",
+                        "item_name": "Phares",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "Vérifier le fonctionnement de tous les feux",
+                        "pass_label": "Conforme",
+                        "fail_label": "Non Conforme"
+                    }
+                ]
+            },
+            {
+                "section_id": 4,
+                "section_name": "Fluides",
+                "items": [
+                    {
+                        "item_id": "niveaux",
+                        "item_name": "Niveaux",
+                        "type": "Pass / Fail",
+                        "required": false,
+                        "short_description": "Huile, lave-glace, liquide de refroidissement",
+                        "pass_label": "Conforme",
+                        "fail_label": "Non Conforme"
+                    }
+                ]
+            }
+        ]
+    }
+}

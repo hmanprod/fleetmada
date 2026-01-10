@@ -11,12 +11,12 @@ interface ToastProps {
     onClose: () => void;
 }
 
-export default function NotificationToast({ 
-    type, 
-    title, 
-    message, 
-    duration = 5000, 
-    onClose 
+export default function NotificationToast({
+    type,
+    title,
+    message,
+    duration = 5000,
+    onClose
 }: ToastProps) {
     const [isVisible, setIsVisible] = useState(true);
     const [isLeaving, setIsLeaving] = useState(false);
@@ -66,11 +66,11 @@ export default function NotificationToast({
     if (!isVisible) return null;
 
     return (
-        <div 
+        <div
             className={`
-                fixed top-4 right-4 z-50 max-w-sm w-full shadow-lg rounded-lg border p-4
+                max-w-sm w-full shadow-lg rounded-lg border p-4
                 transform transition-all duration-300 ease-in-out
-                ${isLeaving ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'}
+                ${isLeaving ? 'translate-x-full opacity-0 scale-95' : 'translate-x-0 opacity-100 scale-100'}
                 ${getStyles()}
             `}
         >
@@ -79,7 +79,7 @@ export default function NotificationToast({
                     {getIcon()}
                 </div>
                 <div className="ml-3 w-0 flex-1">
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-bold">
                         {title}
                     </p>
                     {message && (
@@ -91,7 +91,7 @@ export default function NotificationToast({
                 <div className="ml-4 flex-shrink-0 flex">
                     <button
                         onClick={handleClose}
-                        className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
+                        className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none p-1 hover:bg-black/5 rounded-full transition-colors"
                     >
                         <X size={16} />
                     </button>
@@ -121,13 +121,13 @@ export function useToast() {
     };
 
     const toast = {
-        success: (title: string, message?: string, duration?: number) => 
+        success: (title: string, message?: string, duration?: number) =>
             addToast({ type: 'success', title, message, duration }),
-        error: (title: string, message?: string, duration?: number) => 
+        error: (title: string, message?: string, duration?: number) =>
             addToast({ type: 'error', title, message, duration }),
-        warning: (title: string, message?: string, duration?: number) => 
+        warning: (title: string, message?: string, duration?: number) =>
             addToast({ type: 'warning', title, message, duration }),
-        info: (title: string, message?: string, duration?: number) => 
+        info: (title: string, message?: string, duration?: number) =>
             addToast({ type: 'info', title, message, duration }),
     };
 
@@ -135,21 +135,33 @@ export function useToast() {
 }
 
 // Container pour afficher les toasts
-export function ToastContainer() {
-    const { toasts, removeToast } = useToast();
+interface ToastContainerProps {
+    toasts: Array<{
+        id: string;
+        type: 'success' | 'error' | 'warning' | 'info';
+        title: string;
+        message?: string;
+        duration?: number;
+    }>;
+    removeToast: (id: string) => void;
+}
+
+export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
+    if (toasts.length === 0) return null;
 
     return (
-        <>
-            {toasts.map(toast => (
-                <NotificationToast
-                    key={toast.id}
-                    type={toast.type}
-                    title={toast.title}
-                    message={toast.message}
-                    duration={toast.duration}
-                    onClose={() => removeToast(toast.id)}
-                />
+        <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3 w-full max-w-sm pointer-events-none">
+            {toasts.map(t => (
+                <div key={t.id} className="pointer-events-auto">
+                    <NotificationToast
+                        type={t.type}
+                        title={t.title}
+                        message={t.message}
+                        duration={t.duration}
+                        onClose={() => removeToast(t.id)}
+                    />
+                </div>
             ))}
-        </>
+        </div>
     );
 }

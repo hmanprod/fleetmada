@@ -15,9 +15,33 @@ interface TokenPayload {
 // Schéma de validation
 const InspectionTemplateUpdateSchema = z.object({
   name: z.string().min(1, 'Nom requis').optional(),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   category: z.string().min(1, 'Catégorie requise').optional(),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  color: z.string().optional().nullable(),
+  enableLocationException: z.boolean().optional(),
+  preventStoredPhotos: z.boolean().optional(),
+  items: z.array(z.object({
+    name: z.string().min(1, 'Nom de l\'élément requis'),
+    description: z.string().optional().nullable(),
+    category: z.string().min(1, 'Catégorie requise'),
+    isRequired: z.boolean().default(false),
+    sortOrder: z.number().default(0),
+    type: z.enum(['PASS_FAIL', 'NUMERIC', 'TEXT', 'MULTIPLE_CHOICE', 'SIGNATURE', 'PHOTO', 'HEADER', 'DATE_TIME', 'METER']).default('PASS_FAIL'),
+    options: z.array(z.string()).default([]),
+    unit: z.string().optional().nullable(),
+    instructions: z.string().optional().nullable(),
+    shortDescription: z.string().optional().nullable(),
+    passLabel: z.string().default('Pass'),
+    failLabel: z.string().default('Fail'),
+    requirePhotoOnPass: z.boolean().default(false),
+    requirePhotoOnFail: z.boolean().default(false),
+    enableNA: z.boolean().default(true),
+    dateTimeType: z.string().optional().nullable(),
+    minRange: z.number().optional().nullable(),
+    maxRange: z.number().optional().nullable(),
+    requireSecondaryMeter: z.boolean().default(false)
+  })).optional()
 })
 
 // Types TypeScript
@@ -129,7 +153,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         )
       }
 
-      logAction('GET Inspection Template Detail - Success', userId, { 
+      logAction('GET Inspection Template Detail - Success', userId, {
         templateId,
         itemsCount: template.items.length
       })
@@ -225,7 +249,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const updateData = InspectionTemplateUpdateSchema.parse(body)
 
-    logAction('PUT Inspection Template', userId, { 
+    logAction('PUT Inspection Template', userId, {
       templateId,
       updateFields: Object.keys(updateData)
     })
@@ -269,29 +293,70 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
 
       // Mise à jour du template
-      const updatedTemplate = await prisma.inspectionTemplate.update({
-        where: {
-          id: templateId
-        },
-        data: {
-          ...updateData,
-          updatedAt: new Date()
-        },
-        include: {
-          items: {
-            orderBy: {
-              sortOrder: 'asc'
-            }
-          },
-          _count: {
-            select: {
-              inspections: true
+      const updatedTemplate = await prisma.$transaction(async (tx) => {
+        // Mettre à jour les champs de base
+        const { items, ...baseData } = updateData;
+
+        const template = await tx.inspectionTemplate.update({
+          where: { id: templateId },
+          data: {
+            ...baseData,
+            updatedAt: new Date()
+          }
+        });
+
+        // Si des items sont fournis, on les remplace
+        if (items) {
+          // Supprimer les items existants
+          await tx.inspectionTemplateItem.deleteMany({
+            where: { inspectionTemplateId: templateId }
+          });
+
+          // Créer les nouveaux items
+          await Promise.all(
+            items.map((item, index) =>
+              tx.inspectionTemplateItem.create({
+                data: {
+                  inspectionTemplateId: templateId,
+                  name: item.name,
+                  description: item.description,
+                  category: item.category,
+                  isRequired: item.isRequired,
+                  sortOrder: item.sortOrder || index,
+                  type: item.type as any,
+                  options: item.options,
+                  unit: item.unit,
+                  instructions: item.instructions,
+                  shortDescription: item.shortDescription,
+                  passLabel: item.passLabel,
+                  failLabel: item.failLabel,
+                  requirePhotoOnPass: item.requirePhotoOnPass,
+                  requirePhotoOnFail: item.requirePhotoOnFail,
+                  enableNA: item.enableNA,
+                  dateTimeType: item.dateTimeType,
+                  minRange: item.minRange,
+                  maxRange: item.maxRange,
+                  requireSecondaryMeter: item.requireSecondaryMeter
+                } as any
+              })
+            )
+          );
+        }
+
+        return tx.inspectionTemplate.findUnique({
+          where: { id: templateId },
+          include: {
+            items: {
+              orderBy: { sortOrder: 'asc' }
+            },
+            _count: {
+              select: { inspections: true }
             }
           }
-        }
-      })
+        });
+      });
 
-      logAction('PUT Inspection Template - Success', userId, { 
+      logAction('PUT Inspection Template - Success', userId, {
         templateId,
         updatedFields: Object.keys(updateData)
       })
@@ -319,7 +384,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('PUT Inspection Template - Validation error', userId, {
@@ -424,7 +489,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
       // Vérifier si le template est utilisé par des inspections
       if (existingTemplate._count.inspections > 0) {
-        logAction('DELETE Inspection Template - Template in use', userId, { 
+        logAction('DELETE Inspection Template - Template in use', userId, {
           templateId,
           inspectionsCount: existingTemplate._count.inspections
         })

@@ -1,0 +1,123 @@
+{
+    "inspection_checklist": {
+        "metadata": {
+            "title": "Accident",
+            "category": "Incidents",
+            "description": "Formulaire de rapport d'accident.",
+            "color": "#ef4444",
+            "editable": true,
+            "checklist_type": "accident_report"
+        },
+        "sections": [
+            {
+                "section_id": 1,
+                "section_name": "Accident Documentation",
+                "items": [
+                    {
+                        "item_id": "accident_photo",
+                        "item_name": "Accident photo",
+                        "type": "Photo",
+                        "required": false,
+                        "short_description": "—",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "time_accident_occurred",
+                        "item_name": "Time Accident Occurred",
+                        "type": "Date / Time",
+                        "required": false,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "date_format": "Date and Time"
+                    },
+                    {
+                        "item_id": "accident_details",
+                        "item_name": "Accident Details",
+                        "type": "Free Text",
+                        "required": true,
+                        "short_description": "Please describe the accident and attach pictures of the vehicle",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "location",
+                        "item_name": "Location",
+                        "type": "Free Text",
+                        "required": true,
+                        "short_description": "Where did the accident occur?",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "driver_information",
+                        "item_name": "Driver Information",
+                        "type": "Free Text",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "View Instructions"
+                    },
+                    {
+                        "item_id": "police_report_number",
+                        "item_name": "Police Report Number",
+                        "type": "Free Text",
+                        "required": false,
+                        "short_description": "if available",
+                        "instructions": "—"
+                    }
+                ]
+            },
+            {
+                "section_id": 2,
+                "section_name": "Vehicle Assessment",
+                "items": [
+                    {
+                        "item_id": "vehicle_condition",
+                        "item_name": "Vehicle Condition",
+                        "type": "Dropdown",
+                        "required": true,
+                        "short_description": "Is the vehicle safe to operate?",
+                        "instructions": "—",
+                        "choices": [
+                            {
+                                "value": "excellent",
+                                "label": "Excellent",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "has_issues_safe",
+                                "label": "Has issues but safe to operate",
+                                "fail_if_chosen": true
+                            },
+                            {
+                                "value": "not_safe",
+                                "label": "Not safe to operate",
+                                "fail_if_chosen": true
+                            }
+                        ],
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    }
+                ]
+            },
+            {
+                "section_id": 3,
+                "section_name": "Sign-Off",
+                "items": [
+                    {
+                        "item_id": "driver_signature",
+                        "item_name": "Driver's Signature",
+                        "type": "Signature",
+                        "required": true,
+                        "short_description": "—"
+                    },
+                    {
+                        "item_id": "additional_details",
+                        "item_name": "Additional Details",
+                        "type": "Free Text",
+                        "required": false,
+                        "short_description": "—",
+                        "instructions": ""
+                    }
+                ]
+            }
+        ]
+    }
+}

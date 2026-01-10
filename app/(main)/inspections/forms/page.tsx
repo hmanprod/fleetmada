@@ -4,19 +4,26 @@ import React, { useState, useEffect } from 'react';
 import {
     Plus, Search, Filter, MoreHorizontal, FileText,
     Settings, AlertCircle, ChevronRight, LayoutGrid,
-    CheckCircle2, XCircle, Copy, Trash2, Edit
+    CheckCircle2, XCircle, Copy, Trash2, Edit, ClipboardCopy
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 import { FiltersSidebar } from '../components/filters/FiltersSidebar';
 import { FilterCriterion } from '../components/filters/FilterCard';
 import { TEMPLATE_FIELDS } from '../components/filters/filter-definitions';
+import { FormCard } from './components/FormCard';
+import { TemplateSelectionModal } from './components/TemplateSelectionModal';
+import inspectionsAPI from '@/lib/services/inspections-api';
+import { useToast, ToastContainer } from '../components/NotificationToast';
 
 export default function InspectionFormsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const searchParams = useSearchParams();
+    const { toast, toasts, removeToast } = useToast();
 
     const {
         templates,
@@ -34,7 +41,14 @@ export default function InspectionFormsPage() {
 
     useEffect(() => {
         fetchTemplates();
-    }, []);
+
+        // Check for updated/created params to show toast
+        if (searchParams.get('updated') === 'true') {
+            toast.success('Mise à jour réussie', 'Le formulaire a été modifié avec succès.');
+        } else if (searchParams.get('created') === 'true') {
+            toast.success('Création réussie', 'Le nouveau formulaire a été créé avec succès.');
+        }
+    }, [searchParams]);
 
     const handleApplyFilters = (criteria: FilterCriterion[]) => {
         setActiveCriteria(criteria);
@@ -85,6 +99,16 @@ export default function InspectionFormsPage() {
         }
     };
 
+    const handleCreateFromJson = async (filename: string) => {
+        try {
+            const newTemplate = await inspectionsAPI.createTemplateFromJson(filename);
+            router.push(`/inspections/forms/${newTemplate.id}/edit?created=true`);
+        } catch (err: any) {
+            console.error('Failed to create template from JSON:', err);
+            toast.error('Erreur de création', 'Le modèle n\'a pas pu être créé depuis le fichier JSON.');
+        }
+    };
+
     if (loading && templates.length === 0) {
         return (
             <div className="p-6 max-w-[1800px] mx-auto min-h-screen flex items-center justify-center">
@@ -105,18 +129,31 @@ export default function InspectionFormsPage() {
                 initialFilters={activeCriteria}
                 availableFields={TEMPLATE_FIELDS}
             />
+            <TemplateSelectionModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                onSelect={handleCreateFromJson}
+            />
             {/* Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Formulaires d'Inspection</h1>
                     <p className="text-gray-500 mt-1">Gérez vos formulaires et critères de vérification</p>
                 </div>
-                <button
-                    onClick={handleCreate}
-                    className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2.5 px-6 rounded-lg transition-all shadow-md flex items-center gap-2 active:scale-95"
-                >
-                    <Plus size={20} /> Nouveau Formulaire
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setIsTemplateModalOpen(true)}
+                        className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-2.5 px-6 rounded-lg transition-all shadow-sm flex items-center gap-2 active:scale-95"
+                    >
+                        <ClipboardCopy size={20} className="text-[#008751]" /> Copier depuis Template
+                    </button>
+                    <button
+                        onClick={handleCreate}
+                        className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2.5 px-6 rounded-lg transition-all shadow-md flex items-center gap-2 active:scale-95"
+                    >
+                        <Plus size={20} /> Nouveau Formulaire
+                    </button>
+                </div>
             </div>
 
             {/* Error Message */}
@@ -183,56 +220,15 @@ export default function InspectionFormsPage() {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-visible">
                     {templates.map(template => (
-                        <div key={template.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#008751]/30 transition-all duration-300 overflow-hidden flex flex-col">
-                            <div className="p-6 flex-1">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${template.category === 'Sécurité' ? 'bg-orange-100 text-orange-700' :
-                                        template.category === 'Mécanique' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {template.category}
-                                    </span>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleDuplicate(template.id, template.name)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Dupliquer"><Copy size={16} /></button>
-                                        <button onClick={() => handleDelete(template.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded" title="Supprimer"><Trash2 size={16} /></button>
-                                    </div>
-                                </div>
-
-                                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">{template.name}</h3>
-                                <p className="text-gray-500 text-sm mb-6 line-clamp-2 h-10">{template.description || 'Aucune description fournie.'}</p>
-
-                                <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
-                                    <div className="flex items-center gap-1.5">
-                                        <LayoutGrid size={14} className="text-[#008751]" />
-                                        <span>{template._count?.items || 0} éléments</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <ClipboardCheck size={14} className="text-[#008751]" />
-                                        <span>{template._count?.inspections || 0} utilisations</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                                <button
-                                    onClick={() => handleToggleStatus(template.id, template.isActive)}
-                                    className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${template.isActive ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-gray-600'
-                                        }`}
-                                >
-                                    {template.isActive ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
-                                    {template.isActive ? 'Actif' : 'Inactif'}
-                                </button>
-
-                                <button
-                                    onClick={() => handleEdit(template.id)}
-                                    className="p-2 text-[#008751] hover:bg-[#008751]/10 rounded-lg transition-colors border border-transparent hover:border-[#008751]/20"
-                                >
-                                    <Edit size={18} />
-                                </button>
-                            </div>
-                        </div>
+                        <FormCard
+                            key={template.id}
+                            template={template}
+                            onDuplicate={handleDuplicate}
+                            onDelete={handleDelete}
+                            onToggleStatus={handleToggleStatus}
+                        />
                     ))}
                 </div>
             )}
@@ -249,6 +245,8 @@ export default function InspectionFormsPage() {
                     </div>
                 </div>
             )}
+
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>
     );
 }

@@ -1,66 +1,81 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, CheckCircle2, AlertCircle, LayoutGrid, Type, ListChecks, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Save, HelpCircle, MapPin, CameraOff, Palette, FileJson, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
-import type { InspectionTemplateCreateData, InspectionTemplateItem } from '@/lib/services/inspections-api';
+import inspectionsAPI, { InspectionTemplateCreateData, InspectionTemplate, JsonTemplateMetadata } from '@/lib/services/inspections-api';
+
+const COLORS = [
+    { name: 'None', value: null },
+    { name: 'Red', value: '#ef4444' },
+    { name: 'Orange', value: '#f97316' },
+    { name: 'Yellow', value: '#eab308' },
+    { name: 'Green', value: '#22c55e' },
+    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Indigo', value: '#6366f1' },
+    { name: 'Purple', value: '#a855f7' },
+];
 
 export default function CreateInspectionFormPage() {
     const router = useRouter();
-    const { createTemplate, loading, error, clearError } = useInspectionTemplates();
+    const { createTemplate, loading: loadingHooks } = useInspectionTemplates();
+    const [submitting, setSubmitting] = useState(false);
+    const [jsonTemplates, setJsonTemplates] = useState<JsonTemplateMetadata[]>([]);
+    const [loadingJson, setLoadingJson] = useState(false);
 
-    const [formData, setFormData] = useState<InspectionTemplateCreateData>({
+    const [formData, setFormData] = useState<InspectionTemplateCreateData & { copyFromJson?: string }>({
         name: '',
         description: '',
         category: 'Général',
-        isActive: true,
+        color: null,
+        enableLocationException: true,
+        preventStoredPhotos: true,
+        copyFromJson: '',
         items: []
     });
 
-    const [newItem, setNewItem] = useState<{ name: string; category: string; isRequired: boolean }>({
-        name: '',
-        category: 'Général',
-        isRequired: true
-    });
-
-    const handleAddItem = () => {
-        if (!newItem.name.trim()) return;
-        setFormData(prev => ({
-            ...prev,
-            items: [...prev.items, { ...newItem, sortOrder: prev.items.length } as any]
-        }));
-        setNewItem({ name: '', category: 'Général', isRequired: true });
-    };
-
-    const handleRemoveItem = (index: number) => {
-        setFormData(prev => ({
-            ...prev,
-            items: prev.items.filter((_, i) => i !== index)
-        }));
-    };
+    useEffect(() => {
+        const fetchJsonTemplates = async () => {
+            setLoadingJson(true);
+            try {
+                const data = await inspectionsAPI.getJsonTemplates();
+                setJsonTemplates(data);
+            } catch (err) {
+                console.error("Failed to fetch JSON templates:", err);
+            } finally {
+                setLoadingJson(false);
+            }
+        };
+        fetchJsonTemplates();
+    }, []);
 
     const handleSave = async () => {
         if (!formData.name.trim()) return;
+        setSubmitting(true);
         try {
-            await createTemplate(formData);
-            router.push('/inspections/forms');
+            const newTemplate = await createTemplate(formData);
+            // After creation, redirect to the advanced builder (edit page)
+            router.push(`/inspections/forms/${newTemplate.id}/edit?created=true`);
         } catch (err) {
             console.error(err);
+            setSubmitting(false);
         }
     };
 
     return (
         <div className="bg-gray-50 min-h-screen pb-12">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
+            <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center transition-all">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700">
+                    <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-all">
                         <ArrowLeft size={24} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Nouveau Formulaire d'Inspection</h1>
-                        <p className="text-sm text-gray-500">Concevez votre processus de vérification</p>
+                        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                            <button onClick={() => router.push('/inspections/forms')} className="hover:text-gray-900 transition-colors">Inspection Forms</button>
+                        </nav>
+                        <h1 className="text-2xl font-bold text-gray-900 leading-none">New Inspection Form</h1>
                     </div>
                 </div>
                 <div className="flex gap-3">
@@ -68,139 +83,160 @@ export default function CreateInspectionFormPage() {
                         onClick={() => router.back()}
                         className="px-6 py-2.5 text-gray-700 font-semibold hover:bg-gray-100 rounded-xl transition-colors"
                     >
-                        Annuler
+                        Cancel
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={loading || !formData.name}
+                        disabled={submitting || !formData.name}
                         className="px-6 py-2.5 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-xl shadow-lg shadow-green-900/10 flex items-center gap-2 disabled:opacity-50 transition-all active:scale-95"
                     >
-                        {loading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Save size={20} />}
-                        Enregistrer
+                        {submitting ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                            <span>Save Inspection Form</span>
+                        )}
                     </button>
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto py-8 px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: General Info */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Type size={18} className="text-[#008751]" /> Informations Générales
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nom du Formulaire</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all"
-                                    placeholder="ex: Inspection Quotidienne"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Catégorie</label>
-                                <select
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all"
-                                    value={formData.category}
-                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                >
-                                    <option value="Général">Général</option>
-                                    <option value="Sécurité">Sécurité</option>
-                                    <option value="Mécanique">Mécanique</option>
-                                    <option value="Électrique">Électrique</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
-                                <textarea
-                                    rows={4}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all"
-                                    placeholder="À quoi sert ce formulaire ?"
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right: Items Builder */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Add Item Form */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Plus size={18} className="text-[#008751]" /> Ajouter un Point de Contrôle
-                        </h2>
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                                    placeholder="Libellé du point de contrôle..."
-                                    value={newItem.name}
-                                    onChange={e => setNewItem({ ...newItem, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="w-full md:w-48">
-                                <select
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-                                    value={newItem.category}
-                                    onChange={e => setNewItem({ ...newItem, category: e.target.value })}
-                                >
-                                    <option value="Général">Général</option>
-                                    <option value="Sécurité">Sécurité</option>
-                                    <option value="Mécanique">Mécanique</option>
-                                    <option value="Carrosserie">Carrosserie</option>
-                                    <option value="Intérieur">Intérieur</option>
-                                </select>
-                            </div>
-                            <button
-                                onClick={handleAddItem}
-                                className="bg-gray-900 text-white p-3 rounded-xl hover:bg-black transition-colors"
-                            >
-                                <Plus size={24} />
-                            </button>
-                        </div>
+            <div className="max-w-3xl mx-auto py-12 px-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="p-8 border-b border-gray-100 bg-gray-50/30">
+                        <h2 className="text-xl font-bold text-gray-900">Details</h2>
                     </div>
 
-                    {/* Items List */}
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <ListChecks size={18} className="text-[#008751]" /> Points de Contrôle ({formData.items.length})
-                            </h2>
+                    <div className="p-8 space-y-8">
+                        {/* Title */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
+                                Title <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                className="w-full p-3.5 bg-white border border-gray-300 rounded-xl focus:ring-4 focus:ring-[#008751]/10 focus:border-[#008751] outline-none transition-all placeholder:text-gray-400"
+                                placeholder=""
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            />
                         </div>
 
-                        <div className="divide-y divide-gray-100">
-                            {formData.items.length === 0 ? (
-                                <div className="p-12 text-center">
-                                    <Star size={40} className="mx-auto text-gray-200 mb-4" />
-                                    <p className="text-gray-500">Aucun point de contrôle ajouté pour le moment.</p>
+                        {/* Description */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Description</label>
+                            <textarea
+                                rows={4}
+                                className="w-full p-3.5 bg-white border border-gray-300 rounded-xl focus:ring-4 focus:ring-[#008751]/10 focus:border-[#008751] outline-none transition-all placeholder:text-gray-400 resize-none"
+                                placeholder=""
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            />
+                        </div>
+
+                        {/* Copy From Template */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Copy from Template</label>
+                            <div className="relative">
+                                <select
+                                    className="w-full p-3.5 bg-white border border-gray-300 rounded-xl focus:ring-4 focus:ring-[#008751]/10 focus:border-[#008751] outline-none transition-all appearance-none cursor-pointer disabled:bg-gray-50 disabled:text-gray-400"
+                                    value={formData.copyFromJson}
+                                    onChange={e => {
+                                        const selected = jsonTemplates.find(t => t.filename === e.target.value);
+                                        setFormData({
+                                            ...formData,
+                                            copyFromJson: e.target.value,
+                                            name: selected ? selected.title : formData.name,
+                                            category: selected ? selected.category : formData.category,
+                                            description: selected ? selected.description || '' : formData.description
+                                        });
+                                    }}
+                                    disabled={loadingJson}
+                                >
+                                    <option value="">{loadingJson ? 'Loading templates...' : 'Please select'}</option>
+                                    {jsonTemplates.map((template) => (
+                                        <option key={template.filename} value={template.filename}>
+                                            {template.title} ({template.category})
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    {loadingJson ? <Loader2 size={18} className="animate-spin" /> : <FileJson size={18} />}
                                 </div>
-                            ) : (
-                                formData.items.map((item, index) => (
-                                    <div key={index} className="p-4 flex items-center justify-between group hover:bg-gray-50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
-                                                {index + 1}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-gray-900">{item.name}</p>
-                                                <p className="text-xs text-gray-400 font-medium uppercase tracking-tighter">Catégorie: {item.category}</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => handleRemoveItem(index)}
-                                            className="p-2 text-gray-300 hover:text-red-600 transition-colors"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                ))
-                            )}
+                            </div>
+                            <p className="text-sm text-gray-500">Select a standard JSON template as a starting point (Optional)</p>
                         </div>
+
+                        {/* Color Picker */}
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                                <Palette size={16} className="text-gray-400" /> Color
+                            </label>
+                            <div className="flex flex-wrap gap-3">
+                                {COLORS.map((color) => (
+                                    <button
+                                        key={color.name}
+                                        onClick={() => setFormData({ ...formData, color: color.value })}
+                                        className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${formData.color === color.value ? 'border-gray-900 scale-110 shadow-md' : 'border-transparent hover:scale-105'
+                                            }`}
+                                        style={{ backgroundColor: color.value || '#f3f4f6' }}
+                                        title={color.name}
+                                    >
+                                        {!color.value && <div className="w-6 h-[2px] bg-gray-400 rotate-45" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <hr className="border-gray-100" />
+
+                        {/* Settings */}
+                        <div className="space-y-6 pt-2">
+                            <label className="flex items-start gap-4 cursor-pointer group">
+                                <div className="relative flex items-center mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={formData.enableLocationException}
+                                        onChange={e => setFormData({ ...formData, enableLocationException: e.target.checked })}
+                                    />
+                                    <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008751]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008751]"></div>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Enable Location Exception Tracking</p>
+                                </div>
+                            </label>
+
+                            <label className="flex items-start gap-4 cursor-pointer group">
+                                <div className="relative flex items-center mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={formData.preventStoredPhotos}
+                                        onChange={e => setFormData({ ...formData, preventStoredPhotos: e.target.checked })}
+                                    />
+                                    <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008751]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008751]"></div>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Prevent Use of Stored Photos</p>
+                                    <p className="text-xs text-gray-500 mt-1">Users will only be able to attach photos by taking them with the device's built-in camera</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                        <button
+                            onClick={() => router.back()}
+                            className="text-sm font-bold text-[#008751] hover:text-[#007043] transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={submitting || !formData.name}
+                            className="px-8 py-3 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            {submitting ? 'Creating...' : 'Save Inspection Form'}
+                        </button>
                     </div>
                 </div>
             </div>

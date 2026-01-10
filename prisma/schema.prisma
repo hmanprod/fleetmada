@@ -806,16 +806,32 @@ enum ComplianceStatus {
   PENDING_REVIEW
 }
 
+enum InspectionFieldType {
+  PASS_FAIL
+  NUMERIC
+  TEXT
+  MULTIPLE_CHOICE
+  SIGNATURE
+  PHOTO
+  HEADER
+  DATE_TIME
+  METER
+}
+
 model InspectionTemplate {
   id          String           @id @default(cuid())
   name        String
   description String?
   category    String
-  isActive    Boolean          @default(true)
-  items       InspectionTemplateItem[]
+  isActive                Boolean             @default(true)
+  color                   String?
+  enableLocationException Boolean             @default(false)
+  preventStoredPhotos     Boolean             @default(false)
+  items                   InspectionTemplateItem[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   inspections Inspection[]
+  schedules   InspectionSchedule[]
 }
 
 model InspectionTemplateItem {
@@ -826,6 +842,20 @@ model InspectionTemplateItem {
   category           String
   isRequired         Boolean            @default(false)
   sortOrder          Int                @default(0)
+  type               InspectionFieldType @default(PASS_FAIL)
+  options            String[]           @default([])
+  unit               String?
+  instructions       String?
+  shortDescription   String?
+  passLabel          String             @default("Pass")
+  failLabel          String             @default("Fail")
+  requirePhotoOnPass Boolean            @default(false)
+  requirePhotoOnFail Boolean            @default(false)
+  enableNA           Boolean            @default(true)
+  dateTimeType       String?            // "DATE_ONLY" | "DATE_TIME"
+  minRange           Float?
+  maxRange           Float?
+  requireSecondaryMeter Boolean         @default(false)
   inspectionTemplate InspectionTemplate @relation(fields: [inspectionTemplateId], references: [id], onDelete: Cascade)
   inspectionItems    InspectionItem[]
   
@@ -874,6 +904,8 @@ model InspectionItem {
   notes           String?
   sortOrder       Int                 @default(0)
   isRequired      Boolean             @default(false)
+  type            InspectionFieldType @default(PASS_FAIL)
+  unit            String?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   inspection      Inspection          @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
@@ -1114,4 +1146,41 @@ enum IntegrationType {
   FLEET_TRACKING
   FUEL_CARD
   MAINTENANCE_SYSTEM
+}
+
+
+model InspectionSchedule {
+  id                String   @id @default(cuid())
+  templateId        String
+  
+  // Rules
+  ruleType          InspectionRuleType
+  ruleValue         String?  // JSON string for attributes/values or Vehicle ID
+  
+  // Schedule
+  scheduleEnabled   Boolean  @default(false)
+  frequencyType     InspectionFrequency?
+  frequencyInterval Int?     // e.g., every 2 weeks
+  
+  nextDueDate       DateTime?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  template          InspectionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  
+  @@index([templateId])
+}
+
+enum InspectionRuleType {
+  ALL_VEHICLES
+  BY_ATTRIBUTE
+  SPECIFIC_VEHICLE
+}
+
+enum InspectionFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  MILEAGE
 }

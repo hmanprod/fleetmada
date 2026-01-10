@@ -15,7 +15,9 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:setup": "tsx prisma/seed-setup.ts",
+    "db:seed:dev": "tsx prisma/seed-dev.ts",
+    "db:seed": "npm run db:seed:setup && npm run db:seed:dev",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:restart": "docker-compose restart",
@@ -65,6 +67,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "npx tsx prisma/seed-setup.ts"
   }
 }

@@ -1,0 +1,560 @@
+{
+    "inspection_checklist": {
+        "metadata": {
+            "title": "Vehicle Inspection Items",
+            "category": "Maintenance",
+            "description": "Standard vehicle inspection checklist.",
+            "editable": true
+        },
+        "sections": [
+            {
+                "section_id": 1,
+                "section_name": "Meter Reading",
+                "items": [
+                    {
+                        "item_id": "meter_reading",
+                        "item_name": "Meter Reading",
+                        "type": "Meter Entry",
+                        "required": true,
+                        "short_description": "—",
+                        "require_secondary_meter": true,
+                        "require_photo_verification": false
+                    }
+                ]
+            },
+            {
+                "section_id": 2,
+                "section_name": "Interior Checks",
+                "items": [
+                    {
+                        "item_id": "seats_belts",
+                        "item_name": "Seats and seat belts",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "warning_lamps",
+                        "item_name": "Warning lamps",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "switches",
+                        "item_name": "Switches",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "Position lamp, headlamp, and hazards",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "view_wipers_washers",
+                        "item_name": "View to front, wipers & washers",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "brake_controls",
+                        "item_name": "Brake controls, servo operation",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "steering_wheel_column",
+                        "item_name": "Steering wheel & column",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "doors_mirrors_horn",
+                        "item_name": "Doors, mirrors, horn",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "speedometer_controls",
+                        "item_name": "Speedometer, driver controls (Class 5 only)",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "interior_condition",
+                        "item_name": "Interior condition",
+                        "type": "Photo",
+                        "required": false,
+                        "short_description": "Take a photo of the interior",
+                        "instructions": "—"
+                    }
+                ]
+            },
+            {
+                "section_id": 3,
+                "section_name": "Exterior Checks",
+                "items": [
+                    {
+                        "item_id": "front_photo",
+                        "item_name": "Front of Vehicle Photo",
+                        "type": "Photo",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "left_side_photo",
+                        "item_name": "Left Side of Vehicle Photo",
+                        "type": "Photo",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "rear_photo",
+                        "item_name": "Rear of Vehicle Photo",
+                        "type": "Photo",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "right_side_photo",
+                        "item_name": "Right Side of Vehicle Photo",
+                        "type": "Photo",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "registration_plates",
+                        "item_name": "Registration plates",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "lamps_registration",
+                        "item_name": "Lamps, registration plate lamps",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "indicators_hazards",
+                        "item_name": "Indicators, hazards",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "headlamps_aim",
+                        "item_name": "Headlamps & aim",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "stop_lamps_fog_reflectors",
+                        "item_name": "Stop lamps, fog lamps, reflectors",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "wheels_tyres",
+                        "item_name": "Wheels, tyres",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "shock_absorbers",
+                        "item_name": "Shock absorbers",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "mirrors_wipers_fuel_cap",
+                        "item_name": "Mirrors, wiper blades, fuel tank cap",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "glazing",
+                        "item_name": "Glazing (Class 5 Only)",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "doors_boot_bonnet",
+                        "item_name": "Doors, boot lid, loading doors, bonnet",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "towbars",
+                        "item_name": "Towbars",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "body_condition",
+                        "item_name": "General condition of body",
+                        "type": "Dropdown",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "choices": [
+                            {
+                                "value": "excellent",
+                                "label": "Excellent",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "small_dents",
+                                "label": "Small dents",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "major_damage",
+                                "label": "Major body damage",
+                                "fail_if_chosen": true
+                            }
+                        ],
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    }
+                ]
+            },
+            {
+                "section_id": 4,
+                "section_name": "Under bonnet checks",
+                "items": [
+                    {
+                        "item_id": "vehicle_structure",
+                        "item_name": "Vehicle structure",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "braking_systems",
+                        "item_name": "Braking systems",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "exhaust_fuel_system",
+                        "item_name": "Exhaust systems, fuel system",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "speed_limiter",
+                        "item_name": "Speed limiter (if applicable)",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "steering_power_steering",
+                        "item_name": "Steering & power steering components",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "suspension_components",
+                        "item_name": "Suspension components",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    }
+                ]
+            },
+            {
+                "section_id": 5,
+                "section_name": "Under vehicle checks",
+                "items": [
+                    {
+                        "item_id": "steering_under_vehicle",
+                        "item_name": "Steering including power steering",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "drive_shafts",
+                        "item_name": "Drive shafts (if applicable)",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "suspension_shocks_under",
+                        "item_name": "Suspension, shock absorbers",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "wheel_bearings",
+                        "item_name": "Wheel bearings",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "brake_systems_mechanical",
+                        "item_name": "Brake systems & mechanical components",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "exhaust_system_under",
+                        "item_name": "Exhaust system",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "fuel_system_tank",
+                        "item_name": "Fuel system & fuel tank",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "structure_general",
+                        "item_name": "Structure, general vehicle condition",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    }
+                ]
+            },
+            {
+                "section_id": 6,
+                "section_name": "Sign-off",
+                "items": [
+                    {
+                        "item_id": "signature",
+                        "item_name": "Signature",
+                        "type": "Signature",
+                        "required": true,
+                        "short_description": ""
+                    }
+                ]
+            }
+        ]
+    }
+}

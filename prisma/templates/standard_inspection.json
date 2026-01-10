@@ -1,0 +1,327 @@
+{
+    "inspection_checklist": {
+        "metadata": {
+            "title": "Standard Inspection Form",
+            "category": "Standard",
+            "description": "Formulaire d'inspection standard pour tous types de véhicules.",
+            "editable": true,
+            "checklist_type": "standard_vehicle_inspection"
+        },
+        "sections": [
+            {
+                "section_id": 1,
+                "section_name": "Odometer Reading",
+                "items": [
+                    {
+                        "item_id": "odometer_reading",
+                        "item_name": "Odometer Reading",
+                        "type": "Meter Entry",
+                        "required": true,
+                        "short_description": "—",
+                        "require_secondary_meter": true,
+                        "require_photo_verification": false
+                    }
+                ]
+            },
+            {
+                "section_id": 2,
+                "section_name": "Item Checklist",
+                "items": [
+                    {
+                        "item_id": "interior_cleanliness",
+                        "item_name": "Interior Cleanliness",
+                        "type": "Photo",
+                        "required": false,
+                        "short_description": "Take a photo of the interior",
+                        "instructions": "—"
+                    },
+                    {
+                        "item_id": "engine",
+                        "item_name": "Engine",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "oil_life_left",
+                        "item_name": "Oil Life Left",
+                        "type": "Number",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "minimum": 15.0,
+                        "maximum": 100.0,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "fuel_level",
+                        "item_name": "Fuel Level",
+                        "type": "Dropdown",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "choices": [
+                            {
+                                "value": "full",
+                                "label": "Full",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "three_quarters",
+                                "label": "3/4",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "half",
+                                "label": "1/2",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "quarter",
+                                "label": "1/4",
+                                "fail_if_chosen": true
+                            },
+                            {
+                                "value": "empty",
+                                "label": "Empty",
+                                "fail_if_chosen": true
+                            }
+                        ],
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": false
+                    },
+                    {
+                        "item_id": "transmission",
+                        "item_name": "Transmission",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "clutch",
+                        "item_name": "Clutch",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": true,
+                        "na_label": "No Clutch",
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "steering_mechanism",
+                        "item_name": "Steering Mechanism",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "horn",
+                        "item_name": "Horn",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "windshield_wipers_washers",
+                        "item_name": "Windshield and Wipers/Washers",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "rear_vision_mirrors",
+                        "item_name": "Rear Vision Mirrors",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "lighting_devices_reflectors",
+                        "item_name": "Lighting Devices and Reflectors",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": true,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "parking_brake",
+                        "item_name": "Parking Brake",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "service_brakes",
+                        "item_name": "Service Brakes",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "air_lines_light_lines",
+                        "item_name": "Air Lines/Light Lines",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "coupling_devices",
+                        "item_name": "Coupling Devices",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "tires",
+                        "item_name": "Tires",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "wheels_rims",
+                        "item_name": "Wheels and Rims",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "emergency_equipment",
+                        "item_name": "Emergency Equipment",
+                        "type": "Pass / Fail",
+                        "required": true,
+                        "short_description": "—",
+                        "instructions": "—",
+                        "pass_label": "Pass",
+                        "fail_label": "Fail",
+                        "enable_na_option": false,
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    }
+                ]
+            },
+            {
+                "section_id": 3,
+                "section_name": "Sign-Off",
+                "items": [
+                    {
+                        "item_id": "vehicle_condition_ok",
+                        "item_name": "Vehicle Condition OK",
+                        "type": "Dropdown",
+                        "required": true,
+                        "short_description": "This must be checked if there are no defects.",
+                        "instructions": "—",
+                        "choices": [
+                            {
+                                "value": "excellent",
+                                "label": "Excellent",
+                                "fail_if_chosen": false
+                            },
+                            {
+                                "value": "has_issues_safe",
+                                "label": "Has issues but safe to operate",
+                                "fail_if_chosen": true
+                            },
+                            {
+                                "value": "not_safe",
+                                "label": "Not safe to operate",
+                                "fail_if_chosen": true
+                            }
+                        ],
+                        "require_photo_comment_pass": false,
+                        "require_photo_comment_fail": true
+                    },
+                    {
+                        "item_id": "driver_signature",
+                        "item_name": "Reviewing Driver's Signature",
+                        "type": "Signature",
+                        "required": true,
+                        "short_description": ""
+                    }
+                ]
+            }
+        ]
+    }
+}

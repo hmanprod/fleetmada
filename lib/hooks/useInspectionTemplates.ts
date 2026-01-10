@@ -42,7 +42,7 @@ interface UseInspectionTemplatesReturn {
 
 export function useInspectionTemplates(initialFilters: InspectionTemplateFilters = {}): UseInspectionTemplatesReturn {
   const [templates, setTemplates] = useState<InspectionTemplate[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<InspectionTemplatesResponse['pagination'] | null>(null)
   const [filters, setFilters] = useState<InspectionTemplateFilters>({
@@ -75,6 +75,7 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
 
   const createTemplate = useCallback(async (data: InspectionTemplateCreateData): Promise<InspectionTemplate> => {
     try {
+      setLoading(true)
       setError(null)
       const newTemplate = await inspectionsAPI.createInspectionTemplate(data)
 
@@ -86,11 +87,14 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du modèle d\'inspection'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [fetchTemplates])
 
   const updateTemplate = useCallback(async (id: string, data: InspectionTemplateUpdateData): Promise<InspectionTemplate> => {
     try {
+      setLoading(true)
       setError(null)
       const updatedTemplate = await inspectionsAPI.updateInspectionTemplate(id, data)
 
@@ -104,11 +108,14 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la modification du modèle d\'inspection'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   const deleteTemplate = useCallback(async (id: string): Promise<void> => {
     try {
+      setLoading(true)
       setError(null)
       await inspectionsAPI.deleteInspectionTemplate(id)
 
@@ -126,11 +133,14 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression du modèle d\'inspection'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [pagination])
 
   const duplicateTemplate = useCallback(async (id: string, newName: string): Promise<InspectionTemplate> => {
     try {
+      setLoading(true)
       setError(null)
       const duplicatedTemplate = await inspectionsAPI.duplicateInspectionTemplate(id, newName)
 
@@ -142,11 +152,14 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la duplication du modèle'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [fetchTemplates])
 
   const toggleTemplateStatus = useCallback(async (id: string, isActive: boolean): Promise<InspectionTemplate> => {
     try {
+      setLoading(true)
       setError(null)
       const updatedTemplate = await inspectionsAPI.updateInspectionTemplate(id, { isActive })
 
@@ -160,28 +173,36 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du statut'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   const getTemplate = useCallback(async (id: string): Promise<InspectionTemplate> => {
     try {
+      setLoading(true)
       setError(null)
       return await inspectionsAPI.getInspectionTemplate(id)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération du modèle'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   const getTemplateItems = useCallback(async (id: string): Promise<InspectionTemplateItem[]> => {
     try {
+      setLoading(true)
       setError(null)
       return await inspectionsAPI.getInspectionTemplateItems(id)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la récupération des éléments'
       setError(errorMessage)
       throw err
+    } finally {
+      setLoading(false)
     }
   }, [])
 
@@ -220,11 +241,6 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
       mostUsedTemplate
     }
   }, [templates])
-
-  // Charger les données initiales - Supprimé pour éviter les conflits avec les appels spécifiques aux pages
-  // useEffect(() => {
-  //   fetchTemplates()
-  // }, [])
 
   return {
     templates,

@@ -10,6 +10,8 @@ const getAuthToken = (): string | null => {
 }
 
 // Types pour les Inspections
+export type InspectionFieldType = 'PASS_FAIL' | 'NUMERIC' | 'TEXT' | 'MULTIPLE_CHOICE' | 'SIGNATURE' | 'PHOTO' | 'HEADER' | 'DATE_TIME' | 'METER';
+
 export interface Inspection {
   id: string
   vehicleId: string
@@ -67,6 +69,8 @@ export interface InspectionItem {
   notes?: string
   sortOrder: number
   isRequired: boolean
+  type: InspectionFieldType
+  unit?: string
   createdAt: Date
   updatedAt: Date
   templateItem?: {
@@ -75,6 +79,8 @@ export interface InspectionItem {
     description: string
     category: string
     isRequired: boolean
+    type: InspectionFieldType
+    unit?: string
   }
 }
 
@@ -100,6 +106,9 @@ export interface InspectionTemplate {
   description?: string
   category: string
   isActive: boolean
+  color?: string
+  enableLocationException: boolean
+  preventStoredPhotos: boolean
   createdAt: Date
   updatedAt: Date
   items?: InspectionTemplateItem[]
@@ -117,6 +126,20 @@ export interface InspectionTemplateItem {
   category: string
   isRequired: boolean
   sortOrder: number
+  type: InspectionFieldType
+  options: string[]
+  unit?: string
+  instructions?: string
+  shortDescription?: string
+  passLabel?: string
+  failLabel?: string
+  requirePhotoOnPass?: boolean
+  requirePhotoOnFail?: boolean
+  enableNA?: boolean
+  dateTimeType?: string
+  minRange?: number
+  maxRange?: number
+  requireSecondaryMeter?: boolean
 }
 
 export interface InspectionCreateData {
@@ -157,13 +180,12 @@ export interface InspectionTemplateCreateData {
   description?: string
   category: string
   isActive?: boolean
-  items: {
-    name: string
-    description?: string
-    category: string
-    isRequired?: boolean
-    sortOrder?: number
-  }[]
+  color?: string
+  enableLocationException?: boolean
+  preventStoredPhotos?: boolean
+  copyFromId?: string
+  copyFromJson?: string
+  items?: Partial<InspectionTemplateItem>[]
 }
 
 export interface InspectionTemplateUpdateData {
@@ -171,6 +193,10 @@ export interface InspectionTemplateUpdateData {
   description?: string
   category?: string
   isActive?: boolean
+  color?: string
+  enableLocationException?: boolean
+  preventStoredPhotos?: boolean
+  items?: Partial<InspectionTemplateItem>[]
 }
 
 export interface InspectionFilters {
@@ -537,6 +563,76 @@ class InspectionsAPI {
 
     return result.data!
   }
+
+  // Schedules
+  async getSchedules(templateId: string): Promise<any[]> {
+    const endpoint = `/api/inspection-templates/${templateId}/schedules`
+    const result = await this.makeRequest<any[]>(endpoint)
+
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur lors de la récupération des plannings')
+    }
+
+    return result.data!
+  }
+
+  async createSchedule(templateId: string, scheduleData: any): Promise<any> {
+    const endpoint = `/api/inspection-templates/${templateId}/schedules`
+    const result = await this.makeRequest<any>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(scheduleData),
+    })
+
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur lors de la création du planning')
+    }
+
+    return result.data!
+  }
+
+  async deleteSchedule(templateId: string, scheduleId: string): Promise<void> {
+    const endpoint = `/api/inspection-templates/${templateId}/schedules/${scheduleId}`
+    const result = await this.makeRequest(endpoint, {
+      method: 'DELETE',
+    })
+
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur lors de la suppression du planning')
+    }
+  }
+
+  // JSON Templates
+  async getJsonTemplates(): Promise<JsonTemplateMetadata[]> {
+    const endpoint = '/api/inspection-templates/templates-json'
+    const result = await this.makeRequest<JsonTemplateMetadata[]>(endpoint)
+
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur lors de la récupération des templates JSON')
+    }
+
+    return result.data!
+  }
+
+  async createTemplateFromJson(filename: string): Promise<InspectionTemplate> {
+    const endpoint = '/api/inspection-templates/templates-json'
+    const result = await this.makeRequest<InspectionTemplate>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({ filename }),
+    })
+
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur lors de la création du template depuis le JSON')
+    }
+
+    return result.data!
+  }
+}
+
+export interface JsonTemplateMetadata {
+  filename: string
+  title: string
+  category: string
+  description?: string
 }
 
 // Instance singleton de l'API Inspections
