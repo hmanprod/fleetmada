@@ -83,7 +83,10 @@ export async function GET(
 
     try {
       const contact = await prisma.contact.findUnique({
-        where: { id: contactId }
+        where: { id: contactId },
+        include: {
+          group: true
+        }
       })
 
       if (!contact) {
@@ -96,7 +99,7 @@ export async function GET(
 
       // Récupérer les assignments du contact (véhicules assignés)
       const assignments = await prisma.vehicleAssignment.findMany({
-        where: { operator: contactId },
+        where: { contactId: contactId },
         include: {
           vehicle: {
             select: {
@@ -113,16 +116,24 @@ export async function GET(
         orderBy: { startDate: 'desc' }
       })
 
+      // Trouver s'il y a un utilisateur associé à ce contact par email
+      const associatedUser = await prisma.user.findUnique({
+        where: { email: contact.email },
+        select: { id: true }
+      })
+
       logAction('GET Contact by ID - Success', userId, {
         contactId,
-        assignmentsCount: assignments.length
+        assignmentsCount: assignments.length,
+        hasAssociatedUser: !!associatedUser
       })
 
       return NextResponse.json({
         success: true,
         data: {
           ...contact,
-          assignments
+          assignments,
+          associatedUserId: associatedUser?.id || null
         }
       })
 
@@ -227,13 +238,28 @@ export async function PUT(
           lastName: data.lastName,
           email: data.email,
           phone: data.phone || null,
-          group: data.group || null,
+          groupId: data.groupId || null,
           status: data.status || 'ACTIVE',
           userType: data.userType || null,
           classifications: data.classifications || [],
           image: data.image || null,
           jobTitle: data.jobTitle || null,
           company: data.company || null,
+          middleName: data.middleName || null,
+          phoneWork: data.phoneWork || null,
+          phoneOther: data.phoneOther || null,
+          address: data.address || null,
+          address2: data.address2 || null,
+          city: data.city || null,
+          zip: data.zip || null,
+          country: data.country || null,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          employeeNumber: data.employeeNumber || null,
+          startDate: data.startDate ? new Date(data.startDate) : null,
+          leaveDate: data.leaveDate ? new Date(data.leaveDate) : null,
+          licenseNumber: data.licenseNumber || null,
+          licenseClass: data.licenseClass || [],
+          hourlyRate: data.hourlyRate ? parseFloat(data.hourlyRate) : null,
           updatedAt: new Date()
         }
       })
@@ -322,9 +348,9 @@ export async function DELETE(
           activeAssignments
         })
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Impossible de supprimer ce contact car il a ${activeAssignments} assignment(s) actif(s)` 
+          {
+            success: false,
+            error: `Impossible de supprimer ce contact car il a ${activeAssignments} assignment(s) actif(s)`
           },
           { status: 400 }
         )

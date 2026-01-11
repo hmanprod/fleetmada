@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, FileText, Upload, Plus, X, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Calendar, FileText, Upload, Plus, X, AlertCircle, CheckCircle, User, MoreHorizontal, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useIssueDetails } from '@/lib/hooks/useIssueDetails';
 import useIssues from '@/lib/hooks/useIssues';
 import { useVehicles } from '@/lib/hooks/useVehicles';
+import { useToast, ToastContainer } from '@/components/NotificationToast';
 import type { IssueUpdateData } from '@/lib/services/issues-api';
+import { useContacts } from '@/lib/hooks/useContacts';
 
 export default function IssueEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -26,27 +28,51 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
     // Récupération des véhicules via la vraie API
     const { vehicles, loading: vehiclesLoading, error: vehiclesError } = useVehicles();
 
+    // Récupération des contacts
+    const { contacts } = useContacts();
+
     // États du formulaire
     const [formData, setFormData] = useState<IssueUpdateData>({
         summary: '',
         priority: 'MEDIUM',
         labels: [],
-        assignedTo: ''
+        assignedTo: []
     });
 
+    // Contact Dropdown State
+    const [isContactDropdownOpen, setIsContactDropdownOpen] = useState(false);
+    const [contactSearch, setContactSearch] = useState('');
+    const contactDropdownRef = useRef<HTMLDivElement>(null);
+
     const [loadingSubmit, setLoadingSubmit] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
-    const [submitSuccess, setSubmitSuccess] = useState(false);
 
-    // Données mockées temporaires pour utilisateurs (à remplacer par API Users plus tard)
+    // Click outside handler for contact dropdown
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (contactDropdownRef.current && !contactDropdownRef.current.contains(event.target as Node)) {
+                setIsContactDropdownOpen(false);
+            }
+        };
 
-    const mockUsers = [
-        { id: 'user-1', name: 'Hery RABOTOVAO' },
-        { id: 'user-2', name: 'John Doe' },
-        { id: 'user-3', name: 'Jane Smith' }
-    ];
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
+    const { toast, toasts, removeToast } = useToast();
+
+    // Mock Labels (Keep until Labels API exists)
     const mockLabels = ['Electrical', 'Mechanical', 'Body', 'Safety', 'Recall'];
+
+    const filteredContacts = contacts.filter(contact => {
+        const searchLower = contactSearch.toLowerCase();
+        const fullName = `${contact.firstName} ${contact.lastName}`.toLowerCase();
+        return fullName.includes(searchLower) ||
+            (contact.email && contact.email.toLowerCase().includes(searchLower));
+    });
+
+    const selectedContacts = contacts.filter(c => formData.assignedTo?.includes(c.id));
 
     // Charger l'issue au montage
     useEffect(() => {
@@ -62,7 +88,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                 summary: issue.summary,
                 priority: issue.priority,
                 labels: [...issue.labels],
-                assignedTo: issue.assignedTo || ''
+                assignedTo: Array.isArray(issue.assignedTo) ? issue.assignedTo : (issue.assignedTo ? [issue.assignedTo] : [])
             });
         }
     }, [issue]);
@@ -76,7 +102,6 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
 
         try {
             setLoadingSubmit(true);
-            setSubmitError(null);
 
             const updatedIssue = await updateIssue(params.id, formData);
 
@@ -87,7 +112,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                 console.warn('Impossible de mettre à jour la liste:', listError);
             }
 
-            setSubmitSuccess(true);
+            toast.success('Issue updated successfully');
 
             // Redirection après un court délai
             setTimeout(() => {
@@ -96,7 +121,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la sauvegarde';
-            setSubmitError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoadingSubmit(false);
         }
@@ -104,7 +129,6 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
 
     const handleInputChange = (field: keyof IssueUpdateData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        setSubmitError(null);
     };
 
     const handleAddLabel = (label: string) => {
@@ -120,6 +144,23 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
         setFormData(prev => ({
             ...prev,
             labels: (prev.labels || []).filter(label => label !== labelToRemove)
+        }));
+    };
+
+    const handleAddContact = (contactId: string) => {
+        if (contactId && !formData.assignedTo?.includes(contactId)) {
+            setFormData(prev => ({
+                ...prev,
+                assignedTo: [...(prev.assignedTo || []), contactId]
+            }));
+            setContactSearch('');
+        }
+    };
+
+    const handleRemoveContact = (contactId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            assignedTo: (prev.assignedTo || []).filter(id => id !== contactId)
         }));
     };
 
@@ -145,26 +186,8 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
             </div>
 
             <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
-                {/* Messages d'état */}
-                {submitError && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
-                        <AlertCircle className="text-red-600" size={20} />
-                        <span className="text-red-700">{submitError}</span>
-                        <button
-                            onClick={() => setSubmitError(null)}
-                            className="ml-auto text-red-600 hover:text-red-800"
-                        >
-                            ×
-                        </button>
-                    </div>
-                )}
+                <ToastContainer toasts={toasts} removeToast={removeToast} />
 
-                {submitSuccess && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
-                        <CheckCircle className="text-green-600" size={20} />
-                        <span className="text-green-700" data-testid="success-message">Issue modifié avec succès !</span>
-                    </div>
-                )}
 
                 {/* État de chargement */}
                 {loading && (
@@ -296,18 +319,79 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                     </div>
                                 </div>
 
-                                <div>
+                                <div ref={contactDropdownRef}>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                                    <select
-                                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
-                                        value={formData.assignedTo || ''}
-                                        onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                                    >
-                                        <option value="">Please select</option>
-                                        {mockUsers.map(user => (
-                                            <option key={user.id} value={user.id}>{user.name}</option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <div
+                                            className={`w-full p-2.5 border rounded-md bg-white cursor-pointer flex items-center justify-between transition-all ${isContactDropdownOpen ? 'ring-2 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
+                                            onClick={() => setIsContactDropdownOpen(!isContactDropdownOpen)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <User size={18} className="text-gray-400" />
+                                                {formData.assignedTo && formData.assignedTo.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {selectedContacts.map(c => (
+                                                            <span key={c.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100">
+                                                                {c.firstName} {c.lastName}
+                                                                <span onClick={(e) => { e.stopPropagation(); handleRemoveContact(c.id); }} className="hover:text-blue-900 cursor-pointer"><X size={10} /></span>
+                                                            </span>
+                                                        ))}
+                                                        {selectedContacts.length === 0 && <span className="text-sm font-medium text-gray-900">{formData.assignedTo.length} selected</span>}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-500">Select assignees...</span>
+                                                )}
+                                            </div>
+                                            <MoreHorizontal size={18} className="text-gray-400 rotate-90" />
+                                        </div>
+
+                                        {isContactDropdownOpen && (
+                                            <div className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <div className="p-2 border-b border-gray-100 bg-gray-50">
+                                                    <div className="relative">
+                                                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                        <input
+                                                            autoFocus
+                                                            type="text"
+                                                            placeholder="Search name or email..."
+                                                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
+                                                            value={contactSearch}
+                                                            onChange={(e) => setContactSearch(e.target.value)}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="max-h-60 overflow-y-auto">
+                                                    {filteredContacts.length > 0 ? (
+                                                        filteredContacts.map(c => {
+                                                            const isSelected = formData.assignedTo?.includes(c.id);
+                                                            return (
+                                                                <div
+                                                                    key={c.id}
+                                                                    className={`px-4 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors ${isSelected ? 'bg-green-50' : ''}`}
+                                                                    onClick={() => {
+                                                                        if (isSelected) {
+                                                                            handleRemoveContact(c.id);
+                                                                        } else {
+                                                                            handleAddContact(c.id);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-sm font-medium text-gray-900 group-hover:text-[#008751]">{c.firstName} {c.lastName}</div>
+                                                                        <div className="text-xs text-gray-500">{c.jobTitle || c.email}</div>
+                                                                    </div>
+                                                                    {isSelected && <div className="text-[#008751]"><CheckCircle size={16} /></div>}
+                                                                </div>
+                                                            );
+                                                        })
+                                                    ) : (
+                                                        <div className="px-4 py-6 text-center text-sm text-gray-500 italic">No contacts found</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div>

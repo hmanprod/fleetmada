@@ -33,7 +33,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['vehicles', 'service', 'reminders', 'fuel']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const toggleExpand = (id: string) => {
     setExpandedItems(prev =>
@@ -135,9 +135,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       </div>
 
       <div className="flex-1 py-4 pb-20">
-        <div className="px-4 mb-2 text-xs font-semibold text-green-200 uppercase tracking-wider">
+        {/* <div className="px-4 mb-2 text-xs font-semibold text-green-200 uppercase tracking-wider">
           Commencer
-        </div>
+        </div> */}
 
         {menuItems.map((item) => {
           const isExpanded = expandedItems.includes(item.id);

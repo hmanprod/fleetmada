@@ -35,7 +35,7 @@ export default function NewInspectionSelectionPage() {
                         >
                             <ArrowLeft size={16} /> Retour
                         </button>
-                        <h1 className="text-2xl font-bold text-gray-900">Nouvelle Inspection</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Planifier une Inspection</h1>
                     </div>
                 </div>
             </div>
@@ -111,7 +111,7 @@ export default function NewInspectionSelectionPage() {
                                             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-lg transition-colors shadow-sm hover:shadow"
                                         >
                                             <Layout size={18} />
-                                            Créer une inspection
+                                            Commencer une inspection
                                         </button>
                                     </div>
                                 </div>

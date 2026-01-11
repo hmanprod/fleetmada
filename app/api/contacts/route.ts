@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (group) {
-      where.group = group;
+      where.groupId = group;
     }
 
     if (classification) {
@@ -124,7 +124,10 @@ export async function GET(request: NextRequest) {
           where,
           skip,
           take: limit,
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
+          include: {
+            group: true
+          }
         }),
         prisma.contact.count({ where })
       ]);
@@ -254,13 +257,28 @@ export async function POST(request: NextRequest) {
           lastName: data.lastName,
           email: data.email,
           phone: data.phone || null,
-          group: data.group || null,
+          groupId: data.groupId || null,
           status: data.status || 'ACTIVE',
           userType: data.userType || null,
           classifications: data.classifications || [],
           image: data.image || null,
           jobTitle: data.jobTitle || null,
-          company: data.company || null
+          company: data.company || null,
+          middleName: data.middleName || null,
+          phoneWork: data.phoneWork || null,
+          phoneOther: data.phoneOther || null,
+          address: data.address || null,
+          address2: data.address2 || null,
+          city: data.city || null,
+          zip: data.zip || null,
+          country: data.country || null,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          employeeNumber: data.employeeNumber || null,
+          startDate: data.startDate ? new Date(data.startDate) : null,
+          leaveDate: data.leaveDate ? new Date(data.leaveDate) : null,
+          licenseNumber: data.licenseNumber || null,
+          licenseClass: data.licenseClass || [],
+          hourlyRate: data.hourlyRate ? parseFloat(data.hourlyRate) : null,
         }
       })
 

@@ -207,6 +207,7 @@ export interface InspectionFilters {
   status?: 'DRAFT' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   vehicleId?: string
   inspectionTemplateId?: string
+  userId?: string
   sortBy?: 'createdAt' | 'updatedAt' | 'scheduledDate' | 'status' | 'title'
   sortOrder?: 'asc' | 'desc'
 }

@@ -55,7 +55,7 @@ export default function InspectionsHubPage() {
           onClick={() => router.push('/inspections/history/create')}
           className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-green-900/10 active:scale-95"
         >
-          <Plus size={20} /> Nouvelle Inspection
+          <Plus size={20} /> Planifier une Inspection
         </button>
       </div>
 

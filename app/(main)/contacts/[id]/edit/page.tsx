@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, User, Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useRouter as useNextRouter } from 'next/navigation';
-import { useCreateContact } from '@/lib/hooks/useContacts';
+import { useContact, useUpdateContact } from '@/lib/hooks/useContacts';
 import { useUploadDocuments } from '@/lib/hooks/useUploadDocuments';
 import { useGroups } from '@/lib/hooks/useGroups';
 
-export default function ContactCreatePage() {
+export default function ContactEditPage({ params }: { params: { id: string } }) {
     const router = useNextRouter();
-    const { createContact, loading: saving, error: createError } = useCreateContact();
+    const { contact, loading: fetching, error: fetchError } = useContact(params.id);
+    const { updateContact, loading: saving, error: updateError } = useUpdateContact(params.id);
     const { uploadSingleDocument, uploading: uploadingImage } = useUploadDocuments();
 
     const [firstName, setFirstName] = useState('');
@@ -23,7 +24,7 @@ export default function ContactCreatePage() {
     const [image, setImage] = useState<string | null>(null);
     const [licenseClasses, setLicenseClasses] = useState<string[]>([]);
 
-    // Other fields that are in the form but not necessarily in the basic API yet
+    // Other fields
     const [middleName, setMiddleName] = useState('');
     const [workPhone, setWorkPhone] = useState('');
     const [otherPhone, setOtherPhone] = useState('');
@@ -42,8 +43,37 @@ export default function ContactCreatePage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
 
+    // Populate state when contact is loaded
+    useEffect(() => {
+        if (contact) {
+            setFirstName(contact.firstName || '');
+            setLastName(contact.lastName || '');
+            setEmail(contact.email || '');
+            setPhone(contact.phone || '');
+            setGroupId(contact.groupId || (contact.group as any)?.id || '');
+            setJobTitle(contact.jobTitle || '');
+            setClassifications(contact.classifications || []);
+            setImage(contact.image || null);
+            setMiddleName(contact.middleName || '');
+            setWorkPhone(contact.phoneWork || '');
+            setOtherPhone(contact.phoneOther || '');
+            setAddress(contact.address || '');
+            setAddress2(contact.address2 || '');
+            setCity(contact.city || '');
+            setZipCode(contact.zip || '');
+            setCountry(contact.country || '');
+            setDob(contact.dateOfBirth ? new Date(contact.dateOfBirth).toISOString().split('T')[0] : '');
+            setEmployeeNumber(contact.employeeNumber || '');
+            setStartDate(contact.startDate ? new Date(contact.startDate).toISOString().split('T')[0] : '');
+            setLeaveDate(contact.leaveDate ? new Date(contact.leaveDate).toISOString().split('T')[0] : '');
+            setLicenseNumber(contact.licenseNumber || '');
+            setHourlyRate(contact.hourlyRate?.toString() || '');
+            setLicenseClasses(contact.licenseClass || []);
+        }
+    }, [contact]);
+
     const handleCancel = () => {
-        router.push('/contacts');
+        router.push(`/contacts/${params.id}`);
     };
 
     const handleClassificationChange = (classification: string) => {
@@ -89,7 +119,7 @@ export default function ContactCreatePage() {
             return;
         }
 
-        const success = await createContact({
+        const success = await updateContact({
             firstName,
             lastName,
             email,
@@ -98,67 +128,66 @@ export default function ContactCreatePage() {
             jobTitle,
             classifications,
             image: image || undefined,
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            middleName,
+            phoneWork: workPhone,
+            phoneOther: otherPhone,
+            address,
+            address2,
+            city,
+            zip: zipCode,
+            country,
+            dateOfBirth: dob || undefined,
+            employeeNumber,
+            startDate: startDate || undefined,
+            leaveDate: leaveDate || undefined,
+            licenseNumber,
+            licenseClass: licenseClasses,
+            hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
         });
 
         if (success) {
-            router.push('/contacts?created=true');
+            router.push(`/contacts/${params.id}?updated=true`);
         }
     };
 
-    const handleSaveAndAddAnother = async () => {
-        if (!firstName) {
-            alert('Le prénom est obligatoire');
-            return;
-        }
+    if (fetching) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="w-8 h-8 animate-spin text-[#008751]" />
+            </div>
+        );
+    }
 
-        const success = await createContact({
-            firstName,
-            lastName,
-            email,
-            phone,
-            groupId: groupId || undefined,
-            jobTitle,
-            classifications,
-            image: image || undefined,
-            status: 'ACTIVE'
-        });
-
-        if (success) {
-            setFirstName('');
-            setLastName('');
-            setEmail('');
-            setPhone('');
-            setGroupId('');
-            setJobTitle('');
-            setClassifications([]);
-            setImage(null);
-            setLicenseClasses([]);
-            alert('Contact ajouté avec succès');
-        }
-    };
+    if (fetchError || !contact) {
+        return (
+            <div className="p-8 text-center">
+                <p className="text-red-500 mb-4">{fetchError || 'Contact non trouvé'}</p>
+                <button onClick={() => router.push('/contacts')} className="text-[#008751] hover:underline">Retour aux contacts</button>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                        <ArrowLeft size={18} /> Contacts
+                        <ArrowLeft size={18} /> Back
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">New Contact</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Edit Contact: {contact.firstName} {contact.lastName}</h1>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
-                    {/* <button onClick={handleSaveAndAddAnother} disabled={saving} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white">Add Multiple Contacts</button> */}
                     <button onClick={handleSave} disabled={saving || uploadingImage} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50" data-testid="save-contact-button">
-                        {saving ? 'Enregistrement...' : 'Save Contact'}
+                        {saving ? 'Enregistrement...' : 'Save Changes'}
                     </button>
                 </div>
             </div>
-            {createError && (
+            {updateError && (
                 <div className="max-w-4xl mx-auto mt-4 px-4">
                     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
-                        {createError}
+                        {updateError}
                     </div>
                 </div>
             )}
@@ -548,9 +577,8 @@ export default function ContactCreatePage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 pb-12">
-                    <button onClick={handleSaveAndAddAnother} disabled={saving || uploadingImage} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white">Save & Add Another</button>
                     <button onClick={handleSave} disabled={saving || uploadingImage} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm" data-testid="save-contact-button">
-                        {saving ? 'Enregistrement...' : 'Save Contact'}
+                        {saving ? 'Enregistrement...' : 'Save Changes'}
                     </button>
                 </div>
 

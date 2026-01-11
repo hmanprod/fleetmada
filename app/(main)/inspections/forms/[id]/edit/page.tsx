@@ -12,7 +12,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 import type { InspectionTemplateUpdateData, InspectionTemplateItem, InspectionTemplate } from '@/lib/services/inspections-api';
 import inspectionsAPI from '@/lib/services/inspections-api';
-import { useToast, ToastContainer } from '../../../components/NotificationToast';
+import { useToast, ToastContainer } from '@/components/NotificationToast';
 
 const COLORS = [
     { name: 'None', value: null },

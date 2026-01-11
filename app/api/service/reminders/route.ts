@@ -84,18 +84,34 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const status = searchParams.get('status')
     const vehicleId = searchParams.get('vehicleId')
+    const contactId = searchParams.get('contactId')
     const overdue = searchParams.get('overdue') === 'true'
 
     const skip = (page - 1) * limit
 
     logAction('GET Service Reminders', userId, {
-      page, limit, status, vehicleId, overdue
+      page, limit, status, vehicleId, contactId, overdue
     })
 
-    const where: any = {
-      vehicle: {
+    const where: any = {}
+
+    if (contactId) {
+      where.vehicle = {
+        assignments: {
+          some: {
+            contactId,
+            status: 'ACTIVE'
+          }
+        }
+      }
+    } else {
+      where.vehicle = {
         userId
       }
+    }
+
+    if (vehicleId) {
+      where.vehicleId = vehicleId
     }
 
     if (status) {
@@ -135,17 +151,17 @@ export async function GET(request: NextRequest) {
       const now = new Date()
       let isOverdue = false
       let daysUntilDue: number | null = null
-      
+
       if (reminder.nextDue) {
         isOverdue = reminder.nextDue < now
         daysUntilDue = Math.ceil((reminder.nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
       }
-      
+
       // Logique de priorité
       let priority = 'NORMAL'
       if (isOverdue) priority = 'OVERDUE'
       else if (daysUntilDue !== null && daysUntilDue <= 7) priority = 'SOON'
-      
+
       return {
         ...reminder,
         isOverdue,

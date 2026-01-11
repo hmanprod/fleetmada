@@ -44,7 +44,7 @@ interface UseInspectionsReturn {
 
 export function useInspections(initialFilters: InspectionFilters = {}): UseInspectionsReturn {
   const [inspections, setInspections] = useState<Inspection[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<InspectionsResponse['pagination'] | null>(null)
   const [filters, setFilters] = useState<InspectionFilters>({
@@ -273,10 +273,17 @@ export function useInspections(initialFilters: InspectionFilters = {}): UseInspe
     }
   }, [inspections])
 
-  // Charger les données initiales - Supprimé pour éviter les conflits avec les appels spécifiques aux pages
-  // useEffect(() => {
-  //   fetchInspections()
-  // }, [])
+  // Charger les données initiales
+  useEffect(() => {
+    fetchInspections()
+  }, []) // On mount, use initial filters
+
+  // Support declarative filter updates
+  useEffect(() => {
+    if (initialFilters.userId || initialFilters.vehicleId) {
+      fetchInspections(initialFilters)
+    }
+  }, [initialFilters.userId, initialFilters.vehicleId, initialFilters.status])
 
   return {
     inspections,

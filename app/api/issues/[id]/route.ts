@@ -17,7 +17,7 @@ const IssueUpdateSchema = z.object({
   summary: z.string().min(1, 'Le résumé est requis').optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
   labels: z.array(z.string()).optional(),
-  assignedTo: z.string().optional()
+  assignedTo: z.array(z.string()).optional()
 })
 
 const IssueStatusUpdateSchema = z.object({
@@ -25,7 +25,7 @@ const IssueStatusUpdateSchema = z.object({
 })
 
 const IssueAssignSchema = z.object({
-  assignedTo: z.string().min(1, 'Utilisateur assigné requis')
+  assignedTo: z.array(z.string()).min(1, 'Au moins un utilisateur assigné requis')
 })
 
 // Types TypeScript

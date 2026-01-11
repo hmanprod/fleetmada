@@ -15,7 +15,7 @@ import { FormCard } from './components/FormCard';
 import { TemplateSelectionModal } from './components/TemplateSelectionModal';
 import { ConfirmationModal } from '@/app/components/ui/ConfirmationModal';
 import inspectionsAPI from '@/lib/services/inspections-api';
-import { useToast, ToastContainer } from '../components/NotificationToast';
+import { useToast, ToastContainer } from '@/components/NotificationToast';
 
 export default function InspectionFormsPage() {
     const router = useRouter();

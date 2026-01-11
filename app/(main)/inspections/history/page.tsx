@@ -234,7 +234,7 @@ export default function InspectionHistoryPage() {
                         onClick={() => router.push('/inspections/history/create')}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                     >
-                        <FileText size={20} /> Planifier Inspection
+                        <FileText size={20} /> Planifier une Inspection
                     </button>
                 </div>
             </div>

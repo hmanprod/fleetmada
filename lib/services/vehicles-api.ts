@@ -633,6 +633,33 @@ export class VehiclesAPIService {
   // === ASSIGNMENTS ===
 
   /**
+   * Récupère TOUTES les assignations (global)
+   */
+  async getAllAssignments(): Promise<VehicleAssignment[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/assignments`, {
+        headers: getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors de la récupération des assignations')
+      }
+
+      // The API returns { success: true, data: [ ...assignments ] } based on assignments page usage
+      return data.data
+    } catch (error) {
+      handleApiError(error)
+      throw error
+    }
+  }
+
+  /**
    * Récupère les assignations d'un véhicule
    */
   async getVehicleAssignments(vehicleId: string): Promise<VehicleAssignmentsResponse> {

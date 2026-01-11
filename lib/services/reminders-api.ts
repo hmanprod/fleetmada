@@ -85,12 +85,12 @@ export interface VehicleRenewalsResponse {
 
 class RemindersApiService {
   private async makeRequest<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<{ success: boolean; data?: T; error?: string }> {
     try {
       const token = localStorage.getItem('authToken') || ''
-      
+
       const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers: {
@@ -122,14 +122,16 @@ class RemindersApiService {
     limit?: number
     status?: string
     vehicleId?: string
+    contactId?: string
     overdue?: boolean
   } = {}): Promise<ServiceRemindersResponse | null> {
     const queryParams = new URLSearchParams()
-    
+
     if (params.page) queryParams.append('page', params.page.toString())
     if (params.limit) queryParams.append('limit', params.limit.toString())
     if (params.status) queryParams.append('status', params.status)
     if (params.vehicleId) queryParams.append('vehicleId', params.vehicleId)
+    if (params.contactId) queryParams.append('contactId', params.contactId)
     if (params.overdue) queryParams.append('overdue', 'true')
 
     const result = await this.makeRequest<ServiceRemindersResponse>(
@@ -245,7 +247,7 @@ class RemindersApiService {
     dueSoon?: boolean
   } = {}): Promise<VehicleRenewalsResponse | null> {
     const queryParams = new URLSearchParams()
-    
+
     if (params.page) queryParams.append('page', params.page.toString())
     if (params.limit) queryParams.append('limit', params.limit.toString())
     if (params.status) queryParams.append('status', params.status)

@@ -11,7 +11,7 @@ interface UseIssueDetailsReturn {
   updateIssue: (id: string, data: IssueUpdateData) => Promise<Issue>
   deleteIssue: (id: string) => Promise<void>
   updateIssueStatus: (id: string, status: IssueStatusUpdateData['status']) => Promise<Issue>
-  assignIssue: (id: string, assignedTo: string) => Promise<Issue>
+  assignIssue: (id: string, assignedTo: string[]) => Promise<Issue>
   clearError: () => void
   refetch: () => Promise<void>
 }
@@ -30,7 +30,7 @@ export function useIssueDetails(issueId: string | null): UseIssueDetailsReturn {
     try {
       setLoading(true)
       setError(null)
-      
+
       const issueData = await issuesAPI.getIssue(id)
       setIssue(issueData)
     } catch (err) {
@@ -81,7 +81,7 @@ export function useIssueDetails(issueId: string | null): UseIssueDetailsReturn {
     }
   }, [])
 
-  const assignIssue = useCallback(async (id: string, assignedTo: string): Promise<Issue> => {
+  const assignIssue = useCallback(async (id: string, assignedTo: string[]): Promise<Issue> => {
     try {
       setError(null)
       const updatedIssue = await issuesAPI.assignIssue(id, { assignedTo })

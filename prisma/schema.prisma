@@ -233,7 +233,7 @@ model Issue {
   status       IssueStatus  @default(OPEN)
   priority     Priority     @default(MEDIUM)
   reportedDate DateTime     @default(now())
-  assignedTo   String?
+  assignedTo   String[]
   labels       String[]
   watchers     Int          @default(0)
   createdAt    DateTime     @default(now())
@@ -498,13 +498,29 @@ model Contact {
   lastName        String
   email           String        @unique
   phone           String?
-  group           String?
+  groupId         String?
+  group           Group?        @relation(fields: [groupId], references: [id])
   status          ContactStatus @default(ACTIVE)
   userType        String?
   classifications String[]
   image           String?
   jobTitle        String?
   company         String?
+  middleName      String?
+  phoneWork       String?
+  phoneOther      String?
+  address         String?
+  address2        String?
+  city            String?
+  zip             String?
+  country         String?
+  dateOfBirth     DateTime?
+  employeeNumber  String?
+  startDate       DateTime?
+  leaveDate       DateTime?
+  licenseNumber   String?
+  licenseClass    String[]
+  hourlyRate      Float?
   placeId         String?       // Foreign key vers Place
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -1184,4 +1200,12 @@ enum InspectionFrequency {
   WEEKLY
   MONTHLY
   MILEAGE
+}
+model Group {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  color     String?
+  contacts  Contact[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

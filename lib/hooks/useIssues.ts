@@ -8,31 +8,37 @@ interface UseIssuesReturn {
   loading: boolean
   error: string | null
   pagination: IssuesResponse['pagination'] | null
+  filters: IssueFilters
+  setFilters: (filters: IssueFilters) => void
   fetchIssues: (filters?: IssueFilters) => Promise<void>
   createIssue: (data: any) => Promise<Issue>
   updateIssue: (id: string, data: any) => Promise<Issue>
   deleteIssue: (id: string) => Promise<void>
   updateIssueStatus: (id: string, status: any) => Promise<Issue>
-  assignIssue: (id: string, assignedTo: string) => Promise<Issue>
+  assignIssue: (id: string, assignedTo: string[]) => Promise<Issue>
   clearError: () => void
   refetch: () => Promise<void>
 }
 
 export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
   const [issues, setIssues] = useState<Issue[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<IssuesResponse['pagination'] | null>(null)
-  const [filters, setFilters] = useState<IssueFilters>(initialFilters)
+  const [filters, setFilters] = useState<IssueFilters>({
+    page: 1,
+    limit: 20,
+    ...initialFilters
+  })
 
   const fetchIssues = useCallback(async (newFilters: IssueFilters = {}) => {
     try {
       setLoading(true)
       setError(null)
-      
+
       const currentFilters = { ...filters, ...newFilters }
       setFilters(currentFilters)
-      
+
       const response = await issuesAPI.getIssues(currentFilters)
       setIssues(response.issues)
       setPagination(response.pagination)
@@ -49,10 +55,10 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     try {
       setError(null)
       const newIssue = await issuesAPI.createIssue(data)
-      
+
       // Rafraîchir la liste après création
       await fetchIssues()
-      
+
       return newIssue
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du problème'
@@ -65,12 +71,12 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     try {
       setError(null)
       const updatedIssue = await issuesAPI.updateIssue(id, data)
-      
+
       // Mettre à jour l'issue dans la liste locale
-      setIssues(prev => prev.map(issue => 
+      setIssues(prev => prev.map(issue =>
         issue.id === id ? { ...issue, ...updatedIssue } : issue
       ))
-      
+
       return updatedIssue
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la modification du problème'
@@ -83,10 +89,10 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     try {
       setError(null)
       await issuesAPI.deleteIssue(id)
-      
+
       // Supprimer l'issue de la liste locale
       setIssues(prev => prev.filter(issue => issue.id !== id))
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -105,12 +111,12 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     try {
       setError(null)
       const updatedIssue = await issuesAPI.updateIssueStatus(id, { status })
-      
+
       // Mettre à jour l'issue dans la liste locale
-      setIssues(prev => prev.map(issue => 
+      setIssues(prev => prev.map(issue =>
         issue.id === id ? { ...issue, ...updatedIssue } : issue
       ))
-      
+
       return updatedIssue
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la modification du statut'
@@ -119,16 +125,16 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     }
   }, [])
 
-  const assignIssue = useCallback(async (id: string, assignedTo: string): Promise<Issue> => {
+  const assignIssue = useCallback(async (id: string, assignedTo: string[]): Promise<Issue> => {
     try {
       setError(null)
       const updatedIssue = await issuesAPI.assignIssue(id, { assignedTo })
-      
+
       // Mettre à jour l'issue dans la liste locale
-      setIssues(prev => prev.map(issue => 
+      setIssues(prev => prev.map(issue =>
         issue.id === id ? { ...issue, ...updatedIssue } : issue
       ))
-      
+
       return updatedIssue
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'assignation du problème'
@@ -155,6 +161,8 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     loading,
     error,
     pagination,
+    filters,
+    setFilters,
     fetchIssues,
     createIssue,
     updateIssue,

@@ -1,39 +1,98 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, ChevronRight, ChevronDown, Settings, Lightbulb, Zap, AlertCircle, Eye, Edit2, PlusSquare, Wrench, CheckCircle2, XCircle, Trash2, ArrowRight, ListPlus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useIssues from '@/lib/hooks/useIssues';
+import { useContacts } from '@/lib/hooks/useContacts';
 import type { Issue, IssueFilters } from '@/lib/services/issues-api';
+import type { Contact } from '@/lib/services/contacts-api';
 import { serviceAPI } from '@/lib/services/service-api';
+import { useToast, ToastContainer } from '@/components/NotificationToast';
+import { FiltersSidebar } from '../inspections/components/filters/FiltersSidebar';
+import { FilterCriterion } from '../inspections/components/filters/FilterCard';
+import { ISSUE_FILTER_FIELDS } from './components/filters/issue-filter-definitions';
+import { useVehicles } from '@/lib/hooks/useVehicles';
+import { groupsAPI, type Group } from '@/lib/services/contacts-api';
 
 export default function IssuesPage() {
   const router = useRouter();
-
-  // Initialiser les filtres depuis l'URL si nécessaire (dans une vraie app)
-  // Pour l'instant on garde l'état local mais on mettra à jour l'URL
-  const [filters, setFilters] = useState<IssueFilters>({
-    page: 1,
-    limit: 20,
-    status: 'OPEN'
-  });
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast, toasts, removeToast } = useToast();
 
   const {
     issues,
     loading,
     error,
     pagination,
+    filters,
+    setFilters,
     fetchIssues,
     clearError,
     updateIssueStatus,
     deleteIssue
-  } = useIssues(filters);
+  } = useIssues({
+    page: 1,
+    limit: 20,
+    status: (searchParams.get('status') as any) || 'OPEN',
+    search: searchParams.get('search') || undefined,
+    priority: (searchParams.get('priority') as any) || undefined,
+    assignedTo: searchParams.get('assignedTo') || undefined,
+    labels: searchParams.get('labels') || undefined,
+    groupId: searchParams.get('groupId') || undefined
+  });
+
+  // Fetch contacts for mapping IDs to names
+  const { contacts } = useContacts({ limit: 1000 });
+
+  const contactMap = useMemo(() => {
+    return contacts.reduce((acc, contact) => {
+      acc[contact.id] = contact;
+      return acc;
+    }, {} as Record<string, Contact>);
+  }, [contacts]);
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [modalType, setModalType] = useState<'service_entry' | 'work_order' | 'resolve' | null>(null);
   const [resolveNote, setResolveNote] = useState('');
+
+  // Advanced Filters State
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
+  const { vehicles } = useVehicles();
+  const [groups, setGroups] = useState<Group[]>([]);
+
+  // Charger les groupes
+  useEffect(() => {
+    groupsAPI.getGroups().then(setGroups);
+  }, []);
+
+  // Populate dynamic options for filter fields
+  const populatedFilterFields = useMemo(() => {
+    return ISSUE_FILTER_FIELDS.map(field => {
+      if (field.id === 'assignedTo') {
+        return {
+          ...field,
+          options: contacts.map(c => ({ value: c.id, label: `${c.firstName} ${c.lastName}` }))
+        };
+      }
+      if (field.id === 'vehicleId') {
+        return {
+          ...field,
+          options: vehicles.map(v => ({ value: v.id, label: `${v.make} ${v.model} (${v.name})` }))
+        };
+      }
+      if (field.id === 'groupId') {
+        return {
+          ...field,
+          options: groups.map(g => ({ value: g.id, label: g.name }))
+        };
+      }
+      return field;
+    });
+  }, [contacts, vehicles, groups]);
 
   const handleAdd = () => {
     router.push('/issues/create');
@@ -62,14 +121,74 @@ export default function IssuesPage() {
     setFilters(updatedFilters);
     fetchIssues(updatedFilters);
 
-    // Mettre à jour l'URL pour refléter les filtres (utile pour les tests et le partage)
+    // Mettre à jour l'URL pour refléter les filtres
     const params = new URLSearchParams();
-    if (updatedFilters.status) params.set('status', updatedFilters.status);
-    if (updatedFilters.search) params.set('search', updatedFilters.search);
-    if (updatedFilters.priority) params.set('priority', updatedFilters.priority);
 
-    // Utiliser replace pour ne pas empiler l'historique à chaque frappe
+    const relevantKeys: (keyof IssueFilters)[] = ['status', 'search', 'priority', 'assignedTo', 'labels', 'groupId', 'startDate', 'endDate'];
+    relevantKeys.forEach(key => {
+      const val = updatedFilters[key];
+      if (val) {
+        params.set(key, String(val));
+      }
+    });
+
     router.replace(`/issues?${params.toString()}`);
+  };
+
+  const handleApplyFilters = (criteria: FilterCriterion[]) => {
+    setActiveCriteria(criteria);
+    setIsFiltersOpen(false);
+
+    // On part d'un état "clean" pour les filtres avancés mais on garde status
+    const newFilters: Partial<IssueFilters> = {
+      status: filters.status || 'OPEN',
+      search: undefined,
+      priority: undefined,
+      assignedTo: undefined,
+      vehicleId: undefined,
+      groupId: undefined,
+      labels: undefined,
+      startDate: undefined,
+      endDate: undefined
+    };
+
+    criteria.forEach(c => {
+      const value = Array.isArray(c.value) ? c.value[0] : c.value;
+
+      if (c.field === 'labels') {
+        newFilters.labels = Array.isArray(c.value) ? c.value.join(',') : c.value;
+      } else if (c.field === 'summary') {
+        newFilters.search = value;
+      } else if (c.field === 'reportedDate') {
+        // Si c'est un filter range (between)
+        if (c.operator === 'between' && typeof c.value === 'object') {
+          newFilters.startDate = c.value.from;
+          newFilters.endDate = c.value.to;
+        } else {
+          newFilters.startDate = value;
+          newFilters.endDate = value;
+        }
+      } else {
+        // @ts-ignore
+        newFilters[c.field] = value;
+      }
+    });
+
+    handleFilterChange(newFilters);
+  };
+
+  const clearFilters = () => {
+    setActiveCriteria([]);
+    setSearchQuery('');
+    handleFilterChange({
+      status: 'OPEN',
+      priority: undefined,
+      assignedTo: undefined,
+      vehicleId: undefined,
+      groupId: undefined,
+      labels: undefined,
+      search: undefined
+    });
   };
 
   const handleEdit = (id: string) => {
@@ -79,9 +198,11 @@ export default function IssuesPage() {
   const handleClose = async (id: string) => {
     try {
       await updateIssueStatus(id, 'CLOSED');
+      toast.success('Issue closed successfully');
       setActiveDropdown(null);
     } catch (err) {
       console.error('Failed to close issue:', err);
+      toast.error('Failed to close issue');
     }
   };
 
@@ -89,9 +210,11 @@ export default function IssuesPage() {
     if (window.confirm('Are you sure you want to delete this issue?')) {
       try {
         await deleteIssue(id);
+        toast.success('Issue deleted successfully');
         setActiveDropdown(null);
       } catch (err) {
         console.error('Failed to delete issue:', err);
+        toast.error('Failed to delete issue');
       }
     }
   };
@@ -104,8 +227,10 @@ export default function IssuesPage() {
       setModalType(null);
       setResolveNote('');
       setSelectedIssue(null);
+      toast.success('Issue resolved successfully');
     } catch (err) {
       console.error('Failed to resolve issue:', err);
+      toast.error('Failed to resolve issue');
     }
   };
 
@@ -121,8 +246,10 @@ export default function IssuesPage() {
       });
       setModalType(null);
       setSelectedIssue(null);
+      toast.success(`${type === 'work_order' ? 'Work Order' : 'Service Entry'} created successfully`);
     } catch (err) {
       console.error(`Failed to create ${type}:`, err);
+      toast.error(`Failed to create ${type === 'work_order' ? 'work order' : 'service entry'}`);
     }
   };
 
@@ -180,7 +307,15 @@ export default function IssuesPage() {
   }
 
   return (
-    <div className="p-6 max-w-[1800px] mx-auto">
+    <div className="p-6 max-w-[1800px] mx-auto relative">
+      <FiltersSidebar
+        isOpen={isFiltersOpen}
+        onClose={() => setIsFiltersOpen(false)}
+        onApply={handleApplyFilters}
+        initialFilters={activeCriteria}
+        availableFields={populatedFilterFields as any}
+      />
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
@@ -191,10 +326,10 @@ export default function IssuesPage() {
         </div>
 
         <div className="flex gap-2">
-          <button className="text-[#008751] hover:bg-green-50 font-medium py-2 px-3 rounded flex items-center gap-1 text-sm bg-transparent">
+          {/* <button className="text-[#008751] hover:bg-green-50 font-medium py-2 px-3 rounded flex items-center gap-1 text-sm bg-transparent">
             <Zap size={16} /> Automations <ChevronDown size={14} />
-          </button>
-          <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
+          </button> */}
+          {/* <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button> */}
           <button
             onClick={handleAdd}
             data-testid="add-issue-button"
@@ -212,7 +347,7 @@ export default function IssuesPage() {
         <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">Overdue</button>
         <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-RESOLVED" onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Resolved</button>
         <button className={`pb-3 border-b-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'CLOSED' })}>Closed</button>
-        <button className="pb-3 border-b-2 border-transparent hover:text-green-700 text-[#008751] flex items-center gap-1"><Plus size={14} /> Add Tab</button>
+        {/* <button className="pb-3 border-b-2 border-transparent hover:text-green-700 text-[#008751] flex items-center gap-1"><Plus size={14} /> Add Tab</button> */}
       </div>
 
       {/* Error Message */}
@@ -242,17 +377,50 @@ export default function IssuesPage() {
             onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Issue Assigned To <ChevronDown size={14} />
-        </button>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Labels <ChevronDown size={14} />
-        </button>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+        <select
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
+          value={filters.assignedTo || ''}
+          onChange={(e) => handleFilterChange({ assignedTo: e.target.value || undefined })}
+        >
+          <option value="">Issue Assigned To</option>
+          {contacts.map(c => (
+            <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
+          ))}
+        </select>
+
+        <select
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
+          value={filters.groupId || ''}
+          onChange={(e) => handleFilterChange({ groupId: e.target.value || undefined })}
+        >
+          <option value="">Group: All</option>
+          {groups.map(g => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
+        </select>
+
+        <button
+          onClick={() => setIsFiltersOpen(true)}
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+        >
           <Filter size={14} /> Filters
+          {activeCriteria.length > 0 && (
+            <span className="bg-[#008751] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+              {activeCriteria.length}
+            </span>
+          )}
         </button>
 
-        <div className="flex-1 text-right text-sm text-gray-500">
+        {(filters.assignedTo || filters.groupId || filters.labels || filters.priority || activeCriteria.length > 0) && (
+          <button
+            onClick={clearFilters}
+            className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-4"
+          >
+            Clear
+          </button>
+        )}
+
+        {/* <div className="flex-1 text-right text-sm text-gray-500">
           {pagination ? `${pagination.page * pagination.limit - pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} of ${pagination.totalCount}` : '0'}
         </div>
         <div className="flex gap-1 ml-auto">
@@ -268,14 +436,12 @@ export default function IssuesPage() {
           >
             <ChevronRight size={16} />
           </button>
-        </div>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Group: None <ChevronDown size={14} />
-        </button>
-        <button className="p-1.5 border border-gray-300 rounded text-gray-600 bg-white"><Settings size={16} /></button>
+        </div> */}
+
+        {/* <button className="p-1.5 border border-gray-300 rounded text-gray-600 bg-white"><Settings size={16} /></button>
         <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
           Save View <ChevronDown size={14} />
-        </button>
+        </button> */}
       </div>
 
       {/* Table */}
@@ -334,7 +500,28 @@ export default function IssuesPage() {
                 </td>
                 <td className="px-4 py-3 text-gray-400">FleetMada</td>
                 <td className="px-4 py-3 text-gray-900 underline decoration-dotted underline-offset-4">{formatDate(issue.reportedDate)}</td>
-                <td className="px-4 py-3 text-gray-400">{issue.assignedTo || '—'}</td>
+                <td className="px-4 py-3 text-gray-400">
+                  {issue.assignedTo && issue.assignedTo.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {(Array.isArray(issue.assignedTo) ? issue.assignedTo : [issue.assignedTo]).map((userId) => {
+                        const contact = contactMap[userId];
+                        return (
+                          <div key={userId} className="text-sm">
+                            {contact ? (
+                              <span className="text-gray-900 font-medium">
+                                {contact.firstName} {contact.lastName}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">{userId.substring(0, 8)}...</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    '—'
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   {issue.labels.length > 0 ? (
                     <div className="flex flex-wrap gap-1">

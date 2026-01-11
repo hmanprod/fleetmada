@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  Clock, 
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Clock,
   CheckCircle,
   AlertTriangle,
   Filter,
@@ -72,17 +72,17 @@ const formatDate = (date: Date, format: string) => {
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
-  
+
   switch (format) {
     case 'yyyy-MM-dd':
       return `${year}-${month}-${day}`;
     case 'dd MMMM yyyy':
-      const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
-                     'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+      const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
       return `${day} ${months[date.getMonth()]} ${year}`;
     case 'MMMM yyyy':
-      const monthsLong = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
-                         'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+      const monthsLong = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
       return `${monthsLong[date.getMonth()]} ${year}`;
     case 'd':
       return day;
@@ -93,13 +93,13 @@ const formatDate = (date: Date, format: string) => {
 
 const isSameDay = (date1: Date, date2: Date) => {
   return date1.getFullYear() === date2.getFullYear() &&
-         date1.getMonth() === date2.getMonth() &&
-         date1.getDate() === date2.getDate();
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate();
 };
 
 const isSameMonth = (date1: Date, date2: Date) => {
   return date1.getFullYear() === date2.getFullYear() &&
-         date1.getMonth() === date2.getMonth();
+    date1.getMonth() === date2.getMonth();
 };
 
 const addMonths = (date: Date, months: number) => {
@@ -123,12 +123,12 @@ const endOfMonth = (date: Date) => {
 const eachDayOfInterval = (start: Date, end: Date) => {
   const days: Date[] = [];
   const current = new Date(start);
-  
+
   while (current <= end) {
     days.push(new Date(current));
     current.setDate(current.getDate() + 1);
   }
-  
+
   return days;
 };
 
@@ -163,7 +163,7 @@ export default function InspectionCalendar({
   // Grouper les inspections par date
   const inspectionsByDate = useMemo(() => {
     const grouped: Record<string, InspectionEvent[]> = {};
-    
+
     filteredInspections.forEach(inspection => {
       const dateKey = formatDate(inspection.date, 'yyyy-MM-dd');
       if (!grouped[dateKey]) {
@@ -171,7 +171,7 @@ export default function InspectionCalendar({
       }
       grouped[dateKey].push(inspection);
     });
-    
+
     return grouped;
   }, [filteredInspections]);
 
@@ -265,7 +265,7 @@ export default function InspectionCalendar({
             <CalendarIcon className="w-5 h-5" />
             Calendrier des Inspections
           </h2>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigateMonth('prev')}
@@ -274,11 +274,11 @@ export default function InspectionCalendar({
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            
+
             <span className="font-medium text-gray-900 min-w-[120px] text-center">
               {formatDate(currentDate, 'MMMM yyyy')}
             </span>
-            
+
             <button
               onClick={() => navigateMonth('next')}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -296,7 +296,7 @@ export default function InspectionCalendar({
             className="flex items-center gap-2 px-3 py-2 bg-[#008751] text-white rounded-lg hover:bg-[#007043] transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
-            Nouvelle inspection
+            Planifier une Inspection
           </button>
         </div>
       </div>
@@ -309,7 +309,7 @@ export default function InspectionCalendar({
               <Filter className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Filtres:</span>
             </div>
-            
+
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -321,7 +321,7 @@ export default function InspectionCalendar({
               <option value="COMPLETED">Terminées</option>
               <option value="OVERDUE">En retard</option>
             </select>
-            
+
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
@@ -401,13 +401,13 @@ export default function InspectionCalendar({
           <h3 className="font-medium text-gray-900 mb-3">
             Inspections du {formatDate(selectedDate, 'dd MMMM yyyy')}
           </h3>
-          
+
           <div className="space-y-2">
             {getInspectionsForDate(selectedDate).length > 0 ? (
               getInspectionsForDate(selectedDate).map((inspection) => {
                 const statusConf = statusConfig[inspection.status];
                 const StatusIcon = statusConf.icon;
-                
+
                 return (
                   <div
                     key={inspection.id}
@@ -424,7 +424,7 @@ export default function InspectionCalendar({
                         <p className="text-xs text-gray-500">{inspection.inspectorName}</p>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <span className={`
                         px-2 py-1 text-xs font-medium rounded-full

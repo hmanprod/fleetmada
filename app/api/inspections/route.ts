@@ -31,6 +31,7 @@ const InspectionListQuerySchema = z.object({
   status: z.enum(['DRAFT', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
   vehicleId: z.string().optional(),
   inspectionTemplateId: z.string().optional(),
+  userId: z.string().optional(),
   sortBy: z.enum(['createdAt', 'updatedAt', 'scheduledDate', 'status', 'title']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc')
 })
@@ -87,6 +88,10 @@ const buildInspectionFilters = (query: InspectionListQuery, userId: string) => {
 
   if (query.inspectionTemplateId) {
     filters.inspectionTemplateId = query.inspectionTemplateId
+  }
+
+  if (query.userId) {
+    filters.userId = query.userId
   }
 
   return filters
@@ -169,7 +174,8 @@ export async function GET(request: NextRequest) {
         search: query.search,
         status: query.status,
         vehicleId: query.vehicleId,
-        inspectionTemplateId: query.inspectionTemplateId
+        inspectionTemplateId: query.inspectionTemplateId,
+        userId: query.userId
       }
     })
 

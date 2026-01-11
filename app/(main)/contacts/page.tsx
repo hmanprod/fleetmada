@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, ChevronRight, Image as ImageIcon, Users, Building2 } from 'lucide-react';
-import { Contact } from '@/types';
-import { useContacts, useContactSearch } from '@/lib/hooks/useContacts';
-import { useRouter } from 'next/navigation';
+import { Contact } from '@/lib/services/contacts-api';
+import { useContacts } from '@/lib/hooks/useContacts';
+import { useGroups } from '@/lib/hooks/useGroups';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useToast, ToastContainer } from '@/components/NotificationToast';
 
 const handleAdd = (router: any) => {
   router.push('/contacts/create');
@@ -16,32 +18,35 @@ const handleSelect = (contact: Contact, router: any) => {
 
 export default function ContactsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast, toasts, removeToast } = useToast();
   const { contacts, loading, error, pagination, fetchContacts, refetch } = useContacts();
-  const { results: searchResults, searchContacts, loading: searchLoading } = useContactSearch();
+  const { groups } = useGroups();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [selectedClassification, setSelectedClassification] = useState<string>('');
 
+  useEffect(() => {
+    if (searchParams.get('created') === 'true') {
+      toast.success('Contact créé', 'Le nouveau contact a été ajouté avec succès.');
+    } else if (searchParams.get('deleted') === 'true') {
+      toast.success('Contact supprimé', 'Le contact a été supprimé avec succès.');
+    }
+  }, [searchParams]);
+
   // Gestion de la recherche
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchQuery.trim()) {
-        searchContacts(searchQuery);
-      }
+      handleFilter();
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchContacts]);
+  }, [searchQuery]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim()) {
-      fetchContacts({ search: query, limit: 20 });
-    } else {
-      refetch();
-    }
   };
 
   const handleFilter = () => {
@@ -54,7 +59,7 @@ export default function ContactsPage() {
     fetchContacts(filters);
   };
 
-  const displayContacts = searchQuery.trim() ? searchResults : contacts;
+  const displayContacts = contacts;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -130,12 +135,33 @@ export default function ContactsPage() {
       </div>
 
       <div className="flex gap-1 border-b border-gray-200 mb-6">
-        <button className="px-4 py-2 text-sm font-medium border-b-2 border-[#008751] text-[#008751]">All</button>
-        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Employee</button>
-        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Operator</button>
-        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Technician</button>
-        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">Manager</button>
-        <button className="px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700">External</button>
+        {[
+          { id: 'All', label: 'All', value: '' },
+          { id: 'Operator', label: 'Operator', value: 'Operator' },
+          { id: 'Technician', label: 'Technician', value: 'Technician' },
+          { id: 'Manager', label: 'Manager', value: 'Manager' },
+          { id: 'Employee', label: 'Employee', value: 'Employee' }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setSelectedClassification(tab.value);
+              fetchContacts({
+                classification: tab.value,
+                status: selectedStatus,
+                group: selectedGroup,
+                search: searchQuery
+              });
+            }}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
+              ? 'border-[#008751] text-[#008751]'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="mb-6">
@@ -169,12 +195,9 @@ export default function ContactsPage() {
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#008751] focus:border-transparent"
           >
             <option value="">All Groups</option>
-            <option value="Atlanta">Atlanta</option>
-            <option value="Nashville">Nashville</option>
-            <option value="Birmingham">Birmingham</option>
-            <option value="Columbia">Columbia</option>
-            <option value="Tallahassee">Tallahassee</option>
-            <option value="Georgia">Georgia</option>
+            {groups.map(group => (
+              <option key={group.id} value={group.id}>{group.name}</option>
+            ))}
           </select>
 
           <button
@@ -185,8 +208,8 @@ export default function ContactsPage() {
           </button>
         </div>
 
-        {searchLoading && (
-          <div className="text-sm text-gray-500">Searching...</div>
+        {loading && contacts.length > 0 && (
+          <div className="text-sm text-[#008751] animate-pulse">Loading updated results...</div>
         )}
       </div>
 
@@ -226,7 +249,7 @@ export default function ContactsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {contact.group || '—'}
+                    {contact.group?.name || '—'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-1">
@@ -330,6 +353,8 @@ export default function ContactsPage() {
           </div>
         )}
       </div>
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

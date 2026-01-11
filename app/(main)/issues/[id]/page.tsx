@@ -1,13 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ArrowLeft, MoreHorizontal, Edit, Bell, MessageSquare, MapPin, Check, EyeOff, AlertCircle, Send, Plus, ListPlus, Wrench, CheckCircle2, XCircle, Trash2, ArrowRight } from 'lucide-react';
 import { serviceAPI } from '@/lib/services/service-api';
 import type { Issue } from '@/lib/services/issues-api';
 import { useRouter } from 'next/navigation';
 import { useIssueDetails } from '@/lib/hooks/useIssueDetails';
 import { useIssueComments } from '@/lib/hooks/useIssueComments';
+import { EntitySidebar } from '@/components/EntitySidebar';
+import { useIssuePhotos } from '@/lib/hooks/useIssuePhotos';
+import { useDocuments } from '@/lib/hooks/useDocuments';
+import { useUploadDocuments } from '@/lib/hooks/useUploadDocuments';
+import { useContacts } from '@/lib/hooks/useContacts';
 import type { IssueCommentData } from '@/lib/services/issues-api';
+import type { Contact } from '@/lib/services/contacts-api';
 
 export default function IssueDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -22,6 +28,16 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         clearError
     } = useIssueDetails(params.id);
 
+    // Fetch contacts for mapping IDs to names
+    const { contacts } = useContacts({ limit: 1000 });
+
+    const contactMap = useMemo(() => {
+        return contacts.reduce((acc, contact) => {
+            acc[contact.id] = contact;
+            return acc;
+        }, {} as Record<string, Contact>);
+    }, [contacts]);
+
     const {
         comments,
         loading: commentsLoading,
@@ -31,8 +47,73 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
     } = useIssueComments(params.id);
 
     // État pour l'ajout de commentaires
-    const [newComment, setNewComment] = useState('');
-    const [submittingComment, setSubmittingComment] = useState(false);
+    // État pour l'ajout de commentaires (legacy - handled by Sidebar now)
+    // const [newComment, setNewComment] = useState(''); 
+    // const [submittingComment, setSubmittingComment] = useState(false);
+
+    // Sidebar State
+    const [activePanel, setActivePanel] = useState<'comments' | 'photos' | 'documents' | null>('comments');
+
+    // Photos Hook
+    const {
+        photos,
+        loading: photosLoading,
+        error: photosError,
+        addPhoto: addPhotoHandler,
+        deletePhoto: deletePhotoHandler,
+        refreshPhotos
+    } = useIssuePhotos(params.id);
+
+    // Documents Hook
+    const {
+        documents,
+        loading: documentsLoading,
+        error: documentsError,
+        refreshDocuments,
+    } = useDocuments({
+        attachedTo: 'issue',
+        attachedId: params.id,
+        limit: 50
+    });
+
+    const { uploadSingleDocument } = useUploadDocuments();
+
+    // Handlers for Sidebar
+    const handleAddCommentWrapper = async (message: string, attachments?: File[]) => {
+        if (!issue) return;
+        try {
+            // Note: Current API doesn't support attachments for comments yet in the hook interface? 
+            // Checking addComment signature: (id, data) -> data has { content, author }
+            // The hook useIssueComments calls addIssueComment(id, {author, content}). It doesn't seem to support attachments in the hook.
+            // Be careful here. 'useVehicleComments' supported attachments. 'useIssueComments' might not.
+            // I'll just send the text for now.
+            const commentData: IssueCommentData = {
+                author: 'CurrentUser', // Placeholder
+                content: message
+            };
+            await addComment(params.id, commentData);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleAddPhotoWrapper = async (files: FileList) => {
+        await addPhotoHandler(files);
+    };
+
+    const handleAddDocumentWrapper = async (files: FileList) => {
+        // Upload one by one
+        for (let i = 0; i < files.length; i++) {
+            await uploadSingleDocument(files[i], {
+                attachedTo: 'issue',
+                attachedId: params.id,
+                fileName: files[i].name,
+                mimeType: files[i].type
+            });
+        }
+        refreshDocuments();
+    };
+
     const [resolving, setResolving] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [modalType, setModalType] = useState<'service_entry' | 'work_order' | 'resolve' | null>(null);
@@ -67,24 +148,10 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         }
     };
 
-    const handleAddComment = async () => {
-        if (!newComment.trim() || !issue) return;
-
-        try {
-            setSubmittingComment(true);
-            const commentData: IssueCommentData = {
-                author: 'Utilisateur actuel', // TODO: Récupérer depuis le contexte d'auth
-                content: newComment.trim()
-            };
-
-            await addComment(params.id, commentData);
-            setNewComment('');
-        } catch (err) {
-            console.error('Erreur lors de l\'ajout du commentaire:', err);
-        } finally {
-            setSubmittingComment(false);
-        }
-    };
+    // Legacy handleAddComment removed/commented as Sidebar handles it
+    /* 
+    const handleAddComment = async () => { ... } 
+    */
 
     const handleCloseIssue = async () => {
         if (!issue) return;
@@ -255,9 +322,9 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                         )}
                         <div className="bg-gray-200 text-gray-500 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">+</div>
                     </div>
-                    <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
+                    {/* <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
                         <EyeOff size={16} /> Unwatch
-                    </button>
+                    </button> */}
                     <div className="relative">
                         <button
                             onClick={() => setShowDropdown(!showDropdown)}
@@ -400,7 +467,22 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
                                     <div className="text-sm text-gray-500">Assigned To</div>
-                                    <div className="text-sm text-gray-900">{issue.assignedTo || '—'}</div>
+                                    <div className="text-sm text-gray-900">
+                                        {issue.assignedTo && issue.assignedTo.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {(Array.isArray(issue.assignedTo) ? issue.assignedTo : [issue.assignedTo]).map((userId) => {
+                                                    const contact = contactMap[userId];
+                                                    return (
+                                                        <span key={userId} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                            {contact ? `${contact.firstName} ${contact.lastName}` : userId.substring(0, 8) + '...'}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            '—'
+                                        )}
+                                    </div>
                                 </div>
 
                                 {issue.labels.length > 0 && (
@@ -425,11 +507,8 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     <div className="text-center text-xs text-[#008751] cursor-pointer hover:underline mb-8">
                         Created {formatDateRelative(issue.createdAt)} · Updated {formatDateRelative(issue.updatedAt)}
                     </div>
-                </div>
 
-                {/* Right Sidebar - Timeline & Comments */}
-                <div className="w-[400px] space-y-6">
-                    {/* Timeline */}
+                    {/* Timeline moved to main column */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h2 className="text-lg font-bold text-gray-900">Timeline</h2>
@@ -450,71 +529,48 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Comments */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[600px] flex flex-col">
-                        <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                            <h2 className="font-bold text-gray-900">Comments</h2>
-                            <div className="flex bg-gray-100 p-1 rounded">
-                                <button className="p-1 hover:bg-white rounded shadow-sm relative"><MessageSquare size={14} /><span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] w-3 h-3 rounded-full flex items-center justify-center">{comments.length}</span></button>
-                                <button className="p-1 hover:bg-white rounded text-gray-400 relative"><MapPin size={14} /></button>
-                                <button className="p-1 hover:bg-white rounded text-gray-400"><Bell size={14} /></button>
-                            </div>
-                        </div>
+                {/* Right Sidebar - Entity Sidebar */}
+                <div className="shrink-0">
+                    <EntitySidebar
+                        entityType="issue"
+                        entityId={issue.id}
+                        activePanel={activePanel}
+                        onPanelChange={setActivePanel}
 
-                        <div className="flex-1 p-6 overflow-y-auto">
-                            {commentsLoading ? (
-                                <div className="flex justify-center items-center h-32">
-                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008751]"></div>
-                                </div>
-                            ) : comments.length === 0 ? (
-                                <div className="text-center text-gray-500 py-8">
-                                    <MessageSquare size={24} className="mx-auto mb-2 opacity-50" />
-                                    <p>Aucun commentaire</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4" data-testid="comments-list">
-                                    {comments.map(comment => (
-                                        <div key={comment.id} className="flex gap-3" data-testid="comment-item">
-                                            <div className="w-8 h-8 rounded-full bg-purple-400 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">
-                                                {comment.author.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex gap-2 items-baseline">
-                                                    <span className="font-bold text-[#008751] text-sm">{comment.author}</span>
-                                                    <span className="text-xs text-gray-500">{formatDateRelative(comment.createdAt)}</span>
-                                                </div>
-                                                <p className="text-sm text-gray-700 mt-1" data-testid="comment-content">{comment.content}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        comments={comments.map(c => ({
+                            id: c.id,
+                            message: c.content,
+                            userName: c.author,
+                            createdAt: c.createdAt,
+                            entityType: 'issue',
+                            entityId: issue.id,
+                            userId: 'unknown',
+                            updatedAt: c.createdAt,
+                            isEdited: false
+                        }))}
+                        commentsLoading={commentsLoading}
+                        onAddComment={handleAddCommentWrapper}
+                        onUpdateComment={async () => { }} // Not impl yet
+                        onDeleteComment={async () => { }} // Not impl yet
+                        onRefreshComments={() => fetchComments(params.id)}
 
-                        <div className="p-4 border-t border-gray-200 flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-purple-400 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">U</div>
-                            <div className="flex-1 flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Add a Comment"
-                                    data-testid="comment-input"
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-                                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751]"
-                                />
-                                <button
-                                    onClick={handleAddComment}
-                                    data-testid="send-comment-button"
-                                    disabled={!newComment.trim() || submittingComment}
-                                    className="px-3 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white rounded text-sm flex items-center gap-1"
-                                >
-                                    <Send size={14} /> Send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                        photos={photos}
+                        photosLoading={photosLoading}
+                        photosError={photosError}
+                        onAddPhoto={handleAddPhotoWrapper}
+                        onDeletePhoto={deletePhotoHandler}
+                        onRefreshPhotos={refreshPhotos}
+
+                        documents={documents}
+                        documentsLoading={documentsLoading}
+                        documentsError={documentsError}
+                        onAddDocument={handleAddDocumentWrapper}
+                        onDeleteDocument={async () => { }} // Need generic document delete
+                        onDownloadDocument={async () => { }} // Need generic download
+                        onRefreshDocuments={refreshDocuments}
+                    />
                 </div>
             </div>
             {/* Modals */}

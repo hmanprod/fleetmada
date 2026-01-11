@@ -4,13 +4,24 @@ import { authenticatedFetch } from '@/lib/hooks/useAuthToken';
 // Utilitaire pour récupérer le token d'authentification
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  
-  const storedToken = localStorage.getItem('authToken') || 
-                     document.cookie.match(/authToken=([^;]*)/)?.[1];
+
+  const storedToken = localStorage.getItem('authToken') ||
+    document.cookie.match(/authToken=([^;]*)/)?.[1];
   return storedToken || null;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+
+export interface Group {
+  id: string;
+  name: string;
+  color?: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    contacts: number;
+  };
+}
 
 export interface Contact {
   id: string;
@@ -18,15 +29,33 @@ export interface Contact {
   lastName: string;
   email: string;
   phone?: string;
-  group?: string;
+  groupId?: string;
+  group?: Group;
   status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
   userType?: string;
   classifications: string[];
   image?: string;
   jobTitle?: string;
   company?: string;
+  middleName?: string;
+  phoneWork?: string;
+  phoneOther?: string;
+  address?: string;
+  address2?: string;
+  city?: string;
+  zip?: string;
+  country?: string;
+  dateOfBirth?: string;
+  employeeNumber?: string;
+  startDate?: string;
+  leaveDate?: string;
+  licenseNumber?: string;
+  licenseClass?: string[];
+  hourlyRate?: number;
   createdAt: string;
   updatedAt: string;
+  associatedUserId?: string | null;
+  assignments?: any[];
 }
 
 export interface ContactListResponse {
@@ -56,16 +85,31 @@ export interface CreateContactRequest {
   lastName: string;
   email: string;
   phone?: string;
-  group?: string;
+  groupId?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
   userType?: string;
   classifications?: string[];
   image?: string;
   jobTitle?: string;
   company?: string;
+  middleName?: string;
+  phoneWork?: string;
+  phoneOther?: string;
+  address?: string;
+  address2?: string;
+  city?: string;
+  zip?: string;
+  country?: string;
+  dateOfBirth?: string;
+  employeeNumber?: string;
+  startDate?: string;
+  leaveDate?: string;
+  licenseNumber?: string;
+  licenseClass?: string[];
+  hourlyRate?: number;
 }
 
-export interface UpdateContactRequest extends Partial<CreateContactRequest> {}
+export interface UpdateContactRequest extends Partial<CreateContactRequest> { }
 
 export interface ContactFilters {
   page?: number;
@@ -79,7 +123,7 @@ export interface ContactFilters {
 class ContactsAPI {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant');
     }
@@ -103,7 +147,7 @@ class ContactsAPI {
 
   async getContacts(filters: ContactFilters = {}): Promise<ContactListResponse> {
     const params = new URLSearchParams();
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, value.toString());
@@ -144,7 +188,7 @@ class ContactsAPI {
 
   async exportContacts(): Promise<Blob> {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant');
     }
@@ -164,7 +208,7 @@ class ContactsAPI {
 
   async importContacts(file: File): Promise<{ success: boolean; message: string; results?: any }> {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant');
     }
@@ -190,4 +234,42 @@ class ContactsAPI {
 }
 
 export const contactsAPI = new ContactsAPI();
+
+export const groupsAPI = {
+  async getGroups(): Promise<Group[]> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/api/groups`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const result = await response.json();
+    return result.data || [];
+  },
+  async createGroup(name: string, color?: string): Promise<{ success: boolean; data?: Group; error?: string }> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/api/groups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ name, color })
+    });
+    return response.json();
+  },
+  async updateGroup(id: string, name?: string, color?: string): Promise<{ success: boolean; data?: Group; error?: string }> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/api/groups/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ name, color })
+    });
+    return response.json();
+  },
+  async deleteGroup(id: string): Promise<{ success: boolean; error?: string }> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE}/api/groups/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.json();
+  }
+};
+
 export default contactsAPI;

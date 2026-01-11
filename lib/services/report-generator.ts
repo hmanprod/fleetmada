@@ -25,7 +25,7 @@ export class ReportGeneratorService {
 
       // Récupération des données selon le template
       const data = await this.getDataForTemplate(template, config, userId)
-      
+
       // Transformation des données pour les charts et tables
       const charts = this.generateCharts(templateConfig, data)
       const tables = this.generateTables(templateConfig, data)
@@ -59,7 +59,7 @@ export class ReportGeneratorService {
 
       // Pour un rapport personnalisé, on combine plusieurs sources de données
       const data = await this.getCustomData(config, userId)
-      
+
       return {
         summary: this.generateCustomSummary(data),
         charts: this.generateCustomCharts(config, data),
@@ -91,105 +91,105 @@ export class ReportGeneratorService {
       // VEHICLES TEMPLATES
       case 'vehicle-cost-comparison':
         return this.getVehicleCostComparisonData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-cost-meter-trend':
         return this.getCostMeterTrendData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-expense-summary':
         return this.getExpenseSummaryData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-expenses-vehicle':
         return this.getVehicleExpensesData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-group-changes':
         return this.getGroupChangesData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-status-changes':
         return this.getStatusChangesData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-utilization-summary':
         return this.getUtilizationData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-meter-history':
         return this.getMeterHistoryData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-list':
         return this.getVehicleListData(userId, config)
-      
+
       case 'vehicle-profitability':
         return this.getVehicleProfitabilityData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-summary':
         return this.getVehicleSummaryData(userId, config)
-      
+
       case 'vehicle-fuel-economy':
         return this.getFuelEconomyData(startDate, endDate, userId, config)
-      
+
       case 'vehicle-replacement-analysis':
         return this.getReplacementAnalysisData(userId, config)
-      
+
       case 'vehicle-costs-vs-budget':
         return this.getCostsVsBudgetData(startDate, endDate, userId, config)
 
       // SERVICE TEMPLATES
       case 'service-maintenance-categorization':
         return this.getMaintenanceCategorizationData(startDate, endDate, userId, config)
-      
+
       case 'service-entries-summary':
         return this.getServiceEntriesSummaryData(startDate, endDate, userId, config)
-      
+
       case 'service-history-by-vehicle':
         return this.getServiceHistoryData(startDate, endDate, userId, config)
-      
+
       case 'service-reminder-compliance':
         return this.getServiceComplianceData(startDate, endDate, userId, config)
-      
+
       case 'service-cost-summary':
         return this.getServiceCostSummaryData(startDate, endDate, userId, config)
-      
+
       case 'service-provider-performance':
         return this.getServiceProviderData(startDate, endDate, userId, config)
-      
+
       case 'service-labor-vs-parts':
         return this.getLaborVsPartsData(startDate, endDate, userId, config)
-      
+
       case 'service-work-order-summary':
         return this.getWorkOrderSummaryData(startDate, endDate, userId, config)
 
       // FUEL TEMPLATES
       case 'fuel-entries-by-vehicle':
         return this.getFuelEntriesData(startDate, endDate, userId, config)
-      
+
       case 'fuel-summary':
         return this.getFuelSummaryData(startDate, endDate, userId, config)
-      
+
       case 'fuel-summary-by-location':
         return this.getFuelByLocationData(startDate, endDate, userId, config)
 
       // ISSUES TEMPLATES
       case 'issues-faults-summary':
         return this.getFaultsSummaryData(startDate, endDate, userId, config)
-      
+
       case 'issues-list':
         return this.getIssuesListData(startDate, endDate, userId, config)
 
       // INSPECTIONS TEMPLATES
       case 'inspection-failures':
         return this.getInspectionFailuresData(startDate, endDate, userId, config)
-      
+
       case 'inspection-schedules':
         return this.getInspectionSchedulesData(startDate, endDate, userId, config)
-      
+
       case 'inspection-submissions':
         return this.getInspectionSubmissionsData(startDate, endDate, userId, config)
-      
+
       case 'inspection-summary':
         return this.getInspectionSummaryData(startDate, endDate, userId, config)
 
       // CONTACTS TEMPLATES
       case 'contact-renewal-reminders':
         return this.getContactRenewalData(startDate, endDate, userId, config)
-      
+
       case 'contacts-list':
         return this.getContactsListData(userId, config)
 
@@ -214,7 +214,7 @@ export class ReportGeneratorService {
 
   private static generateCharts(templateConfig: ReportTemplate, data: any): ChartData[] {
     if (!templateConfig.charts || !data) return []
-    
+
     return templateConfig.charts.map(chart => ({
       id: chart.id,
       type: chart.type,
@@ -226,7 +226,7 @@ export class ReportGeneratorService {
 
   private static generateTables(templateConfig: ReportTemplate, data: any): TableData[] {
     if (!templateConfig.tables || !data) return []
-    
+
     return templateConfig.tables.map(table => ({
       id: table.id,
       title: table.title,
@@ -238,32 +238,32 @@ export class ReportGeneratorService {
 
   private static generateSummary(templateConfig: ReportTemplate, data: any): Record<string, any> {
     const summary: Record<string, any> = {}
-    
+
     if (Array.isArray(data)) {
       summary.totalRecords = data.length
       if (data.length > 0) {
-        const numericFields = Object.keys(data[0]).filter(key => 
+        const numericFields = Object.keys(data[0]).filter(key =>
           typeof data[0][key] === 'number'
         )
         numericFields.forEach(field => {
-          summary[`total${field.charAt(0).toUpperCase() + field.slice(1)}`] = 
+          summary[`total${field.charAt(0).toUpperCase() + field.slice(1)}`] =
             data.reduce((sum, item) => sum + (item[field] || 0), 0)
         })
       }
     }
-    
+
     return summary
   }
 
   private static calculateTotals(data: any[], columns: any[]): Record<string, number> {
     const totals: Record<string, number> = {}
-    
+
     columns.forEach(column => {
       if (column.type === 'number' || column.type === 'currency') {
         totals[column.key] = data.reduce((sum, item) => sum + (item[column.key] || 0), 0)
       }
     })
-    
+
     return totals
   }
 
@@ -311,7 +311,7 @@ export class ReportGeneratorService {
         vehicle.chargingEntries.reduce((sum, entry) => sum + entry.cost, 0)
       ].reduce((sum, cost) => sum + cost, 0)
 
-      const totalMeters = vehicle.meterEntries.length > 0 
+      const totalMeters = vehicle.meterEntries.length > 0
         ? vehicle.meterEntries[0].value - (vehicle.inServiceOdometer || 0)
         : 0
 
@@ -344,13 +344,13 @@ export class ReportGeneratorService {
     config: ReportConfig
   ) {
     const fuelEntries = await prisma.fuelEntry.findMany({
-      where: { 
+      where: {
         userId,
         date: { gte: startDate, lte: endDate }
       },
-      include: { 
+      include: {
         vehicle: true,
-        vendor: true 
+        vendor: true
       },
       orderBy: { date: 'asc' }
     })
@@ -372,13 +372,13 @@ export class ReportGeneratorService {
     config: ReportConfig
   ) {
     const expenses = await prisma.expenseEntry.findMany({
-      where: { 
+      where: {
         vehicle: { userId },
         date: { gte: startDate, lte: endDate }
       },
-      include: { 
+      include: {
         vehicle: true,
-        vendor: true 
+        vendor: true
       }
     })
 
@@ -410,13 +410,13 @@ export class ReportGeneratorService {
     config: ReportConfig
   ) {
     const expenses = await prisma.expenseEntry.findMany({
-      where: { 
+      where: {
         vehicle: { userId },
         date: { gte: startDate, lte: endDate }
       },
-      include: { 
+      include: {
         vehicle: true,
-        vendor: true 
+        vendor: true
       },
       orderBy: { date: 'desc' }
     })
@@ -488,8 +488,8 @@ export class ReportGeneratorService {
       const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
       const activeDays = vehicle.meterEntries.filter(entry => !entry.void).length
       const utilizationRate = totalDays > 0 ? (activeDays / totalDays * 100).toFixed(1) + '%' : '0%'
-      
-      const totalMeters = vehicle.meterEntries.length > 0 
+
+      const totalMeters = vehicle.meterEntries.length > 0
         ? vehicle.meterEntries[vehicle.meterEntries.length - 1].value
         : 0
 
@@ -1054,7 +1054,7 @@ export class ReportGeneratorService {
       email: contact.email,
       phone: contact.phone || 'N/A',
       status: contact.status,
-      group: contact.group || 'N/A'
+      group: contact.groupId || 'N/A'
     }))
   }
 
@@ -1144,7 +1144,7 @@ export class ReportGeneratorService {
   private static transformDataForTable(tableConfig: any, data: any): any[][] {
     // Transformation des données pour les tableaux
     if (Array.isArray(data)) {
-      return data.map(item => 
+      return data.map(item =>
         tableConfig.columns.map(col => item[col.key])
       )
     }

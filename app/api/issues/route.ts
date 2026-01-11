@@ -18,7 +18,7 @@ const IssueCreateSchema = z.object({
   summary: z.string().min(1, 'Le résumé est requis'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
   labels: z.array(z.string()).default([]),
-  assignedTo: z.string().optional()
+  assignedTo: z.array(z.string()).optional()
 })
 
 const IssueListQuerySchema = z.object({
@@ -29,6 +29,11 @@ const IssueListQuerySchema = z.object({
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
   vehicleId: z.string().optional(),
   assignedTo: z.string().optional(),
+  labels: z.string().optional(),
+  groupId: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  userId: z.string().optional(),
   sortBy: z.enum(['createdAt', 'updatedAt', 'priority', 'status', 'reportedDate']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc')
 })
@@ -37,7 +42,7 @@ const IssueUpdateSchema = z.object({
   summary: z.string().min(1, 'Le résumé est requis').optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
   labels: z.array(z.string()).optional(),
-  assignedTo: z.string().optional()
+  assignedTo: z.array(z.string()).optional()
 })
 
 // Types TypeScript
@@ -70,14 +75,22 @@ const validateToken = (token: string): TokenPayload | null => {
 
 // Fonction utilitaire pour construire les filtres de recherche
 const buildIssueFilters = (query: IssueListQuery, userId: string) => {
-  const filters: any = {
-    userId
+  const filters: any = {}
+
+  // Si on demande spécifiquement les issues assignées à quelqu'un ou créées par quelqu'un (userId filter)
+  if (query.assignedTo) {
+    filters.assignedTo = { has: query.assignedTo }
+  } else if (query.userId) {
+    filters.userId = query.userId
+  } else {
+    // Par défaut, on ne montre que les siennes si aucun autre critère utilisateur n'est fourni
+    filters.userId = userId
   }
 
   if (query.search) {
     filters.OR = [
       { summary: { contains: query.search, mode: 'insensitive' } },
-      { labels: { has: query.search } }
+      { labels: { hasSome: [query.search] } }
     ]
   }
 
@@ -93,8 +106,27 @@ const buildIssueFilters = (query: IssueListQuery, userId: string) => {
     filters.vehicleId = query.vehicleId
   }
 
-  if (query.assignedTo) {
-    filters.assignedTo = query.assignedTo
+  if (query.labels) {
+    const labelList = query.labels.split(',').map(l => l.trim()).filter(Boolean)
+    if (labelList.length > 0) {
+      filters.labels = { hasSome: labelList }
+    }
+  }
+
+  if (query.groupId) {
+    filters.vehicle = {
+      group: query.groupId
+    }
+  }
+
+  if (query.startDate || query.endDate) {
+    filters.reportedDate = {}
+    if (query.startDate) {
+      filters.reportedDate.gte = new Date(query.startDate)
+    }
+    if (query.endDate) {
+      filters.reportedDate.lte = new Date(query.endDate)
+    }
   }
 
   return filters
@@ -103,14 +135,14 @@ const buildIssueFilters = (query: IssueListQuery, userId: string) => {
 // Fonction utilitaire pour construire l'ordre de tri
 const buildOrderBy = (query: IssueListQuery) => {
   const orderBy: any = {}
-  
-  if (query.sortBy === 'createdAt' || query.sortBy === 'updatedAt' || 
-      query.sortBy === 'priority' || query.sortBy === 'status' || query.sortBy === 'reportedDate') {
+
+  if (query.sortBy === 'createdAt' || query.sortBy === 'updatedAt' ||
+    query.sortBy === 'priority' || query.sortBy === 'status' || query.sortBy === 'reportedDate') {
     orderBy[query.sortBy] = query.sortOrder
   } else {
     orderBy.createdAt = 'desc'
   }
-  
+
   return orderBy
 }
 
@@ -161,7 +193,7 @@ export async function GET(request: NextRequest) {
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url)
     const queryParams: any = {}
-    
+
     for (const [key, value] of searchParams.entries()) {
       queryParams[key] = value
     }
@@ -169,13 +201,13 @@ export async function GET(request: NextRequest) {
     const query = IssueListQuerySchema.parse(queryParams)
     const offset = (query.page - 1) * query.limit
 
-    logAction('GET Issues', userId, { 
-      userId, 
-      page: query.page, 
+    logAction('GET Issues', userId, {
+      userId,
+      page: query.page,
       limit: query.limit,
-      filters: { 
-        search: query.search, 
-        status: query.status, 
+      filters: {
+        search: query.search,
+        status: query.status,
         priority: query.priority,
         vehicleId: query.vehicleId,
         assignedTo: query.assignedTo
@@ -219,8 +251,8 @@ export async function GET(request: NextRequest) {
 
       const totalPages = Math.ceil(totalCount / query.limit)
 
-      logAction('GET Issues - Success', userId, { 
-        userId, 
+      logAction('GET Issues - Success', userId, {
+        userId,
         totalCount,
         page: query.page,
         totalPages
@@ -317,8 +349,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const issueData = IssueCreateSchema.parse(body)
 
-    logAction('POST Issues', userId, { 
-      userId, 
+    logAction('POST Issues', userId, {
+      userId,
       summary: issueData.summary,
       priority: issueData.priority,
       vehicleId: issueData.vehicleId
@@ -331,7 +363,7 @@ export async function POST(request: NextRequest) {
           ...issueData,
           userId,
           reportedDate: new Date()
-        },
+        } as any,
         include: {
           vehicle: {
             select: {
@@ -352,8 +384,8 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      logAction('POST Issues - Success', userId, { 
-        userId, 
+      logAction('POST Issues - Success', userId, {
+        userId,
         issueId: newIssue.id,
         summary: newIssue.summary
       })
@@ -380,7 +412,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Issues - Validation error', userId, {

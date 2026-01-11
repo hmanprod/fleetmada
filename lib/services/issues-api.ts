@@ -3,10 +3,10 @@ import { useAuthToken } from '@/lib/hooks/useAuthToken'
 // Fonction utilitaire pour récupérer le token d'authentification
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null
-  
-  return localStorage.getItem('authToken') || 
-         document.cookie.match(/authToken=([^;]*)/)?.[1] ||
-         null
+
+  return localStorage.getItem('authToken') ||
+    document.cookie.match(/authToken=([^;]*)/)?.[1] ||
+    null
 }
 
 // Types pour les Issues
@@ -18,7 +18,8 @@ export interface Issue {
   status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   reportedDate: Date
-  assignedTo?: string
+  assignedTo?: string[]
+  assignedToUsers?: { id: string, name: string }[] // Optional: if backend returns populated users
   labels: string[]
   watchers: number
   createdAt: Date
@@ -64,14 +65,14 @@ export interface IssueCreateData {
   summary: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   labels?: string[]
-  assignedTo?: string
+  assignedTo?: string[]
 }
 
 export interface IssueUpdateData {
   summary?: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   labels?: string[]
-  assignedTo?: string
+  assignedTo?: string[]
 }
 
 export interface IssueStatusUpdateData {
@@ -79,7 +80,7 @@ export interface IssueStatusUpdateData {
 }
 
 export interface IssueAssignData {
-  assignedTo: string
+  assignedTo: string[]
 }
 
 export interface IssueCommentData {
@@ -99,6 +100,11 @@ export interface IssueFilters {
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   vehicleId?: string
   assignedTo?: string
+  labels?: string
+  groupId?: string
+  reportedDate?: string
+  startDate?: string
+  endDate?: string
   sortBy?: 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'reportedDate'
   sortOrder?: 'asc' | 'desc'
 }
@@ -117,30 +123,30 @@ export interface IssuesResponse {
 
 class IssuesAPI {
   private async makeRequest<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<{ success: boolean; data?: T; error?: string; message?: string }> {
     const token = getAuthToken()
-    
+
     // Pour éviter l'erreur dans les tests E2E où le localStorage n'est pas accessible de la même manière
     // on permet de passer si on est côté serveur (build time) mais côté client c'est critique
     if (!token && typeof window !== 'undefined') {
-        // Essayer de récupérer depuis les cookies
-        const cookieToken = document.cookie.match(/authToken=([^;]*)/)?.[1];
-        if (!cookieToken) {
-             // En mode dev/test, on peut essayer de récupérer un token simulé si besoin
-             console.warn('Token d\'authentification manquant dans makeRequest');
-             // Ne pas throw immédiatement pour laisser une chance aux mocks
-        }
+      // Essayer de récupérer depuis les cookies
+      const cookieToken = document.cookie.match(/authToken=([^;]*)/)?.[1];
+      if (!cookieToken) {
+        // En mode dev/test, on peut essayer de récupérer un token simulé si besoin
+        console.warn('Token d\'authentification manquant dans makeRequest');
+        // Ne pas throw immédiatement pour laisser une chance aux mocks
+      }
     }
 
     const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...options.headers,
+      'Content-Type': 'application/json',
+      ...options.headers,
     };
 
     if (token) {
-        (headers as any)['Authorization'] = `Bearer ${token}`;
+      (headers as any)['Authorization'] = `Bearer ${token}`;
     }
 
     const config: RequestInit = {
@@ -155,10 +161,10 @@ class IssuesAPI {
       if (!response.ok) {
         // Gérer le cas 401 Unauthorized
         if (response.status === 401) {
-             // Rediriger vers login ou refresh token
-             if (typeof window !== 'undefined') {
-                 // window.location.href = '/login';
-             }
+          // Rediriger vers login ou refresh token
+          if (typeof window !== 'undefined') {
+            // window.location.href = '/login';
+          }
         }
         throw new Error(result.error || 'Erreur API')
       }
@@ -173,7 +179,7 @@ class IssuesAPI {
   // GET /api/issues - Liste des problèmes avec filtres et pagination
   async getIssues(filters: IssueFilters = {}): Promise<IssuesResponse> {
     const params = new URLSearchParams()
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.append(key, String(value))
@@ -182,11 +188,11 @@ class IssuesAPI {
 
     const endpoint = `/api/issues?${params.toString()}`
     const result = await this.makeRequest<IssuesResponse>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des problèmes')
     }
-    
+
     return result.data!
   }
 
@@ -197,11 +203,11 @@ class IssuesAPI {
       method: 'POST',
       body: JSON.stringify(issueData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la création du problème')
     }
-    
+
     return result.data!
   }
 
@@ -209,11 +215,11 @@ class IssuesAPI {
   async getIssue(id: string): Promise<Issue> {
     const endpoint = `/api/issues/${id}`
     const result = await this.makeRequest<Issue>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération du problème')
     }
-    
+
     return result.data!
   }
 
@@ -224,11 +230,11 @@ class IssuesAPI {
       method: 'PUT',
       body: JSON.stringify(updateData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la modification du problème')
     }
-    
+
     return result.data!
   }
 
@@ -238,7 +244,7 @@ class IssuesAPI {
     const result = await this.makeRequest(endpoint, {
       method: 'DELETE',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la suppression du problème')
     }
@@ -251,11 +257,11 @@ class IssuesAPI {
       method: 'POST',
       body: JSON.stringify(statusData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la modification du statut')
     }
-    
+
     return result.data!
   }
 
@@ -266,11 +272,11 @@ class IssuesAPI {
       method: 'POST',
       body: JSON.stringify(assignData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de l\'assignation du problème')
     }
-    
+
     return result.data!
   }
 
@@ -278,11 +284,11 @@ class IssuesAPI {
   async getIssueComments(issueId: string): Promise<Comment[]> {
     const endpoint = `/api/issues/${issueId}/comments`
     const result = await this.makeRequest<Comment[]>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des commentaires')
     }
-    
+
     return result.data!
   }
 
@@ -293,11 +299,11 @@ class IssuesAPI {
       method: 'POST',
       body: JSON.stringify(commentData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de l\'ajout du commentaire')
     }
-    
+
     return result.data!
   }
 
@@ -308,11 +314,11 @@ class IssuesAPI {
       method: 'PUT',
       body: JSON.stringify(updateData),
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la modification du commentaire')
     }
-    
+
     return result.data!
   }
 
@@ -322,7 +328,7 @@ class IssuesAPI {
     const result = await this.makeRequest(endpoint, {
       method: 'DELETE',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la suppression du commentaire')
     }
@@ -332,18 +338,18 @@ class IssuesAPI {
   async getIssueImages(issueId: string): Promise<IssueImage[]> {
     const endpoint = `/api/issues/${issueId}/images`
     const result = await this.makeRequest<IssueImage[]>(endpoint)
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la récupération des images')
     }
-    
+
     return result.data!
   }
 
   // POST /api/issues/[id]/images - Upload d'images
   async uploadIssueImages(issueId: string, files: File[]): Promise<IssueImage[]> {
     const token = getAuthToken()
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant')
     }
@@ -381,7 +387,7 @@ class IssuesAPI {
     const result = await this.makeRequest(endpoint, {
       method: 'DELETE',
     })
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Erreur lors de la suppression de l\'image')
     }

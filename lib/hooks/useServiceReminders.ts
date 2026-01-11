@@ -6,6 +6,7 @@ export interface UseServiceRemindersOptions {
   limit?: number
   status?: string
   vehicleId?: string
+  contactId?: string
   overdue?: boolean
 }
 
@@ -211,7 +212,7 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   // Charger les rappels au montage du composant et quand les options changent
   useEffect(() => {
     fetchReminders()
-  }, [options.page, options.limit, options.status, options.vehicleId, options.overdue])
+  }, [options.page, options.limit, options.status, options.vehicleId, options.contactId, options.overdue])
 
   return {
     reminders,

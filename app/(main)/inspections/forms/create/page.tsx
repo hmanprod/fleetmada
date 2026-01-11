@@ -7,7 +7,7 @@ import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 import inspectionsAPI, { InspectionTemplateCreateData, InspectionTemplate, JsonTemplateMetadata } from '@/lib/services/inspections-api';
 
 const COLORS = [
-    { name: 'None', value: null },
+    { name: 'None', value: undefined },
     { name: 'Red', value: '#ef4444' },
     { name: 'Orange', value: '#f97316' },
     { name: 'Yellow', value: '#eab308' },
@@ -28,7 +28,7 @@ export default function CreateInspectionFormPage() {
         name: '',
         description: '',
         category: 'Général',
-        color: null,
+        color: undefined,
         enableLocationException: true,
         preventStoredPhotos: true,
         copyFromJson: '',

@@ -721,17 +721,17 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                                     onClick={handleStartExecution}
                                     className="w-full flex items-center gap-2 px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white rounded text-sm font-medium"
                                 >
-                                    <Play size={16} /> Démarrer l'Inspection
+                                    <Play size={16} /> Commencer l'Inspection
                                 </button>
                             )}
-                            {inspection.status === 'SCHEDULED' && (
+                            {/* {inspection.status === 'SCHEDULED' && (
                                 <button
                                     onClick={handleStartExecution}
                                     className="w-full flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
                                 >
                                     <Play size={16} /> Commencer Maintenant
                                 </button>
-                            )}
+                            )} */}
                             {inspection.status === 'IN_PROGRESS' && (
                                 <button
                                     onClick={handleCompleteInspection}
@@ -740,7 +740,7 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                                     <CheckCircle size={16} /> Terminer
                                 </button>
                             )}
-                            <button className="w-full flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm font-medium">
+                            {/* <button className="w-full flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm font-medium">
                                 <Clock size={16} /> Programmer
                             </button>
                             <button className="w-full flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm font-medium">
@@ -748,7 +748,7 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                             </button>
                             <button className="w-full flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm font-medium">
                                 <Flag size={16} /> Signaler
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>

@@ -51,13 +51,14 @@ export interface ServiceEntry {
   watchers: number
   isWorkOrder: boolean
   createdAt: string
-  updatedAt: string
+  updatedAt: string;
   vehicle?: {
-    id: string
-    name: string
-    make: string
-    model: string
-  }
+    id: string;
+    name: string;
+    make: string;
+    model: string;
+    licensePlate?: string;
+  };
   user?: {
     id: string
     name: string

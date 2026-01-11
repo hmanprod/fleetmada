@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, FileText, Upload, Plus, X, AlertCircle, CheckCircle, Camera } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Calendar, FileText, Upload, Plus, X, AlertCircle, CheckCircle, Camera, User, Search, MoreHorizontal, Car } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useIssues from '@/lib/hooks/useIssues';
 import { useVehicles } from '@/lib/hooks/useVehicles';
+import { useContacts } from '@/lib/hooks/useContacts';
 import { useAuthToken } from '@/lib/hooks/useAuthToken';
+import { useToast, ToastContainer } from '@/components/NotificationToast';
 import type { IssueCreateData } from '@/lib/services/issues-api';
 
 export default function NewIssuePage() {
@@ -15,13 +17,16 @@ export default function NewIssuePage() {
     // Récupération des véhicules via la vraie API
     const { vehicles, loading: vehiclesLoading, error: vehiclesError } = useVehicles();
 
+    // Récupération des contacts
+    const { contacts, loading: contactsLoading } = useContacts();
+
     // États du formulaire
     const [formData, setFormData] = useState<IssueCreateData>({
         vehicleId: '',
         summary: '',
         priority: 'MEDIUM',
         labels: [],
-        assignedTo: ''
+        assignedTo: []
     });
 
     const [description, setDescription] = useState('');
@@ -33,17 +38,55 @@ export default function NewIssuePage() {
     const [selectedLabel, setSelectedLabel] = useState('');
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
 
+    // Contact Dropdown State
+    const [isContactDropdownOpen, setIsContactDropdownOpen] = useState(false);
+    const [contactSearch, setContactSearch] = useState('');
+    const contactDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Vehicle Dropdown State
+    const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
+    const [vehicleSearch, setVehicleSearch] = useState('');
+    const vehicleDropdownRef = useRef<HTMLDivElement>(null);
+
     // États d'interface
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
 
-    // Données mockées temporaires pour utilisateurs (à remplacer par API Users plus tard)
-    const mockUsers = [
-        { id: 'user-1', name: 'Hery RABOTOVAO' },
-        { id: 'user-2', name: 'John Doe' },
-        { id: 'user-3', name: 'Jane Smith' }
-    ];
+    const { toast, toasts, removeToast } = useToast();
+
+    // Click outside handler for dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (contactDropdownRef.current && !contactDropdownRef.current.contains(event.target as Node)) {
+                setIsContactDropdownOpen(false);
+            }
+            if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target as Node)) {
+                setIsVehicleDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const filteredContacts = contacts.filter(contact => {
+        const searchLower = contactSearch.toLowerCase();
+        const fullName = `${contact.firstName} ${contact.lastName}`.toLowerCase();
+        return fullName.includes(searchLower) ||
+            (contact.email && contact.email.toLowerCase().includes(searchLower));
+    });
+
+    const selectedContacts = contacts.filter(c => formData.assignedTo?.includes(c.id));
+
+    const filteredVehicles = vehicles.filter(vehicle => {
+        const searchLower = vehicleSearch.toLowerCase();
+        return vehicle.name.toLowerCase().includes(searchLower) ||
+            (vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchLower));
+    });
+
+    const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId);
+
 
     const mockLabels = ['Electrical', 'Mechanical', 'Body', 'Safety', 'Recall'];
 
@@ -53,7 +96,6 @@ export default function NewIssuePage() {
 
     const handleInputChange = (field: keyof IssueCreateData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        setError(null); // Clear error when user makes changes
     };
 
     const handleAddLabel = () => {
@@ -73,10 +115,26 @@ export default function NewIssuePage() {
         }));
     };
 
+    const handleAddContact = (contactId: string) => {
+        if (contactId && !formData.assignedTo?.includes(contactId)) {
+            setFormData(prev => ({
+                ...prev,
+                assignedTo: [...(prev.assignedTo || []), contactId]
+            }));
+            setContactSearch('');
+        }
+    };
+
+    const handleRemoveContact = (contactId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            assignedTo: (prev.assignedTo || []).filter(id => id !== contactId)
+        }));
+    };
+
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(event.target.files || []);
         setUploadedImages(prev => [...prev, ...files]);
-        setError(null);
     };
 
     const handleRemoveImage = (indexToRemove: number) => {
@@ -91,11 +149,11 @@ export default function NewIssuePage() {
 
     const validateForm = (): boolean => {
         if (!formData.vehicleId) {
-            setError('Veuillez sélectionner un véhicule');
+            toast.error('Veuillez sélectionner un véhicule');
             return false;
         }
         if (!formData.summary.trim()) {
-            setError('Le résumé est requis');
+            toast.error('Le résumé est requis');
             return false;
         }
         return true;
@@ -106,14 +164,13 @@ export default function NewIssuePage() {
 
         try {
             setLoading(true);
-            setError(null);
 
             await createIssue({
                 ...formData,
                 summary: formData.summary.trim()
             });
 
-            setSuccess(true);
+            toast.success('Problème créé avec succès');
 
             // Redirect after short delay
             setTimeout(() => {
@@ -122,7 +179,7 @@ export default function NewIssuePage() {
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du problème';
-            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -133,7 +190,6 @@ export default function NewIssuePage() {
 
         try {
             setLoading(true);
-            setError(null);
 
             await createIssue({
                 ...formData,
@@ -146,18 +202,17 @@ export default function NewIssuePage() {
                 summary: '',
                 priority: 'MEDIUM',
                 labels: [],
-                assignedTo: ''
+                assignedTo: []
             });
             setDescription('');
             setSelectedLabel('');
             setUploadedImages([]);
 
-            setSuccess(true);
-            setTimeout(() => setSuccess(false), 2000);
+            toast.success('Problème créé avec succès. Vous pouvez en ajouter un autre.');
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du problème';
-            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -179,46 +234,81 @@ export default function NewIssuePage() {
             </div>
 
             <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
-                {/* Messages d'état */}
-                {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
-                        <AlertCircle className="text-red-600" size={20} />
-                        <span className="text-red-700" data-testid="error-message">{error}</span>
-                    </div>
-                )}
-
-                {success && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
-                        <CheckCircle className="text-green-600" size={20} />
-                        <span className="text-green-700" data-testid="success-message">Problème créé avec succès !</span>
-                    </div>
-                )}
+                <ToastContainer toasts={toasts} removeToast={removeToast} />
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-6">Détails</h2>
 
                     <div className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule <span className="text-red-500">*</span></label>
+                        <div className="relative" ref={vehicleDropdownRef}>
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Véhicule <span className="text-red-500">*</span></label>
                             {vehiclesError && (
                                 <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
                                     Erreur lors du chargement des véhicules: {vehiclesError}
                                 </div>
                             )}
-                            <select
-                                data-testid="vehicle-select"
-                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
-                                value={formData.vehicleId}
-                                onChange={(e) => handleInputChange('vehicleId', e.target.value)}
-                                disabled={vehiclesLoading}
-                            >
-                                <option value="">{vehiclesLoading ? 'Chargement...' : 'Veuillez sélectionner'}</option>
-                                {vehicles.map(vehicle => (
-                                    <option key={vehicle.id} value={vehicle.id}>
-                                        {vehicle.name} - {vehicle.make} {vehicle.model} ({vehicle.vin})
-                                    </option>
-                                ))}
-                            </select>
+
+                            <div className="relative">
+                                <div
+                                    className={`w-full p-2.5 border rounded-md bg-white cursor-pointer flex items-center justify-between transition-all ${isVehicleDropdownOpen ? 'ring-2 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
+                                    onClick={() => !vehiclesLoading && setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Car size={18} className="text-gray-400" />
+                                        {selectedVehicle ? (
+                                            <div>
+                                                <span className="font-medium text-gray-900">{selectedVehicle.name}</span>
+                                                <span className="ml-2 text-xs text-gray-500">{selectedVehicle.licensePlate}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-500">{vehiclesLoading ? 'Chargement...' : 'Sélectionner un véhicule...'}</span>
+                                        )}
+                                    </div>
+                                    <MoreHorizontal size={18} className="text-gray-400 rotate-90" />
+                                </div>
+
+                                {isVehicleDropdownOpen && (
+                                    <div className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="p-2 border-b border-gray-100 bg-gray-50">
+                                            <div className="relative">
+                                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    placeholder="Rechercher véhicule ou plaque..."
+                                                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
+                                                    value={vehicleSearch}
+                                                    onChange={(e) => setVehicleSearch(e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {filteredVehicles.length > 0 ? (
+                                                filteredVehicles.map(v => (
+                                                    <div
+                                                        key={v.id}
+                                                        className={`px-4 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors ${formData.vehicleId === v.id ? 'bg-green-50' : ''}`}
+                                                        onClick={() => {
+                                                            handleInputChange('vehicleId', v.id);
+                                                            setIsVehicleDropdownOpen(false);
+                                                            setVehicleSearch('');
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <div className="text-sm font-medium text-gray-900 group-hover:text-[#008751]">{v.name}</div>
+                                                            <div className="text-xs text-gray-500">{v.licensePlate || 'Sans plaque'} • {v.type || 'Standard'}</div>
+                                                        </div>
+                                                        {formData.vehicleId === v.id && <div className="w-2 h-2 rounded-full bg-[#008751]"></div>}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-6 text-center text-sm text-gray-500 italic">Aucun véhicule trouvé</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div>
@@ -235,7 +325,12 @@ export default function NewIssuePage() {
                                     <option value="HIGH">Haute</option>
                                     <option value="CRITICAL">Critique</option>
                                 </select>
-                                <div className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-dashed border-gray-400 w-4 h-4"></div>
+                                <div className={`absolute left-3 top-1/2 -translate-y-1/2 rounded-full w-4 h-4 border ${formData.priority === 'LOW' ? 'bg-blue-500 border-blue-500' :
+                                    formData.priority === 'MEDIUM' ? 'bg-yellow-500 border-yellow-500' :
+                                        formData.priority === 'HIGH' ? 'bg-orange-500 border-orange-500' :
+                                            formData.priority === 'CRITICAL' ? 'bg-red-600 border-red-600' :
+                                                'border-dashed border-gray-400'
+                                    }`}></div>
                             </div>
                         </div>
 
@@ -308,18 +403,82 @@ export default function NewIssuePage() {
                             <p className="text-xs text-gray-500 mt-1">Utilisez les étiquettes pour catégoriser et grouper.</p>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
-                            <select
-                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
-                                value={formData.assignedTo}
-                                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                            >
-                                <option value="">Veuillez sélectionner</option>
-                                {mockUsers.map(user => (
-                                    <option key={user.id} value={user.id}>{user.name}</option>
-                                ))}
-                            </select>
+                        <div className="relative" ref={contactDropdownRef}>
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Assigné à</label>
+
+                            <div className="relative">
+                                <div
+                                    className={`w-full p-2.5 border rounded-md bg-white cursor-pointer flex items-center justify-between transition-all ${isContactDropdownOpen ? 'ring-2 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
+                                    onClick={() => setIsContactDropdownOpen(!isContactDropdownOpen)}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <User size={18} className="text-gray-400" />
+                                        {formData.assignedTo && formData.assignedTo.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {selectedContacts.map(c => (
+                                                    <span key={c.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100">
+                                                        {c.firstName} {c.lastName}
+                                                        <span onClick={(e) => { e.stopPropagation(); handleRemoveContact(c.id); }} className="hover:text-blue-900 cursor-pointer"><X size={10} /></span>
+                                                    </span>
+                                                ))}
+                                                {selectedContacts.length === 0 && <span className="text-sm font-medium text-gray-900">{formData.assignedTo.length} sélectionné(s)</span>}
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-500">Sélectionner un contact...</span>
+                                        )}
+                                    </div>
+                                    <MoreHorizontal size={18} className="text-gray-400 rotate-90" />
+                                </div>
+
+                                {isContactDropdownOpen && (
+                                    <div className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="p-2 border-b border-gray-100 bg-gray-50">
+                                            <div className="relative">
+                                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    placeholder="Rechercher nom ou email..."
+                                                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
+                                                    value={contactSearch}
+                                                    onChange={(e) => setContactSearch(e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {filteredContacts.length > 0 ? (
+                                                filteredContacts.map(c => {
+                                                    const isSelected = formData.assignedTo?.includes(c.id);
+                                                    return (
+                                                        <div
+                                                            key={c.id}
+                                                            className={`px-4 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors ${isSelected ? 'bg-green-50' : ''}`}
+                                                            onClick={() => {
+                                                                if (isSelected) {
+                                                                    handleRemoveContact(c.id);
+                                                                } else {
+                                                                    handleAddContact(c.id);
+                                                                }
+                                                                // Don't close for multi-select convenience
+                                                                // setIsContactDropdownOpen(false); 
+                                                            }}
+                                                        >
+                                                            <div>
+                                                                <div className="text-sm font-medium text-gray-900 group-hover:text-[#008751]">{c.firstName} {c.lastName}</div>
+                                                                <div className="text-xs text-gray-500">{c.jobTitle || c.email}</div>
+                                                            </div>
+                                                            {isSelected && <div className="text-[#008751]"><CheckCircle size={16} /></div>}
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="px-4 py-6 text-center text-sm text-gray-500 italic">Aucun contact trouvé</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -386,22 +545,27 @@ export default function NewIssuePage() {
                         </div>
 
                         {uploadedImages.length > 0 && (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <h4 className="text-sm font-medium text-gray-700">Fichiers sélectionnés</h4>
-                                <div className="space-y-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {uploadedImages.map((file, index) => (
-                                        <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                                            <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                                                <FileText size={16} className="text-gray-600" />
-                                            </div>
-                                            <span className="text-sm text-gray-900 flex-1">{file.name}</span>
+                                        <div key={index} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={file.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage(index)}
-                                                className="text-red-500 hover:text-red-700"
+                                                className="absolute top-1.5 right-1.5 p-1.5 bg-black/50 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all transform scale-90 group-hover:scale-100"
                                             >
-                                                <X size={16} />
+                                                <X size={14} />
                                             </button>
+                                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-2 py-1 truncate">
+                                                {file.name}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
