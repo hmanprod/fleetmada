@@ -156,6 +156,11 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     fetchIssues()
   }, []) // Seulemente au montage
 
+  // Sync internal filters with initialFilters prop if changed externally
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, ...initialFilters }));
+  }, [initialFilters.status, initialFilters.assignedTo, initialFilters.vehicleId, initialFilters.priority, initialFilters.groupId, initialFilters.labels]);
+
   return {
     issues,
     loading,
