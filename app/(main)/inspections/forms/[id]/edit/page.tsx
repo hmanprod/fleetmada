@@ -584,6 +584,21 @@ export default function EditInspectionFormPage() {
                                                                         />
                                                                     </div>
                                                                 )}
+
+                                                                {item.type === 'DATE_TIME' && (
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Format</label>
+                                                                        <select
+                                                                            className="w-full p-2 text-sm bg-white border border-gray-200 rounded-lg focus:border-[#008751] outline-none"
+                                                                            value={item.dateTimeType || 'DATE_ONLY'}
+                                                                            onChange={e => handleUpdateItem(index, { dateTimeType: e.target.value })}
+                                                                        >
+                                                                            <option value="DATE_ONLY">Date seulement</option>
+                                                                            <option value="DATE_TIME">Date et Heure</option>
+                                                                            <option value="TIME_ONLY">Heure seulement</option>
+                                                                        </select>
+                                                                    </div>
+                                                                )}
                                                             </>
                                                         )}
                                                     </div>

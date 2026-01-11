@@ -24,11 +24,11 @@
                     {
                         "item_id": "time_accident_occurred",
                         "item_name": "Time Accident Occurred",
-                        "type": "Date / Time",
+                        "type": "datetime",
                         "required": false,
                         "short_description": "—",
                         "instructions": "—",
-                        "date_format": "Date and Time"
+                        "date_format": "datetime"
                     },
                     {
                         "item_id": "accident_details",

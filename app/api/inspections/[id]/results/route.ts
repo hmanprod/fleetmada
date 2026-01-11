@@ -19,7 +19,8 @@ const InspectionResultsSubmitSchema = z.object({
     resultValue: z.string().optional(),
     isCompliant: z.boolean(),
     notes: z.string().optional(),
-    imageUrl: z.string().url().optional()
+    imageUrl: z.string().url().optional(),
+    images: z.array(z.string().url()).optional()
   })).min(1, 'Au moins un résultat requis')
 })
 
@@ -288,7 +289,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
                 resultValue: resultData.resultValue || '',
                 isCompliant: resultData.isCompliant,
                 notes: resultData.notes,
-                imageUrl: resultData.imageUrl
+                imageUrl: resultData.imageUrl,
+                images: resultData.images || []
               },
               include: {
                 inspectionItem: {

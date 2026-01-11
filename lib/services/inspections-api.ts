@@ -169,6 +169,7 @@ export interface InspectionResultData {
   isCompliant: boolean
   notes?: string
   imageUrl?: string
+  images?: string[]
 }
 
 export interface InspectionResultsSubmitData {

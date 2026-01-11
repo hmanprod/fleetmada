@@ -925,6 +925,7 @@ model InspectionResult {
   isCompliant      Boolean
   notes            String?
   imageUrl         String?
+  images           String[]         @default([]) // Support multiple images per result
   createdAt        DateTime         @default(now())
   inspection       Inspection       @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
   inspectionItem   InspectionItem   @relation(fields: [inspectionItemId], references: [id], onDelete: Cascade)

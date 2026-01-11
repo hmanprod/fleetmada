@@ -100,7 +100,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const body = await request.json()
     const duplicateData = DuplicateTemplateSchema.parse(body)
 
-    logAction('DUPLICATE', userId, { 
+    logAction('DUPLICATE', userId, {
       templateId,
       newName: duplicateData.name
     })
@@ -169,7 +169,21 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
                 description: originalItem.description,
                 category: originalItem.category,
                 isRequired: originalItem.isRequired,
-                sortOrder: index
+                sortOrder: index,
+                type: originalItem.type,
+                options: originalItem.options,
+                unit: originalItem.unit,
+                instructions: originalItem.instructions,
+                shortDescription: originalItem.shortDescription,
+                passLabel: originalItem.passLabel,
+                failLabel: originalItem.failLabel,
+                requirePhotoOnPass: originalItem.requirePhotoOnPass,
+                requirePhotoOnFail: originalItem.requirePhotoOnFail,
+                enableNA: originalItem.enableNA,
+                dateTimeType: originalItem.dateTimeType,
+                minRange: originalItem.minRange,
+                maxRange: originalItem.maxRange,
+                requireSecondaryMeter: originalItem.requireSecondaryMeter
               }
             })
           )
@@ -181,7 +195,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         }
       })
 
-      logAction('DUPLICATE - Success', userId, { 
+      logAction('DUPLICATE - Success', userId, {
         originalTemplateId: templateId,
         newTemplateId: duplicatedTemplate.id,
         itemsCount: duplicatedTemplate.items.length
@@ -210,7 +224,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('DUPLICATE - Validation error', userId, {

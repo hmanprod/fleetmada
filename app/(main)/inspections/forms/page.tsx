@@ -13,6 +13,7 @@ import { FilterCriterion } from '../components/filters/FilterCard';
 import { TEMPLATE_FIELDS } from '../components/filters/filter-definitions';
 import { FormCard } from './components/FormCard';
 import { TemplateSelectionModal } from './components/TemplateSelectionModal';
+import { ConfirmationModal } from '@/app/components/ui/ConfirmationModal';
 import inspectionsAPI from '@/lib/services/inspections-api';
 import { useToast, ToastContainer } from '../components/NotificationToast';
 
@@ -22,6 +23,11 @@ export default function InspectionFormsPage() {
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; templateId: string | null }>({
+        isOpen: false,
+        templateId: null
+    });
+    const [isDeleting, setIsDeleting] = useState(false);
     const searchParams = useSearchParams();
     const { toast, toasts, removeToast } = useToast();
 
@@ -75,19 +81,34 @@ export default function InspectionFormsPage() {
 
     const handleDuplicate = async (id: string, name: string) => {
         try {
-            await duplicateTemplate(id, `${name} (Copie)`);
+            const newTemplate = await duplicateTemplate(id, `${name} (Copie)`);
+            if (newTemplate && newTemplate.id) {
+                router.push(`/inspections/forms/${newTemplate.id}/edit?tab=info`);
+                toast.success('Duplication réussie', 'Le formulaire a été dupliqué. Vous pouvez maintenant le renommer.');
+            }
         } catch (err) {
             console.error('Failed to duplicate template:', err);
+            toast.error('Erreur de duplication', 'Le formulaire n\'a pas pu être dupliqué.');
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce formulaire ?')) {
-            try {
-                await deleteTemplate(id);
-            } catch (err) {
-                console.error('Failed to delete template:', err);
-            }
+    const handleDelete = (id: string) => {
+        setDeleteConfirmation({ isOpen: true, templateId: id });
+    };
+
+    const executeDelete = async () => {
+        if (!deleteConfirmation.templateId) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteTemplate(deleteConfirmation.templateId);
+            toast.success('Formulaire supprimé', 'Le formulaire a été supprimé avec succès.');
+            setDeleteConfirmation({ isOpen: false, templateId: null });
+        } catch (err) {
+            console.error('Failed to delete template:', err);
+            toast.error('Erreur', 'Impossible de supprimer le formulaire. Veuillez réessayer.');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -134,6 +155,16 @@ export default function InspectionFormsPage() {
                 onClose={() => setIsTemplateModalOpen(false)}
                 onSelect={handleCreateFromJson}
             />
+            <ConfirmationModal
+                isOpen={deleteConfirmation.isOpen}
+                onClose={() => setDeleteConfirmation({ isOpen: false, templateId: null })}
+                onConfirm={executeDelete}
+                title="Supprimer le formulaire"
+                message="Êtes-vous sûr de vouloir supprimer ce formulaire d'inspection ? Cette action est irréversible et toutes les inspections associées pourraient être affectées."
+                confirmLabel="Supprimer"
+                isDestructive={true}
+                isLoading={isDeleting}
+            />
             {/* Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
@@ -141,12 +172,12 @@ export default function InspectionFormsPage() {
                     <p className="text-gray-500 mt-1">Gérez vos formulaires et critères de vérification</p>
                 </div>
                 <div className="flex gap-3">
-                    <button
+                    {/* <button
                         onClick={() => setIsTemplateModalOpen(true)}
                         className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-2.5 px-6 rounded-lg transition-all shadow-sm flex items-center gap-2 active:scale-95"
                     >
                         <ClipboardCopy size={20} className="text-[#008751]" /> Copier depuis Template
-                    </button>
+                    </button> */}
                     <button
                         onClick={handleCreate}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2.5 px-6 rounded-lg transition-all shadow-md flex items-center gap-2 active:scale-95"

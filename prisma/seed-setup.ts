@@ -20,7 +20,8 @@ const typeMap: Record<string, any> = {
     'Pass / Fail': 'PASS_FAIL',
     'Numeric': 'NUMERIC',
     'Number': 'NUMERIC',
-    'Header': 'HEADER'
+    'Header': 'HEADER',
+    'datetime': 'DATE_TIME'
 };
 
 async function seedTemplateFromJson(filePath: string, companyId: string) {
@@ -63,7 +64,7 @@ async function seedTemplateFromJson(filePath: string, companyId: string) {
                     requirePhotoOnPass: item.require_photo_pass ?? item.require_photo_comment_pass ?? false,
                     requirePhotoOnFail: item.require_photo_fail ?? item.require_photo_comment_fail ?? item.require_photo_verification ?? false,
                     enableNA: item.enable_na ?? item.enable_na_option ?? true,
-                    dateTimeType: item.date_format === 'Date and Time' ? 'DATE_TIME' : (item.date_format === 'Date Only' ? 'DATE_ONLY' : null),
+                    dateTimeType: (item.date_format === 'Date and Time' || item.date_format === 'datetime') ? 'DATE_TIME' : (item.date_format === 'Date Only' ? 'DATE_ONLY' : null),
                     requireSecondaryMeter: item.require_secondary_meter ?? false,
                     minRange: typeof item.minimum === 'number' ? item.minimum : (parseFloat(item.minimum) || null),
                     maxRange: typeof item.maximum === 'number' ? item.maximum : (parseFloat(item.maximum) || null),
@@ -153,7 +154,7 @@ async function main() {
 
     // Seed Templates from JSON
     const templatesDir = path.join(__dirname, 'templates');
-    const essentialTemplates = ['standard_inspection.json', 'daily_safety_inspection.json'];
+    const essentialTemplates = ['standard_inspection.json', 'daily_safety_inspection.json', 'accident.json'];
 
     for (const filename of essentialTemplates) {
         const filePath = path.join(templatesDir, filename);

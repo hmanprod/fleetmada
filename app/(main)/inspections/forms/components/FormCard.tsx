@@ -67,13 +67,22 @@ export function FormCard({ template, onDuplicate, onDelete, onToggleStatus }: Fo
         };
     }, []);
 
-    const handleEdit = () => {
-        router.push(`/inspections/forms/${template.id}/edit`);
+    const handleInfo = () => {
+        router.push(`/inspections/forms/${template.id}/edit?tab=info`);
     };
 
     const handleVehiclesAndSchedules = () => {
-        // For now, redirect to a placeholder or the same edit page with a tab query
         router.push(`/inspections/forms/${template.id}/edit?tab=schedules`);
+    };
+
+    const handleViewHistory = () => {
+        router.push(`/inspections/history?inspectionTemplateId=${template.id}`);
+    };
+
+    const handlePrint = () => {
+        // Create a printable view or just use window.print() on the edit page
+        // For now, we'll redirect to the edit page and suggest printing
+        window.open(`/inspections/forms/${template.id}/edit?print=true`, '_blank');
     };
 
     const handleStartInspection = () => {
@@ -106,16 +115,16 @@ export function FormCard({ template, onDuplicate, onDelete, onToggleStatus }: Fo
                                 <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                     Edit
                                 </div>
-                                <button onClick={() => { setIsMenuOpen(false); handleEdit(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
+                                <button onClick={() => { setIsMenuOpen(false); router.push(`/inspections/forms/${template.id}/edit`); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                                     <List size={16} /> Inspection Items
                                 </button>
-                                <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed" title="Coming Soon">
+                                {/* <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed" title="Coming Soon">
                                     <Workflow size={16} /> Workflows
-                                </button>
+                                </button> */}
                                 <button onClick={() => { setIsMenuOpen(false); handleVehiclesAndSchedules(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                                     <Car size={16} /> Vehicles & Schedules
                                 </button>
-                                <button onClick={() => { setIsMenuOpen(false); handleEdit(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
+                                <button onClick={() => { setIsMenuOpen(false); handleInfo(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                                     <Edit size={16} /> Title and Settings
                                 </button>
 
@@ -124,21 +133,21 @@ export function FormCard({ template, onDuplicate, onDelete, onToggleStatus }: Fo
                                 <button onClick={() => { setIsMenuOpen(false); handleStartInspection(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-900 font-medium">
                                     <Play size={16} /> Start Inspection
                                 </button>
-                                <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed">
+                                {/* <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed">
                                     <Share size={16} /> Share Submission Link
-                                </button>
-                                <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed">
+                                </button> */}
+                                {/* <button onClick={() => { setIsMenuOpen(false); handlePrint(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                                     <Printer size={16} /> Print
-                                </button>
+                                </button> */}
                                 <button onClick={() => { setIsMenuOpen(false); onDuplicate(template.id, template.name); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                                     <Copy size={16} /> Make a Copy
                                 </button>
-                                <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed">
+                                <button onClick={() => { setIsMenuOpen(false); handleViewHistory(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                                     <Settings size={16} /> View History
                                 </button>
-                                <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed">
+                                {/* <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-gray-700 opacity-50 cursor-not-allowed">
                                     <Archive size={16} /> Archive
-                                </button>
+                                </button> */}
 
                                 <div className="my-1 border-t border-gray-100"></div>
 
@@ -150,7 +159,7 @@ export function FormCard({ template, onDuplicate, onDelete, onToggleStatus }: Fo
                     </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-[#008751] transition-colors cursor-pointer" onClick={handleEdit}>{template.name}</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-[#008751] transition-colors cursor-pointer" onClick={() => router.push(`/inspections/forms/${template.id}/edit`)}>{template.name}</h3>
                 <p className="text-gray-500 text-sm mb-6 line-clamp-2 h-10">{template.description || 'Aucune description fournie.'}</p>
 
                 <div className="flex items-center gap-4 text-xs font-medium text-gray-500">

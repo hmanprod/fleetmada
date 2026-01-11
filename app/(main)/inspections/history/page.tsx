@@ -488,11 +488,11 @@ export default function InspectionHistoryPage() {
                                                     className="text-gray-400 hover:text-gray-600"
                                                     title="Voir les détails"
                                                 >
-                                                    <Eye size={16} />
+                                                    <ChevronRight size={16} />
                                                 </button>
-                                                <button className="text-gray-400 hover:text-gray-600">
+                                                {/* <button className="text-gray-400 hover:text-gray-600">
                                                     <MoreHorizontal size={16} />
-                                                </button>
+                                                </button> */}
                                             </div>
                                         </td>
                                     </tr>
