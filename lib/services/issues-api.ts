@@ -40,6 +40,7 @@ export interface Issue {
     comments: number
     images: number
   }
+  images?: IssueImage[]
 }
 
 export interface Comment {

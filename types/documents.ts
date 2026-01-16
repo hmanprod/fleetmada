@@ -17,7 +17,7 @@ export interface Document {
   autoDelete: boolean;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relations
   user: User;
   company?: Company;
@@ -174,7 +174,7 @@ export interface DocumentSearchResult {
 }
 
 // Types d'entités où peuvent être attachés les documents
-export type AttachmentEntityType = 
+export type AttachmentEntityType =
   | 'vehicle'
   | 'service'
   | 'issue'
@@ -183,7 +183,8 @@ export type AttachmentEntityType =
   | 'contact'
   | 'reminder'
   | 'user'
-  | 'company';
+  | 'company'
+  | 'expense';
 
 // Mappage des types MIME vers les types de fichiers
 export const MIME_TYPE_CATEGORIES = {
@@ -208,11 +209,11 @@ export type MimeTypeCategory = keyof typeof MIME_TYPE_CATEGORIES;
 // Utilitaires
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 

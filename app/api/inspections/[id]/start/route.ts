@@ -155,9 +155,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
                   category: templateItem.category,
                   status: 'PENDING',
                   sortOrder: index,
-                  isRequired: templateItem.isRequired
+                  isRequired: templateItem.isRequired,
+                  canCreateIssue: (templateItem as any).canCreateIssue
                 }
-              })
+              } as any)
             )
           )
         }
@@ -200,7 +201,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         return updatedInspection
       })
 
-      logAction('START - Success', userId, { 
+      logAction('START - Success', userId, {
         inspectionId,
         templateItems: inspection.inspectionTemplate?.items.length || 0
       })

@@ -71,6 +71,7 @@ export interface InspectionItem {
   isRequired: boolean
   type: InspectionFieldType
   unit?: string
+  canCreateIssue?: boolean
   createdAt: Date
   updatedAt: Date
   templateItem?: {
@@ -140,6 +141,7 @@ export interface InspectionTemplateItem {
   minRange?: number
   maxRange?: number
   requireSecondaryMeter?: boolean
+  canCreateIssue?: boolean
 }
 
 export interface InspectionCreateData {

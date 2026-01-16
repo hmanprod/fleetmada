@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
+import {
   CreateExpenseEntrySchema,
   type CreateExpenseEntryInput
 } from '@/lib/validations/vehicle-validations'
+import { checkVehicleAccess } from '@/lib/api-utils'
 import jwt from 'jsonwebtoken'
 
 // Interface pour les données du token JWT décodé
@@ -38,21 +39,6 @@ const validateToken = (token: string): TokenPayload | null => {
   }
 }
 
-// Fonction utilitaire pour vérifier l'accès au véhicule
-const checkVehicleAccess = async (vehicleId: string, userId: string) => {
-  const vehicle = await prisma.vehicle.findFirst({
-    where: {
-      id: vehicleId,
-      userId
-    }
-  })
-
-  if (!vehicle) {
-    return null
-  }
-
-  return vehicle
-}
 
 // Schéma pour les paramètres de requête des dépenses
 const ExpenseQuerySchema = {
@@ -113,13 +99,13 @@ const buildExpenseFilters = (query: any, vehicleId: string) => {
 // Fonction utilitaire pour construire l'ordre de tri
 const buildExpenseOrderBy = (query: any) => {
   const orderBy: any = {}
-  
+
   if (query.sortBy === 'date' || query.sortBy === 'amount' || query.sortBy === 'type' || query.sortBy === 'createdAt') {
     orderBy[query.sortBy] = query.sortOrder
   } else {
     orderBy.date = 'desc'
   }
-  
+
   return orderBy
 }
 
@@ -179,7 +165,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url)
     const query: any = {}
-    
+
     for (const [key, value] of searchParams.entries()) {
       if (ExpenseQuerySchema[key as keyof typeof ExpenseQuerySchema]) {
         query[key] = ExpenseQuerySchema[key as keyof typeof ExpenseQuerySchema](value)
@@ -190,13 +176,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const limit = query.limit || 20
     const offset = (page - 1) * limit
 
-    logAction('GET Expenses', userId, { 
-      userId, 
+    logAction('GET Expenses', userId, {
+      userId,
       vehicleId,
-      page, 
+      page,
       limit,
-      filters: { 
-        type: query.type, 
+      filters: {
+        type: query.type,
         status: query.status,
         startDate: query.startDate,
         endDate: query.endDate
@@ -293,8 +279,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         percentage: totalCount > 0 ? (item._count.id / totalCount) * 100 : 0
       })).sort((a, b) => b.totalAmount - a.totalAmount)
 
-      logAction('GET Expenses - Success', userId, { 
-        userId, 
+      logAction('GET Expenses - Success', userId, {
+        userId,
         vehicleId,
         totalCount,
         page,
@@ -349,7 +335,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     logAction('GET Expenses - Server error', userId, {
       vehicleId,
       error: error instanceof Error ? error.message : 'Unknown server error',
@@ -423,8 +409,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       vehicleId
     })
 
-    logAction('POST Expense', userId, { 
-      userId, 
+    logAction('POST Expense', userId, {
+      userId,
       vehicleId,
       expenseType: expenseData.type,
       amount: expenseData.amount
@@ -449,6 +435,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           date: new Date(expenseData.date),
           type: expenseData.type,
           vendorName: expenseData.vendor,
+          vendorId: expenseData.vendorId,
           source: expenseData.source,
           amount: expenseData.amount,
           currency: expenseData.currency,
@@ -459,8 +446,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         }
       })
 
-      logAction('POST Expense - Success', userId, { 
-        userId, 
+      logAction('POST Expense - Success', userId, {
+        userId,
         vehicleId,
         expenseId: newExpense.id,
         amount: newExpense.amount
@@ -506,7 +493,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Expense - Validation error', userId, {

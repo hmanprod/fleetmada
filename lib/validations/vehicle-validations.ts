@@ -123,6 +123,7 @@ export const CreateExpenseEntrySchema = z.object({
   date: z.string().datetime(),
   type: z.string().min(1, 'Le type de dépense est requis'),
   vendor: z.string().optional(),
+  vendorId: z.string().optional(),
   source: z.string().min(1, 'La source est requise'),
   amount: z.number().min(0, 'Le montant doit être positif'),
   currency: z.string().default('USD'),

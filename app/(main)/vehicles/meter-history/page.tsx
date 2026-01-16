@@ -44,7 +44,7 @@ export default function VehicleMeterPage() {
     date: new Date().toISOString().split('T')[0],
     isVoid: false,
     type: 'Primary',
-    unit: 'hrs'
+    unit: 'mi'
   });
 
   const fetchData = async (currentFilters: MeterEntriesQuery) => {
@@ -133,7 +133,7 @@ export default function VehicleMeterPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.vehicleId || !formData.date || !formData.value || !token) return;
+    if (!formData.vehicleId || !formData.date || formData.value === undefined || formData.value === null || !token) return;
 
     setIsSaving(true);
     setError(null);
@@ -151,6 +151,7 @@ export default function VehicleMeterPage() {
         },
         body: JSON.stringify({
           ...formData,
+          void: formData.isVoid, // Map isVoid to void for the API
           date: new Date(formData.date || '').toISOString(),
           value: Number(formData.value),
           type: 'MILEAGE'

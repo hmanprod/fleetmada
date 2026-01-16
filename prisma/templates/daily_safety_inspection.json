@@ -19,7 +19,8 @@
                         "required": true,
                         "short_description": "Vérifier l'état des plaquettes et le liquide",
                         "pass_label": "Conforme",
-                        "fail_label": "Non Conforme"
+                        "fail_label": "Non Conforme",
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -34,7 +35,8 @@
                         "required": true,
                         "short_description": "Vérifier la pression et l'usure",
                         "pass_label": "Conforme",
-                        "fail_label": "Non Conforme"
+                        "fail_label": "Non Conforme",
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -49,7 +51,8 @@
                         "required": true,
                         "short_description": "Vérifier le fonctionnement de tous les feux",
                         "pass_label": "Conforme",
-                        "fail_label": "Non Conforme"
+                        "fail_label": "Non Conforme",
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -64,7 +67,8 @@
                         "required": false,
                         "short_description": "Huile, lave-glace, liquide de refroidissement",
                         "pass_label": "Conforme",
-                        "fail_label": "Non Conforme"
+                        "fail_label": "Non Conforme",
+                        "can_create_issue": true
                     }
                 ]
             }

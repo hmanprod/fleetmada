@@ -10,7 +10,7 @@ export interface Photo {
   height?: number;
   userId: string;
   userName: string;
-  entityType: 'vehicle' | 'service' | 'issue' | 'part';
+  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
   entityId: string;
   locationType?: 'interior' | 'exterior' | 'engine' | 'dashboard' | 'other';
   description?: string;
@@ -22,7 +22,7 @@ export interface Photo {
 
 export interface PhotoUploadData {
   file: File;
-  entityType: 'vehicle' | 'service' | 'issue' | 'part';
+  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
   entityId: string;
   locationType?: 'interior' | 'exterior' | 'engine' | 'dashboard' | 'other';
   description?: string;
@@ -31,7 +31,7 @@ export interface PhotoUploadData {
 }
 
 export interface PhotoFilters {
-  entityType?: 'vehicle' | 'service' | 'issue' | 'part';
+  entityType?: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
   entityId?: string;
   attachedId?: string;
   userId?: string;
@@ -60,11 +60,11 @@ export interface UploadPhotoResult {
 // Utilitaires pour les photos
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 

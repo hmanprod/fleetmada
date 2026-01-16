@@ -43,6 +43,7 @@ interface ChecklistItem {
     requireSecondaryMeter?: boolean;
     secondaryValue?: string;
     media?: string[]; // Array of blob URLs or base64
+    canCreateIssue?: boolean;
 }
 
 export default function StartInspectionPage() {
@@ -126,7 +127,8 @@ export default function StartInspectionPage() {
                         dateTimeType: item.dateTimeType || 'DATE_ONLY',
                         requireSecondaryMeter: item.requireSecondaryMeter || false,
                         secondaryValue: '',
-                        media: []
+                        media: [],
+                        canCreateIssue: item.canCreateIssue
                     };
                 }));
             }
@@ -605,6 +607,12 @@ export default function StartInspectionPage() {
                                                             <div className="text-xs text-blue-600 bg-blue-50 px-3 py-2 rounded-lg inline-block border border-blue-100">
                                                                 <Info size={12} className="inline mr-1 mb-0.5" />
                                                                 {item.instructions}
+                                                            </div>
+                                                        )}
+                                                        {item.canCreateIssue && (
+                                                            <div className="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-orange-600 bg-orange-50 w-fit px-2 py-0.5 rounded-full border border-orange-100">
+                                                                <AlertCircle size={10} />
+                                                                AUTO-CRÉER ISSUE SUR ÉCHEC
                                                             </div>
                                                         )}
                                                     </div>

@@ -5,9 +5,9 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// In development, we use a fresh client if needed to pick up schema changes
-export const prisma = process.env.NODE_ENV === 'production'
-  ? (globalForPrisma.prisma ?? new PrismaClient())
-  : new PrismaClient()
+// In development, we use a singleton to prevent connection leaks during hot reloads
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+})
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

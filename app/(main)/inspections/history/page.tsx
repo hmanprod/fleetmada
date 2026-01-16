@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Search, Filter, Calendar, Download, FileText, Eye,
     ChevronDown, ChevronLeft, ChevronRight, Settings,
-    MoreHorizontal, AlertCircle, CheckCircle, Clock,
+    MoreHorizontal, AlertCircle, CheckCircle, Clock, Edit,
     TrendingUp, BarChart3, User, MapPin, Award
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -221,7 +221,7 @@ export default function InspectionHistoryPage() {
                 </div>
 
                 <div className="flex gap-2">
-                    <button
+                    {/* <button
                         onClick={handleExport}
                         className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50 flex items-center gap-2"
                     >
@@ -229,7 +229,7 @@ export default function InspectionHistoryPage() {
                     </button>
                     <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50">
                         <Settings size={20} />
-                    </button>
+                    </button> */}
                     <button
                         onClick={() => router.push('/inspections/history/create')}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
@@ -265,13 +265,14 @@ export default function InspectionHistoryPage() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
                 <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
-                            {/* Recherche */}
-                            <div className="relative flex-1 max-w-md">
+                        {/* Recherche et Filtres */}
+                        <div className="flex flex-col md:flex-row items-center gap-4 flex-1">
+                            {/* Recherche - Taille réduite */}
+                            <div className="relative w-full md:w-64 shrink-0">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                                 <input
                                     type="text"
-                                    placeholder="Rechercher par titre, véhicule, inspecteur..."
+                                    placeholder="Rechercher..."
                                     data-testid="inspection-search-input"
                                     className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                                     value={searchQuery}
@@ -279,57 +280,59 @@ export default function InspectionHistoryPage() {
                                 />
                             </div>
 
-                            {/* Filtres rapides */}
-                            <select
-                                className="border border-gray-300 rounded px-3 py-2 text-sm"
-                                value={selectedVehicle}
-                                onChange={(e) => setSelectedVehicle(e.target.value)}
-                            >
-                                <option value="">Tous les véhicules</option>
-                                {vehicles.map(vehicle => (
-                                    <option key={vehicle.id} value={vehicle.id}>
-                                        {vehicle.name} - {vehicle.make} {vehicle.model}
-                                    </option>
-                                ))}
-                            </select>
+                            {/* Filtres rapides - Remplissent l'espace */}
+                            <div className="flex flex-col md:flex-row items-center gap-2 flex-1 w-full">
+                                <select
+                                    className="w-full md:flex-1 border border-gray-300 rounded px-3 py-2 text-sm min-w-[200px]"
+                                    value={selectedVehicle}
+                                    onChange={(e) => setSelectedVehicle(e.target.value)}
+                                >
+                                    <option value="">Tous les véhicules</option>
+                                    {vehicles.map(vehicle => (
+                                        <option key={vehicle.id} value={vehicle.id}>
+                                            {vehicle.name}
+                                        </option>
+                                    ))}
+                                </select>
 
-                            <select
-                                className="border border-gray-300 rounded px-3 py-2 text-sm"
-                                data-testid="status-filter"
-                                value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value)}
-                            >
-                                <option value="">Tous les statuts</option>
-                                <option value="DRAFT">Brouillon</option>
-                                <option value="SCHEDULED">Programmé</option>
-                                <option value="IN_PROGRESS">En cours</option>
-                                <option value="COMPLETED">Terminé</option>
-                                <option value="CANCELLED">Annulé</option>
-                            </select>
+                                <select
+                                    className="w-full md:w-auto border border-gray-300 rounded px-3 py-2 text-sm min-w-[130px]"
+                                    data-testid="status-filter"
+                                    value={selectedStatus}
+                                    onChange={(e) => setSelectedStatus(e.target.value)}
+                                >
+                                    <option value="">Status</option>
+                                    <option value="DRAFT">Brouillon</option>
+                                    <option value="SCHEDULED">Programmé</option>
+                                    <option value="IN_PROGRESS">En cours</option>
+                                    <option value="COMPLETED">Terminé</option>
+                                    <option value="CANCELLED">Annulé</option>
+                                </select>
 
-                            <select
-                                className="border border-gray-300 rounded px-3 py-2 text-sm"
-                                value={selectedTemplate}
-                                onChange={(e) => setSelectedTemplate(e.target.value)}
-                            >
-                                <option value="">Tous les modèles</option>
-                                {templates.map(template => (
-                                    <option key={template.id} value={template.id}>
-                                        {template.name}
-                                    </option>
-                                ))}
-                            </select>
+                                <select
+                                    className="w-full md:flex-1 border border-gray-300 rounded px-3 py-2 text-sm min-w-[200px]"
+                                    value={selectedTemplate}
+                                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                                >
+                                    <option value="">Tous les modèles</option>
+                                    {templates.map(template => (
+                                        <option key={template.id} value={template.id}>
+                                            {template.name}
+                                        </option>
+                                    ))}
+                                </select>
 
-                            <select
-                                className="border border-gray-300 rounded px-3 py-2 text-sm"
-                                value={selectedCompliance}
-                                onChange={(e) => setSelectedCompliance(e.target.value)}
-                            >
-                                <option value="">Toutes conformités</option>
-                                <option value="COMPLIANT">Conforme</option>
-                                <option value="NON_COMPLIANT">Non-conforme</option>
-                                <option value="PENDING_REVIEW">En attente</option>
-                            </select>
+                                <select
+                                    className="w-full md:w-auto border border-gray-300 rounded px-3 py-2 text-sm min-w-[140px]"
+                                    value={selectedCompliance}
+                                    onChange={(e) => setSelectedCompliance(e.target.value)}
+                                >
+                                    <option value="">Conformité</option>
+                                    <option value="COMPLIANT">Conforme</option>
+                                    <option value="NON_COMPLIANT">Non-conf.</option>
+                                    <option value="PENDING_REVIEW">En attente</option>
+                                </select>
+                            </div>
                         </div>
 
                         <button
@@ -465,7 +468,7 @@ export default function InspectionHistoryPage() {
                                             <div className="flex items-center gap-1">
                                                 <BarChart3 size={14} className="text-gray-400" />
                                                 <span className={`text-sm font-bold ${getScoreColor(inspection.overallScore || 0)}`}>
-                                                    {inspection.overallScore ? `${inspection.overallScore}%` : '—'}
+                                                    {inspection.overallScore ? `${Math.round(inspection.overallScore)}%` : '—'}
                                                 </span>
                                             </div>
                                         </td>
@@ -482,17 +485,40 @@ export default function InspectionHistoryPage() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-right">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center justify-end gap-2 relative group hover:z-30">
                                                 <button
                                                     onClick={() => handleViewDetails(inspection.id)}
-                                                    className="text-gray-400 hover:text-gray-600"
+                                                    className="text-gray-400 hover:text-gray-600 block group-hover:hidden"
                                                     title="Voir les détails"
                                                 >
                                                     <ChevronRight size={16} />
                                                 </button>
-                                                {/* <button className="text-gray-400 hover:text-gray-600">
-                                                    <MoreHorizontal size={16} />
-                                                </button> */}
+
+                                                <div className="hidden group-hover:block relative">
+                                                    <button className="p-1 hover:bg-gray-100 rounded text-gray-500">
+                                                        <MoreHorizontal size={16} />
+                                                    </button>
+                                                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50 text-left">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleViewDetails(inspection.id);
+                                                            }}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                        >
+                                                            <Eye size={14} /> Voir les détails
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                router.push(`/inspections/history/${inspection.id}/edit`);
+                                                            }}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                        >
+                                                            <Edit size={14} /> Éditer
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>

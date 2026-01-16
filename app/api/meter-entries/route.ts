@@ -117,10 +117,16 @@ export async function GET(request: NextRequest) {
             prisma.meterEntry.count({ where })
         ])
 
+        // Transform entries to match frontend expectations (void -> isVoid)
+        const transformedEntries = entries.map(entry => ({
+            ...entry,
+            isVoid: entry.void
+        }))
+
         return NextResponse.json({
             success: true,
             data: {
-                meterEntries: entries,
+                meterEntries: transformedEntries,
                 pagination: {
                     page: query.page,
                     limit: query.limit,

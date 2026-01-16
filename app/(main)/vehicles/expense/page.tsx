@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, FileText, Image as ImageIcon, ChevronRight } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, FileText, Image as ImageIcon, ChevronRight, MoreVertical, Settings, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { FiltersSidebar } from '../components/filters/FiltersSidebar';
 import { type FilterCriterion } from '../components/filters/FilterCard';
@@ -130,7 +130,7 @@ export default function VehicleExpensePage() {
                     </span>
                 </div>
                 <div className="flex gap-2">
-                    <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
+                    {/* <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button> */}
                     <Link
                         href="/vehicles/expense/create"
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
@@ -191,6 +191,7 @@ export default function VehicleExpensePage() {
                             <th className="p-4">Source</th>
                             <th className="p-4 text-right">Amount</th>
                             <th className="p-4">Attachments</th>
+                            <th className="p-4 w-10"></th>
                         </tr>
                     </thead>
                     <tbody className="text-sm divide-y divide-gray-100">
@@ -217,6 +218,42 @@ export default function VehicleExpensePage() {
                                         {entry.photos ? <div className="flex items-center gap-1"><ImageIcon size={14} /> {entry.photos}</div> : null}
                                         {entry.docs ? <div className="flex items-center gap-1"><FileText size={14} /> {entry.docs}</div> : null}
                                         {!entry.photos && !entry.docs && '—'}
+                                    </div>
+                                </td>
+                                <td className="p-4 text-right text-gray-400">
+                                    <div className="relative group hover:z-30">
+                                        <button
+                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                            onClick={(e) => { e.stopPropagation(); }}
+                                        >
+                                            <MoreVertical size={16} />
+                                        </button>
+
+                                        <div className="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-20 hidden group-hover:block text-left">
+                                            <Link
+                                                href={`/vehicles/expense/${entry.id}`}
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Eye size={14} /> View Details
+                                            </Link>
+                                            <Link
+                                                href={`/vehicles/expense/${entry.id}/edit`}
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Settings size={14} /> Edit
+                                            </Link>
+                                            <button
+                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    // Handle delete
+                                                }}
+                                            >
+                                                <Trash2 size={14} /> Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

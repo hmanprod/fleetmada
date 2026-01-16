@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { UpdateVehicleSchema } from '@/lib/validations/vehicle-validations'
+import { checkVehicleAccess } from '@/lib/api-utils'
 import jwt from 'jsonwebtoken'
 
 // Interface pour les données du token JWT décodé
@@ -35,35 +36,6 @@ const validateToken = (token: string): TokenPayload | null => {
   }
 }
 
-// Fonction utilitaire pour vérifier l'accès au véhicule
-const checkVehicleAccess = async (vehicleId: string, userId: string) => {
-  const vehicle = await prisma.vehicle.findFirst({
-    where: {
-      id: vehicleId,
-      userId
-    },
-    include: {
-      _count: {
-        select: {
-          fuelEntries: true,
-          serviceEntries: true,
-          issues: true,
-          chargingEntries: true,
-          meterEntries: true,
-          reminders: true,
-          expenses: true,
-          assignments: true
-        }
-      }
-    }
-  })
-
-  if (!vehicle) {
-    return null
-  }
-
-  return vehicle
-}
 
 // GET /api/vehicles/[id] - Détails d'un véhicule spécifique
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {

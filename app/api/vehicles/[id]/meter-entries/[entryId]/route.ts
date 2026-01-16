@@ -143,8 +143,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         }
       }
 
-      logAction('GET Meter Entry - Success', userId, { 
-        userId, 
+      logAction('GET Meter Entry - Success', userId, {
+        userId,
         vehicleId,
         entryId: meterEntry.id,
         entryValue: meterEntry.value
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const { id: vehicleId, entryId } = params || { id: 'unknown', entryId: 'unknown' }
-    
+
     logAction('GET Meter Entry - Server error', userId, {
       vehicleId,
       entryId,
@@ -246,8 +246,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const updateData = UpdateMeterEntrySchema.parse({ ...body, id: entryId, vehicleId })
 
-    logAction('PUT Meter Entry', userId, { 
-      userId, 
+    logAction('PUT Meter Entry', userId, {
+      userId,
       vehicleId,
       entryId,
       updateFields: Object.keys(body)
@@ -265,60 +265,82 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         )
       }
 
+      // Préparation des données de mise à jour
+      const updateFields: any = { ...body }
+
+      // Conversion de la date si elle est modifiée
+      if (updateFields.date) {
+        updateFields.date = new Date(updateFields.date)
+      }
+
       // Vérification de la cohérence des valeurs si c'est une modification de mileage
       if (body.value !== undefined && body.type === 'MILEAGE' && !existingMeterEntry.void) {
-        const otherMileageEntries = await prisma.meterEntry.findMany({
+        // Entry date to check against
+        const entryDate = updateFields.date || existingMeterEntry.date;
+
+        // Vérification par rapport à l'entrée précédente
+        const previousEntry = await prisma.meterEntry.findFirst({
           where: {
             vehicleId,
             type: 'MILEAGE',
             void: false,
-            id: { not: entryId }
+            id: { not: entryId },
+            date: { lte: entryDate }
           },
           orderBy: {
             date: 'desc'
           }
         })
 
-        // Vérification qu'il n'y a pas d'entrée avec une valeur plus élevée après celle-ci
-        if (body.value < existingMeterEntry.value) {
-          const laterEntries = await prisma.meterEntry.findMany({
-            where: {
-              vehicleId,
-              type: 'MILEAGE',
-              void: false,
-              id: { not: entryId },
-              date: { gt: existingMeterEntry.date }
-            },
-            orderBy: {
-              date: 'asc'
-            }
+        if (previousEntry && body.value < previousEntry.value) {
+          logAction('PUT Meter Entry - Invalid mileage value (too low)', userId, {
+            vehicleId,
+            entryId,
+            newValue: body.value,
+            previousValue: previousEntry.value,
+            previousDate: previousEntry.date
           })
 
-          if (laterEntries.some(entry => entry.value > body.value)) {
-            logAction('PUT Meter Entry - Invalid mileage value', userId, { 
-              vehicleId,
-              entryId,
-              newValue: body.value,
-              conflictingValue: laterEntries.find(entry => entry.value > body.value)?.value
-            })
-
-            return NextResponse.json(
-              { 
-                success: false, 
-                error: `Cette modification créerait une incohérence dans l'historique du compteur` 
-              },
-              { status: 400 }
-            )
-          }
+          return NextResponse.json(
+            {
+              success: false,
+              error: `La valeur ne peut pas être inférieure à la lecture précédente du ${new Date(previousEntry.date).toLocaleDateString()} (${previousEntry.value})`
+            },
+            { status: 400 }
+          )
         }
-      }
 
-      // Préparation des données de mise à jour
-      const updateFields: any = { ...body }
-      
-      // Conversion de la date si elle est modifiée
-      if (updateFields.date) {
-        updateFields.date = new Date(updateFields.date)
+        // Vérification par rapport à l'entrée suivante
+        const nextEntry = await prisma.meterEntry.findFirst({
+          where: {
+            vehicleId,
+            type: 'MILEAGE',
+            void: false,
+            id: { not: entryId },
+            date: { gte: entryDate }
+          },
+          orderBy: {
+            date: 'asc'
+          }
+        })
+
+        if (nextEntry && body.value > nextEntry.value) {
+          logAction('PUT Meter Entry - Invalid mileage value (too high)', userId, {
+            vehicleId,
+            entryId,
+            newValue: body.value,
+            nextValue: nextEntry.value,
+            nextDate: nextEntry.date
+          })
+
+          return NextResponse.json(
+            {
+              success: false,
+              error: `La valeur ne peut pas être supérieure à la lecture suivante du ${new Date(nextEntry.date).toLocaleDateString()} (${nextEntry.value})`
+            },
+            { status: 400 }
+          )
+        }
       }
 
       // Suppression des champs non modifiables
@@ -353,8 +375,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         }
       }
 
-      logAction('PUT Meter Entry - Success', userId, { 
-        userId, 
+      logAction('PUT Meter Entry - Success', userId, {
+        userId,
         vehicleId,
         entryId: updatedMeterEntry.id,
         entryValue: updatedMeterEntry.value
@@ -397,9 +419,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const { id: vehicleId, entryId } = params || { id: 'unknown', entryId: 'unknown' }
-    
+
     // Gestion des erreurs de validation
-    if (error instanceof Error && error.name === 'ZodError') {
+    if (error instanceof Error && (error.name === 'ZodError' || (error as any).issues)) {
       logAction('PUT Meter Entry - Validation error', userId, {
         vehicleId,
         entryId,
@@ -507,9 +529,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         if (otherMileageEntries === 0) {
           logAction('DELETE Meter Entry - Cannot delete last mileage entry', userId, { vehicleId, entryId })
           return NextResponse.json(
-            { 
-              success: false, 
-              error: 'Impossible de supprimer la dernière entrée de mileage active' 
+            {
+              success: false,
+              error: 'Impossible de supprimer la dernière entrée de mileage active'
             },
             { status: 409 }
           )
@@ -532,9 +554,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
           if (latestEntry && latestEntry.id === entryId) {
             logAction('DELETE Meter Entry - Cannot delete recent mileage entry', userId, { vehicleId, entryId })
             return NextResponse.json(
-              { 
-                success: false, 
-                error: 'Impossible de supprimer une entrée de mileage récente (moins de 24h)' 
+              {
+                success: false,
+                error: 'Impossible de supprimer une entrée de mileage récente (moins de 24h)'
               },
               { status: 409 }
             )
@@ -573,8 +595,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         }
       }
 
-      logAction('DELETE Meter Entry - Success', userId, { 
-        userId, 
+      logAction('DELETE Meter Entry - Success', userId, {
+        userId,
         vehicleId,
         entryId,
         entryValue: meterEntry.value
@@ -604,7 +626,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const { id: vehicleId, entryId } = params || { id: 'unknown', entryId: 'unknown' }
-    
+
     logAction('DELETE Meter Entry - Server error', userId, {
       vehicleId,
       entryId,

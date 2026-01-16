@@ -19,7 +19,8 @@
                         "required": true,
                         "short_description": "—",
                         "require_secondary_meter": true,
-                        "require_photo_verification": false
+                        "require_photo_verification": false,
+                        "can_create_issue": false
                     }
                 ]
             },
@@ -33,7 +34,8 @@
                         "type": "Photo",
                         "required": false,
                         "short_description": "Take a photo of the interior",
-                        "instructions": "—"
+                        "instructions": "—",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "engine",
@@ -46,7 +48,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "oil_life_left",
@@ -55,10 +58,11 @@
                         "required": true,
                         "short_description": "—",
                         "instructions": "—",
-                        "minimum": 15.0,
-                        "maximum": 100.0,
+                        "minimum": 15,
+                        "maximum": 100,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "fuel_level",
@@ -95,7 +99,8 @@
                             }
                         ],
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": false
+                        "require_photo_comment_fail": false,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "transmission",
@@ -108,7 +113,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "clutch",
@@ -122,7 +128,8 @@
                         "enable_na_option": true,
                         "na_label": "No Clutch",
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "steering_mechanism",
@@ -135,7 +142,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "horn",
@@ -148,7 +156,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "windshield_wipers_washers",
@@ -161,7 +170,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "rear_vision_mirrors",
@@ -174,7 +184,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "lighting_devices_reflectors",
@@ -187,7 +198,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": true,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "parking_brake",
@@ -200,7 +212,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "service_brakes",
@@ -213,7 +226,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "air_lines_light_lines",
@@ -226,7 +240,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "coupling_devices",
@@ -239,7 +254,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "tires",
@@ -252,7 +268,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "wheels_rims",
@@ -265,7 +282,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "emergency_equipment",
@@ -278,7 +296,8 @@
                         "fail_label": "Fail",
                         "enable_na_option": false,
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -311,14 +330,16 @@
                             }
                         ],
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_id": "driver_signature",
                         "item_name": "Reviewing Driver's Signature",
                         "type": "Signature",
                         "required": true,
-                        "short_description": ""
+                        "short_description": "",
+                        "can_create_issue": false
                     }
                 ]
             }

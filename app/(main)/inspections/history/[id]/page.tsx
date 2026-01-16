@@ -28,16 +28,11 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
     const { getTemplateItems } = useInspectionTemplates();
     const [inspection, setInspection] = useState<any>(null);
 
-    // États pour l'exécution de l'inspection
-    const [isExecuting, setIsExecuting] = useState(false);
     const [executionResults, setExecutionResults] = useState<{ [key: string]: InspectionItemExecution }>({});
-    const [currentStep, setCurrentStep] = useState(0);
     const [inspectionItems, setInspectionItems] = useState<any[]>([]);
-    const [showPhotoUpload, setShowPhotoUpload] = useState<string | null>(null);
     const [generalNotes, setGeneralNotes] = useState('');
 
     // États d'interface
-    const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'details' | 'execution' | 'results'>('details');
 
     // Charger l'inspection au montage
@@ -51,6 +46,20 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                     setInspectionItems(data.items);
                 } else if (data?.inspectionTemplateId) {
                     loadInspectionItems(data.inspectionTemplateId);
+                }
+
+                // Initialiser les résultats d'exécution s'ils existent
+                if (data.results && data.results.length > 0) {
+                    const initialResults: { [key: string]: InspectionItemExecution } = {};
+                    data.results.forEach((result: any) => {
+                        initialResults[result.inspectionItemId] = {
+                            status: result.isCompliant ? 'PASSED' : 'FAILED',
+                            value: result.resultValue,
+                            notes: result.notes,
+                            imageUrl: result.imageUrl || (result.images && result.images[0])
+                        };
+                    });
+                    setExecutionResults(initialResults);
                 }
             } catch (err) {
                 console.error('Erreur lors du chargement de l\'inspection:', err);
@@ -76,71 +85,6 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
         router.push(`/inspections/history/${params.id}/edit`);
     };
 
-    const handleStartExecution = async () => {
-        try {
-            await startInspection(params.id);
-            setIsExecuting(true);
-            setActiveTab('execution');
-            const data = await fetchInspectionById(params.id);
-            setInspection(data);
-            if (data.items) {
-                setInspectionItems(data.items);
-            }
-        } catch (err) {
-            console.error('Erreur lors du démarrage:', err);
-        }
-    };
-
-    const handleCompleteInspection = async () => {
-        if (!validateExecution()) return;
-
-        try {
-            setSaving(true);
-
-            // Préparer les résultats selon le format attendu par l'API
-            const results = Object.entries(executionResults)
-                .filter(([_, result]) => result.status !== 'PENDING') // Ne soumettre que les éléments complétés
-                .map(([itemId, result]) => ({
-                    inspectionItemId: itemId,
-                    resultValue: result.value || '',
-                    isCompliant: result.status === 'PASSED',
-                    notes: result.notes || '',
-                    imageUrl: result.imageUrl
-                }));
-
-            // Soumettre les résultats
-            await submitInspectionResults(params.id, {
-                results: results
-            });
-
-            // Compléter l'inspection
-            await completeInspection(params.id);
-
-            setIsExecuting(false);
-            setActiveTab('results');
-            const data = await fetchInspectionById(params.id);
-            setInspection(data);
-
-        } catch (err) {
-            console.error('Erreur lors de la complétion:', err);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const validateExecution = (): boolean => {
-        const requiredItems = inspectionItems.filter(item => item.isRequired);
-        const incompleteItems = requiredItems.filter(item =>
-            !executionResults[item.id] || executionResults[item.id].status === 'PENDING'
-        );
-
-        if (incompleteItems.length > 0) {
-            alert(`Veuillez compléter tous les éléments requis (${incompleteItems.length} manquants)`);
-            return false;
-        }
-        return true;
-    };
-
     const calculateOverallScore = (): number => {
         if (inspectionItems.length === 0) return 0;
 
@@ -153,16 +97,6 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
         if (applicableItems === 0) return 100;
 
         return Math.round((passedItems / applicableItems) * 100);
-    };
-
-    const handleItemResult = (itemId: string, field: keyof InspectionItemExecution, value: any) => {
-        setExecutionResults(prev => ({
-            ...prev,
-            [itemId]: {
-                ...prev[itemId],
-                [field]: value
-            }
-        }));
     };
 
     const formatDate = (date: Date | string) => {
@@ -263,16 +197,16 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
 
                 <div className="flex gap-2">
                     <button className="p-2 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50"><MoreHorizontal size={20} /></button>
-                    {(inspection.status === 'DRAFT' || inspection.status === 'SCHEDULED') && (
+                    {(inspection.status === 'DRAFT' || inspection.status === 'SCHEDULED' || inspection.status === 'IN_PROGRESS') && (
                         <button
-                            onClick={handleStartExecution}
+                            onClick={() => router.push(`/inspections/forms/${inspection.inspectionTemplateId}/start`)}
                             data-testid="start-inspection-button"
                             className="px-3 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm"
                         >
-                            <Play size={16} /> Démarrer
+                            <Play size={16} /> {inspection.status === 'IN_PROGRESS' ? 'Continuer' : 'Démarrer'}
                         </button>
                     )}
-                    {inspection.status !== 'COMPLETED' && (
+                    {inspection.status === 'COMPLETED' && (
                         <button
                             onClick={handleEdit}
                             className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm"
@@ -302,7 +236,7 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
-                        Exécution
+                        Résultat de l'inspection
                     </button>
                     <button
                         onClick={() => setActiveTab('results')}
@@ -311,7 +245,7 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
-                        Résultats
+                        Synthèse
                     </button>
                 </div>
             </div>
@@ -415,15 +349,14 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                         </div>
                     )}
 
-                    {/* Exécution Tab */}
+                    {/* Résultat de l'inspection Tab (formerly Execution) */}
                     {activeTab === 'execution' && (
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                                <h2 className="text-lg font-bold text-gray-900">Exécution de l'Inspection</h2>
+                                <h2 className="text-lg font-bold text-gray-900">Résultat de l'inspection</h2>
                                 {(inspection.status === 'DRAFT' || inspection.status === 'SCHEDULED') && (
                                     <button
-                                        onClick={handleStartExecution}
-                                        data-testid="start-inspection-button-execution"
+                                        onClick={() => router.push(`/inspections/forms/${inspection.inspectionTemplateId}/start`)}
                                         className="px-3 py-1 bg-[#008751] hover:bg-[#007043] text-white rounded text-sm"
                                     >
                                         Démarrer l'Inspection
@@ -438,153 +371,81 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                                     </div>
                                 ) : (
                                     <div className="space-y-6">
-                                        {inspectionItems.map((item, index) => (
-                                            <div key={item.id} className="inspection-item border border-gray-200 rounded-lg p-4">
-                                                <div className="flex items-start justify-between mb-3">
-                                                    <div className="flex-1">
-                                                        <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                                                            {item.name}
-                                                            {item.isRequired && <span className="text-red-500">*</span>}
-                                                            {item.isRequired && executionResults[item.id]?.status === 'PENDING' && (
-                                                                <AlertTriangle className="text-yellow-500" size={16} />
+                                        {inspectionItems.map((item, index) => {
+                                            const result = executionResults[item.id] || { status: 'PENDING' };
+                                            return (
+                                                <div key={item.id} className="inspection-item border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div className="flex-1">
+                                                            <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                                                                {item.name}
+                                                                {item.isRequired && <span className="text-red-500">*</span>}
+                                                            </h3>
+                                                            {item.description && (
+                                                                <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                                                             )}
-                                                        </h3>
-                                                        {item.description && (
-                                                            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                                                        )}
-                                                        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">
-                                                            {item.category}
-                                                        </span>
+                                                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">
+                                                                {item.category}
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span className={`px-3 py-1 text-xs font-bold rounded-full ${result.status === 'PASSED' ? 'bg-green-100 text-green-700' :
+                                                                result.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                                                    result.status === 'NOT_APPLICABLE' ? 'bg-gray-100 text-gray-700' :
+                                                                        'bg-yellow-100 text-yellow-700'
+                                                                }`}>
+                                                                {result.status === 'PASSED' && 'CONFORME'}
+                                                                {result.status === 'FAILED' && 'NON-CONFORME'}
+                                                                {result.status === 'NOT_APPLICABLE' && 'N/A'}
+                                                                {result.status === 'PENDING' && 'EN ATTENTE'}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => setShowPhotoUpload(showPhotoUpload === item.id ? null : item.id)}
-                                                            className="p-1 text-gray-400 hover:text-gray-600"
-                                                            title="Ajouter une photo"
-                                                        >
-                                                            <Camera size={16} />
-                                                        </button>
-                                                    </div>
-                                                </div>
 
-                                                {/* Statuts */}
-                                                <div className="grid grid-cols-4 gap-2 mb-3">
-                                                    {['PENDING', 'PASSED', 'FAILED', 'NOT_APPLICABLE'].map((status) => (
-                                                        <button
-                                                            key={status}
-                                                            onClick={() => handleItemResult(item.id, 'status', status)}
-                                                            className={`px-3 py-1 text-xs rounded border ${executionResults[item.id]?.status === status
-                                                                ? status === 'PASSED'
-                                                                    ? 'bg-green-100 border-green-300 text-green-700'
-                                                                    : status === 'FAILED'
-                                                                        ? 'bg-red-100 border-red-300 text-red-700'
-                                                                        : status === 'NOT_APPLICABLE'
-                                                                            ? 'bg-gray-100 border-gray-300 text-gray-700'
-                                                                            : 'bg-yellow-100 border-yellow-300 text-yellow-700'
-                                                                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                                                                }`}
-                                                        >
-                                                            {status === 'PENDING' && 'En attente'}
-                                                            {status === 'PASSED' && 'Conforme'}
-                                                            {status === 'FAILED' && 'Non-conforme'}
-                                                            {status === 'NOT_APPLICABLE' && 'N/A'}
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                {/* Valeur */}
-                                                {executionResults[item.id]?.status && executionResults[item.id].status !== 'PENDING' && (
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Valeur mesurée (optionnel)"
-                                                        className="w-full p-2 border border-gray-300 rounded text-sm mb-2"
-                                                        value={executionResults[item.id]?.value || ''}
-                                                        onChange={(e) => handleItemResult(item.id, 'value', e.target.value)}
-                                                    />
-                                                )}
-
-                                                {/* Notes */}
-                                                <textarea
-                                                    placeholder="Notes et commentaires..."
-                                                    rows={2}
-                                                    className="w-full p-2 border border-gray-300 rounded text-sm"
-                                                    value={executionResults[item.id]?.notes || ''}
-                                                    onChange={(e) => handleItemResult(item.id, 'notes', e.target.value)}
-                                                />
-
-                                                {/* Upload Photo */}
-                                                {showPhotoUpload === item.id && (
-                                                    <div className="mt-3 p-3 border border-dashed border-gray-300 rounded">
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="w-full text-sm"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (file) {
-                                                                    // TODO: Upload image and get URL
-                                                                    handleItemResult(item.id, 'imageUrl', URL.createObjectURL(file));
-                                                                }
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-
-                                        {/* Notes Générales */}
-                                        <div className="border-t border-gray-200 pt-6">
-                                            <h3 className="font-medium text-gray-900 mb-3">Notes Générales</h3>
-                                            <textarea
-                                                placeholder="Commentaires généraux sur l'inspection..."
-                                                rows={4}
-                                                className="w-full p-3 border border-gray-300 rounded"
-                                                value={generalNotes}
-                                                onChange={(e) => setGeneralNotes(e.target.value)}
-                                            />
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-                                            <div className="text-sm text-gray-500">
-                                                {Object.keys(executionResults).length} / {inspectionItems.length} éléments complétés
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <button
-                                                    onClick={() => setIsExecuting(false)}
-                                                    className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
-                                                >
-                                                    Annuler
-                                                </button>
-                                                <button
-                                                    onClick={handleCompleteInspection}
-                                                    disabled={saving}
-                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-50 flex items-center gap-2"
-                                                >
-                                                    {saving ? (
-                                                        <>
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                            Sauvegarde...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Save size={16} /> Terminer l'Inspection
-                                                        </>
+                                                    {/* Details (Value, Notes, Images) */}
+                                                    {(result.value || result.notes || result.imageUrl) && (
+                                                        <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+                                                            {result.value && (
+                                                                <div className="text-sm">
+                                                                    <span className="font-medium text-gray-700">Valeur: </span>
+                                                                    <span className="text-gray-900">{result.value}</span>
+                                                                </div>
+                                                            )}
+                                                            {result.notes && (
+                                                                <div className="text-sm">
+                                                                    <span className="font-medium text-gray-700 block mb-1">Notes:</span>
+                                                                    <p className="bg-white p-2 rounded border border-gray-200 text-gray-600">{result.notes}</p>
+                                                                </div>
+                                                            )}
+                                                            {result.imageUrl && (
+                                                                <div className="mt-2">
+                                                                    <p className="text-xs font-medium text-gray-500 mb-1">Photo:</p>
+                                                                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity">
+                                                                        <img
+                                                                            src={result.imageUrl}
+                                                                            alt="Preuve"
+                                                                            className="w-full h-full object-cover"
+                                                                            onClick={() => window.open(result.imageUrl, '_blank')}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     )}
-                                                </button>
-                                            </div>
-                                        </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
                         </div>
                     )}
 
-                    {/* Résultats Tab */}
+                    {/* Synthèse Tab (formerly Results) */}
                     {activeTab === 'results' && (
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                             <div className="px-6 py-4 border-b border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900">Résultats de l'Inspection</h2>
+                                <h2 className="text-lg font-bold text-gray-900">Synthèse de l'Inspection</h2>
                             </div>
                             <div className="p-6">
                                 {inspection.status === 'COMPLETED' ? (
@@ -718,7 +579,7 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                         <div className="p-6 space-y-3">
                             {inspection.status === 'DRAFT' && (
                                 <button
-                                    onClick={handleStartExecution}
+                                    onClick={() => router.push(`/inspections/forms/${inspection.inspectionTemplateId}/start`)}
                                     className="w-full flex items-center gap-2 px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white rounded text-sm font-medium"
                                 >
                                     <Play size={16} /> Commencer l'Inspection
@@ -734,10 +595,10 @@ export default function InspectionDetailPage({ params }: { params: { id: string 
                             )} */}
                             {inspection.status === 'IN_PROGRESS' && (
                                 <button
-                                    onClick={handleCompleteInspection}
-                                    className="w-full flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium"
+                                    onClick={() => router.push(`/inspections/forms/${inspection.inspectionTemplateId}/start`)}
+                                    className="w-full flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium"
                                 >
-                                    <CheckCircle size={16} /> Terminer
+                                    <Play size={16} /> Continuer l'Inspection
                                 </button>
                             )}
                             {/* <button className="w-full flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm font-medium">

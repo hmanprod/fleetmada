@@ -58,7 +58,8 @@ const InspectionTemplateCreateSchema = z.object({
     dateTimeType: z.string().optional().nullable(),
     minRange: z.number().optional().nullable(),
     maxRange: z.number().optional().nullable(),
-    requireSecondaryMeter: z.boolean().default(false)
+    requireSecondaryMeter: z.boolean().default(false),
+    canCreateIssue: z.boolean().default(false)
   })).optional().default([])
 })
 
@@ -417,6 +418,7 @@ export async function POST(request: NextRequest) {
                   requireSecondaryMeter: item.require_secondary_meter ?? false,
                   minRange: typeof item.minimum === 'number' ? item.minimum : (parseFloat(item.minimum) || undefined),
                   maxRange: typeof item.maximum === 'number' ? item.maximum : (parseFloat(item.maximum) || undefined),
+                  canCreateIssue: item.can_create_issue ?? false,
                 });
               }
             }
@@ -447,7 +449,8 @@ export async function POST(request: NextRequest) {
                 dateTimeType: item.dateTimeType,
                 minRange: item.minRange,
                 maxRange: item.maxRange,
-                requireSecondaryMeter: item.requireSecondaryMeter
+                requireSecondaryMeter: item.requireSecondaryMeter,
+                canCreateIssue: item.canCreateIssue
               } as any
             })
           )

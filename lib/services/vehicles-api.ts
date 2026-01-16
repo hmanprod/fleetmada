@@ -817,6 +817,85 @@ export class VehiclesAPIService {
   }
 
   /**
+   * Récupère une dépense par son ID unique (Global)
+   */
+  async getExpense(id: string): Promise<ExpenseEntry & { vehicle: { id: string, name: string } }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/expenses/${id}`, {
+        headers: getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors de la récupération de la dépense')
+      }
+
+      return data.data
+    } catch (error) {
+      handleApiError(error)
+      throw error
+    }
+  }
+
+  /**
+   * Met à jour une dépense par son ID unique (Global)
+   */
+  async updateExpense(id: string, updates: UpdateExpenseEntryInput): Promise<ExpenseEntry> {
+    try {
+      const response = await fetch(`${this.baseUrl}/expenses/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates)
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors de la mise à jour de la dépense')
+      }
+
+      return data.data
+    } catch (error) {
+      handleApiError(error)
+      throw error
+    }
+  }
+
+  /**
+   * Supprime une dépense par son ID unique (Global)
+   */
+  async deleteExpense(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/expenses/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erreur lors de la suppression de la dépense')
+      }
+    } catch (error) {
+      handleApiError(error)
+      throw error
+    }
+  }
+
+  /**
    * Crée une nouvelle dépense
    */
   async createVehicleExpense(vehicleId: string, expense: CreateExpenseEntryInput): Promise<ExpenseEntry> {

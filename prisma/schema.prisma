@@ -872,6 +872,7 @@ model InspectionTemplateItem {
   minRange           Float?
   maxRange           Float?
   requireSecondaryMeter Boolean         @default(false)
+  canCreateIssue     Boolean            @default(false)
   inspectionTemplate InspectionTemplate @relation(fields: [inspectionTemplateId], references: [id], onDelete: Cascade)
   inspectionItems    InspectionItem[]
   
@@ -922,6 +923,7 @@ model InspectionItem {
   isRequired      Boolean             @default(false)
   type            InspectionFieldType @default(PASS_FAIL)
   unit            String?
+  canCreateIssue  Boolean             @default(false)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   inspection      Inspection          @relation(fields: [inspectionId], references: [id], onDelete: Cascade)

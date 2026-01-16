@@ -19,7 +19,8 @@
                         "type": "Photo",
                         "required": false,
                         "short_description": "—",
-                        "instructions": "—"
+                        "instructions": "—",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "time_accident_occurred",
@@ -28,7 +29,8 @@
                         "required": false,
                         "short_description": "—",
                         "instructions": "—",
-                        "date_format": "datetime"
+                        "date_format": "datetime",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "accident_details",
@@ -36,7 +38,8 @@
                         "type": "Free Text",
                         "required": true,
                         "short_description": "Please describe the accident and attach pictures of the vehicle",
-                        "instructions": "—"
+                        "instructions": "—",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "location",
@@ -44,7 +47,8 @@
                         "type": "Free Text",
                         "required": true,
                         "short_description": "Where did the accident occur?",
-                        "instructions": "—"
+                        "instructions": "—",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "driver_information",
@@ -52,7 +56,8 @@
                         "type": "Free Text",
                         "required": true,
                         "short_description": "—",
-                        "instructions": "View Instructions"
+                        "instructions": "View Instructions",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "police_report_number",
@@ -60,7 +65,8 @@
                         "type": "Free Text",
                         "required": false,
                         "short_description": "if available",
-                        "instructions": "—"
+                        "instructions": "—",
+                        "can_create_issue": false
                     }
                 ]
             },
@@ -93,7 +99,8 @@
                             }
                         ],
                         "require_photo_comment_pass": false,
-                        "require_photo_comment_fail": true
+                        "require_photo_comment_fail": true,
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -106,7 +113,8 @@
                         "item_name": "Driver's Signature",
                         "type": "Signature",
                         "required": true,
-                        "short_description": "—"
+                        "short_description": "—",
+                        "can_create_issue": false
                     },
                     {
                         "item_id": "additional_details",
@@ -114,7 +122,8 @@
                         "type": "Free Text",
                         "required": false,
                         "short_description": "—",
-                        "instructions": ""
+                        "instructions": "",
+                        "can_create_issue": false
                     }
                 ]
             }

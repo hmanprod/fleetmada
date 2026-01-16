@@ -41,9 +41,13 @@ const validateToken = (token: string): TokenPayload | null => {
 }
 
 // Fonction utilitaire pour construire les filtres de recherche
-const buildVehicleFilters = (query: VehicleListQuery, userId: string) => {
-  const filters: any = {
-    // userId
+const buildVehicleFilters = (query: VehicleListQuery, userId: string, companyId: string | null) => {
+  const filters: any = {}
+
+  if (companyId) {
+    filters.user = { companyId }
+  } else {
+    filters.userId = userId
   }
 
   if (query.search) {
@@ -146,6 +150,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Récupération du companyId de l'utilisateur
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true }
+    })
+
+    const companyId = currentUser?.companyId || null
+
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url)
     const queryParams: any = {}
@@ -182,7 +194,7 @@ export async function GET(request: NextRequest) {
 
     try {
       // Construction des filtres et de l'ordre
-      const filters = buildVehicleFilters(query, userId)
+      const filters = buildVehicleFilters(query, userId, companyId)
       const orderBy = buildOrderBy(query)
 
       // Récupération des véhicules avec pagination

@@ -298,8 +298,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
                     id: true,
                     name: true,
                     category: true,
-                    isRequired: true
-                  }
+                    isRequired: true,
+                    canCreateIssue: true
+                  } as any
                 }
               }
             })
@@ -325,6 +326,43 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             updatedAt: new Date()
           }
         })
+
+        // Créer automatiquement des issues pour les items non conformes avec canCreateIssue: true
+        for (const result of results) {
+          const item = await tx.inspectionItem.findUnique({
+            where: { id: result.inspectionItemId }
+          })
+
+          if (item && !result.isCompliant && (item as any).canCreateIssue) {
+            // Chercher l'inspection pour avoir les détails du véhicule
+            const inspectionWithDetails = await tx.inspection.findUnique({
+              where: { id: inspectionId },
+              include: { vehicle: true }
+            })
+
+            const vehicleName = inspectionWithDetails?.vehicle?.name || 'Véhicule inconnu'
+
+            await tx.issue.create({
+              data: {
+                userId,
+                vehicleId: inspection.vehicleId,
+                summary: `Défaut détecté lors de l'inspection "${inspection.title}" sur ${vehicleName} : ${item.name}`,
+                status: 'OPEN',
+                priority: 'MEDIUM',
+                reportedDate: new Date(),
+                labels: ['Inspection', inspection.title],
+                images: {
+                  create: result.images.map(url => ({
+                    fileName: url.split('/').pop() || 'photo_inspection.jpg',
+                    filePath: url,
+                    fileSize: 0,
+                    mimeType: 'image/jpeg'
+                  }))
+                }
+              }
+            })
+          }
+        }
 
         return results
       })

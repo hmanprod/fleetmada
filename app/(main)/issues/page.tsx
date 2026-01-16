@@ -255,7 +255,7 @@ export default function IssuesPage() {
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
-    return d.toLocaleDateString('en-US', {
+    return d.toLocaleDateString('fr-FR', {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric'
@@ -319,9 +319,9 @@ export default function IssuesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Issues</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Problèmes</h1>
           <button className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2 flex items-center gap-1">
-            <Lightbulb size={12} /> Learn
+            <Lightbulb size={12} /> En savoir plus
           </button>
         </div>
 
@@ -335,18 +335,18 @@ export default function IssuesPage() {
             data-testid="add-issue-button"
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
           >
-            <Plus size={20} /> Add Issue
+            <Plus size={20} /> Nouveau Problème
           </button>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
-        <button className={`pb-3 border-b-2 ${filters.status === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'} flex items-center gap-1`} onClick={() => handleFilterChange({ status: undefined })}>All <MoreHorizontal size={14} /></button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-OPEN" onClick={() => handleFilterChange({ status: 'OPEN' })}>Open</button>
-        <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">Overdue</button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-RESOLVED" onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Resolved</button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'CLOSED' })}>Closed</button>
+        <button className={`pb-3 border-b-2 ${filters.status === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'} flex items-center gap-1`} onClick={() => handleFilterChange({ status: undefined })}>Tous <MoreHorizontal size={14} /></button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-OPEN" onClick={() => handleFilterChange({ status: 'OPEN' })}>Ouverts</button>
+        <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">En retard</button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-RESOLVED" onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Résolus</button>
+        <button className={`pb-3 border-b-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'CLOSED' })}>Fermés</button>
         {/* <button className="pb-3 border-b-2 border-transparent hover:text-green-700 text-[#008751] flex items-center gap-1"><Plus size={14} /> Add Tab</button> */}
       </div>
 

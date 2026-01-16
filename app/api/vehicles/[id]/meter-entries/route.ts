@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
-  CreateMeterEntrySchema, 
+import {
+  CreateMeterEntrySchema,
   MeterEntriesQuerySchema,
   type CreateMeterEntryInput,
-  type MeterEntriesQuery 
+  type MeterEntriesQuery
 } from '@/lib/validations/vehicle-validations'
+import { checkVehicleAccess } from '@/lib/api-utils'
 import jwt from 'jsonwebtoken'
 
 // Interface pour les données du token JWT décodé
@@ -40,21 +41,6 @@ const validateToken = (token: string): TokenPayload | null => {
   }
 }
 
-// Fonction utilitaire pour vérifier l'accès au véhicule
-const checkVehicleAccess = async (vehicleId: string, userId: string) => {
-  const vehicle = await prisma.vehicle.findFirst({
-    where: {
-      id: vehicleId,
-      userId
-    }
-  })
-
-  if (!vehicle) {
-    return null
-  }
-
-  return vehicle
-}
 
 // Fonction utilitaire pour construire les filtres de recherche
 const buildMeterEntryFilters = (query: MeterEntriesQuery, vehicleId: string) => {
@@ -91,13 +77,13 @@ const buildMeterEntryFilters = (query: MeterEntriesQuery, vehicleId: string) => 
 // Fonction utilitaire pour construire l'ordre de tri
 const buildOrderBy = (query: MeterEntriesQuery) => {
   const orderBy: any = {}
-  
+
   if (query.sortBy === 'date' || query.sortBy === 'value' || query.sortBy === 'createdAt') {
     orderBy[query.sortBy] = query.sortOrder
   } else {
     orderBy.date = 'desc'
   }
-  
+
   return orderBy
 }
 
@@ -157,22 +143,22 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // Extraction et validation des paramètres de requête
     const { searchParams } = new URL(request.url)
     const queryParams: any = {}
-    
+
     for (const [key, value] of searchParams.entries()) {
       queryParams[key] = value
     }
 
     const query = MeterEntriesQuerySchema.parse(queryParams)
-    
+
     const offset = (query.page - 1) * query.limit
 
-    logAction('GET Meter Entries', userId, { 
-      userId, 
+    logAction('GET Meter Entries', userId, {
+      userId,
       vehicleId,
-      page: query.page, 
+      page: query.page,
       limit: query.limit,
-      filters: { 
-        type: query.type, 
+      filters: {
+        type: query.type,
         void: query.void,
         startDate: query.startDate,
         endDate: query.endDate
@@ -234,7 +220,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         activeEntries: await prisma.meterEntry.count({
           where: { ...filters, void: false }
         }),
-        averageValue: totalCount > 0 ? 
+        averageValue: totalCount > 0 ?
           meterEntries.reduce((sum, entry) => sum + entry.value, 0) / totalCount : 0,
         latestReading: meterEntries.length > 0 ? {
           value: meterEntries[0].value,
@@ -243,8 +229,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         } : null
       }
 
-      logAction('GET Meter Entries - Success', userId, { 
-        userId, 
+      logAction('GET Meter Entries - Success', userId, {
+        userId,
         vehicleId,
         totalCount,
         page: query.page,
@@ -285,7 +271,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     logAction('GET Meter Entries - Server error', userId, {
       vehicleId,
       error: error instanceof Error ? error.message : 'Unknown server error',
@@ -359,8 +345,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       vehicleId
     })
 
-    logAction('POST Meter Entry', userId, { 
-      userId, 
+    logAction('POST Meter Entry', userId, {
+      userId,
       vehicleId,
       entryValue: meterEntryData.value,
       entryType: meterEntryData.type
@@ -380,11 +366,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
       // Vérification de la cohérence des valeurs (pas de recul du compteur)
       if (meterEntryData.type === 'MILEAGE') {
+        const entryDate = new Date(meterEntryData.date)
         const lastMileageEntry = await prisma.meterEntry.findFirst({
           where: {
             vehicleId,
             type: 'MILEAGE',
-            void: false
+            void: false,
+            date: { lte: entryDate }
           },
           orderBy: {
             date: 'desc'
@@ -392,16 +380,17 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         })
 
         if (lastMileageEntry && meterEntryData.value < lastMileageEntry.value) {
-          logAction('POST Meter Entry - Invalid mileage value', userId, { 
+          logAction('POST Meter Entry - Invalid mileage value', userId, {
             vehicleId,
             newValue: meterEntryData.value,
-            lastValue: lastMileageEntry.value
+            lastValue: lastMileageEntry.value,
+            lastValueDate: lastMileageEntry.date
           })
 
           return NextResponse.json(
-            { 
-              success: false, 
-              error: `La valeur du compteur (${meterEntryData.value}) ne peut pas être inférieure à la dernière lecture (${lastMileageEntry.value})` 
+            {
+              success: false,
+              error: `La valeur du compteur (${meterEntryData.value}) ne peut pas être inférieure à la lecture précédente du ${new Date(lastMileageEntry.date).toLocaleDateString()} (${lastMileageEntry.value})`
             },
             { status: 400 }
           )
@@ -424,8 +413,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         })
       }
 
-      logAction('POST Meter Entry - Success', userId, { 
-        userId, 
+      logAction('POST Meter Entry - Success', userId, {
+        userId,
         vehicleId,
         meterEntryId: newMeterEntry.id,
         meterEntryValue: newMeterEntry.value
@@ -467,9 +456,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
     const vehicleId = params?.id || 'unknown'
-    
+
     // Gestion des erreurs de validation
-    if (error instanceof Error && error.name === 'ZodError') {
+    if (error instanceof Error && (error.name === 'ZodError' || (error as any).issues)) {
       logAction('POST Meter Entry - Validation error', userId, {
         vehicleId,
         error: error.message

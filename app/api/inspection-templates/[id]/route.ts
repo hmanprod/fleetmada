@@ -40,7 +40,8 @@ const InspectionTemplateUpdateSchema = z.object({
     dateTimeType: z.string().optional().nullable(),
     minRange: z.number().optional().nullable(),
     maxRange: z.number().optional().nullable(),
-    requireSecondaryMeter: z.boolean().default(false)
+    requireSecondaryMeter: z.boolean().default(false),
+    canCreateIssue: z.boolean().default(false)
   })).optional()
 })
 
@@ -336,7 +337,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
                   dateTimeType: item.dateTimeType,
                   minRange: item.minRange,
                   maxRange: item.maxRange,
-                  requireSecondaryMeter: item.requireSecondaryMeter
+                  requireSecondaryMeter: item.requireSecondaryMeter,
+                  canCreateIssue: item.canCreateIssue
                 } as any
               })
             )

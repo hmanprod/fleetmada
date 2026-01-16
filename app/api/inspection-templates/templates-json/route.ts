@@ -138,6 +138,7 @@ export async function POST(request: NextRequest) {
                             requireSecondaryMeter: item.require_secondary_meter ?? false,
                             minRange: typeof item.minimum === 'number' ? item.minimum : (parseFloat(item.minimum) || null),
                             maxRange: typeof item.maximum === 'number' ? item.maximum : (parseFloat(item.maximum) || null),
+                            canCreateIssue: item.can_create_issue ?? false,
                         } as any
                     });
                 }

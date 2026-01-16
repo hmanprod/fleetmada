@@ -112,7 +112,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                 console.warn('Impossible de mettre à jour la liste:', listError);
             }
 
-            toast.success('Issue updated successfully');
+            toast.success('Problème mis à jour avec succès');
 
             // Redirection après un court délai
             setTimeout(() => {
@@ -169,18 +169,18 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
-                        <ArrowLeft size={16} /> Back
+                        <ArrowLeft size={16} /> Issues
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Issue #{params.id.slice(-6)}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Modifier le Problème #{params.id.slice(-6)}</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+                    <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Annuler</button>
                     <button
                         onClick={handleSave}
                         disabled={loadingSubmit || !issue}
                         className="px-4 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold rounded shadow-sm"
                     >
-                        {loadingSubmit ? 'Saving...' : 'Save Changes'}
+                        {loadingSubmit ? 'Enregistrement...' : 'Sauvegarder'}
                     </button>
                 </div>
             </div>
@@ -220,7 +220,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                 {!loading && !error && issue && (
                     <>
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-6">Details</h2>
+                            <h2 className="text-lg font-bold text-gray-900 mb-6">Détails</h2>
 
                             <div className="space-y-6">
                                 <div>
@@ -247,7 +247,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
                                     <div className="relative">
                                         <select
                                             data-testid="priority-select"
@@ -255,30 +255,35 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                             onChange={e => handleInputChange('priority', e.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL')}
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white appearance-none pl-10"
                                         >
-                                            <option value="LOW">Low</option>
-                                            <option value="MEDIUM">Medium</option>
-                                            <option value="HIGH">High</option>
-                                            <option value="CRITICAL">Critical</option>
+                                            <option value="LOW">Faible</option>
+                                            <option value="MEDIUM">Moyenne</option>
+                                            <option value="HIGH">Haute</option>
+                                            <option value="CRITICAL">Critique</option>
                                         </select>
-                                        <div className={`absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-dashed text-xs w-4 h-4 ${formData.priority === 'CRITICAL' ? 'bg-red-500 border-red-500' : 'border-gray-400'}`}></div>
+                                        <div className={`absolute left-3 top-1/2 -translate-y-1/2 rounded-full w-4 h-4 border ${formData.priority === 'LOW' ? 'bg-blue-500 border-blue-500' :
+                                            formData.priority === 'MEDIUM' ? 'bg-yellow-500 border-yellow-500' :
+                                                formData.priority === 'HIGH' ? 'bg-orange-500 border-orange-500' :
+                                                    formData.priority === 'CRITICAL' ? 'bg-red-600 border-red-600' :
+                                                        'border-dashed border-gray-400'
+                                            }`}></div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Summary <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Résumé <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         data-testid="summary-input"
                                         value={formData.summary}
                                         onChange={e => handleInputChange('summary', e.target.value)}
                                         className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                        placeholder="Brief overview of the issue"
+                                        placeholder="Décrivez brièvement le problème"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Brief overview of the issue</p>
+                                    <p className="text-xs text-gray-500 mt-1">Aperçu bref du problème</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Labels</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Étiquettes</label>
                                     <div className="space-y-2">
                                         <select
                                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
@@ -289,7 +294,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                                 }
                                             }}
                                         >
-                                            <option value="">Please select</option>
+                                            <option value="">Veuillez sélectionner</option>
                                             {mockLabels.filter(label => !formData.labels?.includes(label)).map(label => (
                                                 <option key={label} value={label}>{label}</option>
                                             ))}
@@ -315,12 +320,12 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                             </div>
                                         )}
 
-                                        <p className="text-xs text-gray-500 mt-1">Use labels to categorize, group and more.</p>
+                                        <p className="text-xs text-gray-500 mt-1">Utilisez les étiquettes pour catégoriser et grouper.</p>
                                     </div>
                                 </div>
 
                                 <div ref={contactDropdownRef}>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
                                     <div className="relative">
                                         <div
                                             className={`w-full p-2.5 border rounded-md bg-white cursor-pointer flex items-center justify-between transition-all ${isContactDropdownOpen ? 'ring-2 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
@@ -336,10 +341,10 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                                                 <span onClick={(e) => { e.stopPropagation(); handleRemoveContact(c.id); }} className="hover:text-blue-900 cursor-pointer"><X size={10} /></span>
                                                             </span>
                                                         ))}
-                                                        {selectedContacts.length === 0 && <span className="text-sm font-medium text-gray-900">{formData.assignedTo.length} selected</span>}
+                                                        {selectedContacts.length === 0 && <span className="text-sm font-medium text-gray-900">{formData.assignedTo.length} sélectionné(s)</span>}
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-500">Select assignees...</span>
+                                                    <span className="text-gray-500">Sélectionner les assignés...</span>
                                                 )}
                                             </div>
                                             <MoreHorizontal size={18} className="text-gray-400 rotate-90" />
@@ -353,7 +358,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                                         <input
                                                             autoFocus
                                                             type="text"
-                                                            placeholder="Search name or email..."
+                                                            placeholder="Rechercher nom ou email..."
                                                             className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
                                                             value={contactSearch}
                                                             onChange={(e) => setContactSearch(e.target.value)}
@@ -386,7 +391,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                                             );
                                                         })
                                                     ) : (
-                                                        <div className="px-4 py-6 text-center text-sm text-gray-500 italic">No contacts found</div>
+                                                        <div className="px-4 py-6 text-center text-sm text-gray-500 italic">Aucun contact trouvé</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -395,47 +400,50 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Reported By</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Signalé par</label>
                                     <div className="flex items-center border border-gray-300 rounded-md bg-gray-50 p-2.5">
                                         <div className="w-5 h-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-bold mr-2">
                                             {issue.user?.name?.charAt(0).toUpperCase() || 'U'}
                                         </div>
-                                        <span className="text-gray-900 text-sm">{issue.user?.name || 'Unknown User'}</span>
-                                        <span className="ml-auto text-xs text-gray-500">Cannot be changed</span>
+                                        <span className="text-gray-900 text-sm">{issue.user?.name || 'Utilisateur inconnu'}</span>
+                                        <span className="ml-auto text-xs text-gray-500">Ne peut pas être modifié</span>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Reported Date</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="date"
-                                            value={new Date(issue.reportedDate).toISOString().split('T')[0]}
-                                            disabled
-                                            className="flex-1 p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
-                                        />
-                                        <input
-                                            type="time"
-                                            value={new Date(issue.reportedDate).toTimeString().split(' ')[0].slice(0, 5)}
-                                            disabled
-                                            className="flex-1 p-2.5 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
-                                        />
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">Reported date cannot be changed</p>
-                                </div>
                             </div>
                         </div>
 
+                        {/* Images Section */}
+                        {issue.images && issue.images.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                                <h2 className="text-lg font-bold text-gray-900 mb-6">Images</h2>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    {issue.images.map((img: any) => (
+                                        <div key={img.id} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                            <img
+                                                src={img.filePath}
+                                                alt={img.fileName}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-2 py-1 truncate">
+                                                {img.fileName}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex justify-end pt-4">
                             <div className="flex gap-3">
-                                <button onClick={handleCancel} className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-bold bg-white hover:bg-gray-50">Cancel</button>
+                                <button onClick={handleCancel} className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-bold bg-white hover:bg-gray-50">Annuler</button>
                                 <button
                                     onClick={handleSave}
                                     data-testid="save-button"
                                     disabled={loadingSubmit || !issue}
                                     className="px-4 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold rounded shadow-sm"
                                 >
-                                    {loadingSubmit ? 'Saving...' : 'Save Changes'}
+                                    {loadingSubmit ? 'Enregistrement...' : 'Sauvegarder'}
                                 </button>
                             </div>
                         </div>

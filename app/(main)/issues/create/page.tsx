@@ -29,12 +29,6 @@ export default function NewIssuePage() {
         assignedTo: []
     });
 
-    const [description, setDescription] = useState('');
-    const [reportedDate, setReportedDate] = useState(() => {
-        const now = new Date();
-        return now.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
-    });
-    const [dueDate, setDueDate] = useState('');
     const [selectedLabel, setSelectedLabel] = useState('');
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
 
@@ -204,7 +198,6 @@ export default function NewIssuePage() {
                 labels: [],
                 assignedTo: []
             });
-            setDescription('');
             setSelectedLabel('');
             setUploadedImages([]);
 
@@ -348,17 +341,6 @@ export default function NewIssuePage() {
                         </div>
 
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea
-                                rows={4}
-                                data-testid="description-textarea"
-                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Décrivez le problème en détail..."
-                            />
-                        </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Étiquettes</label>
@@ -483,33 +465,6 @@ export default function NewIssuePage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Dates</h2>
-                    <div className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Date de signalement</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="datetime-local"
-                                    className="flex-1 p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                    value={reportedDate}
-                                    onChange={(e) => setReportedDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Date d'échéance (optionnel)</label>
-                            <input
-                                type="date"
-                                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                value={dueDate}
-                                onChange={(e) => setDueDate(e.target.value)}
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Considéré en retard après cette date</p>
-                        </div>
-                    </div>
-                </div>
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-6">Images</h2>

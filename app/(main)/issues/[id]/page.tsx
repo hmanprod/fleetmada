@@ -25,6 +25,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         error,
         fetchIssue,
         updateIssueStatus,
+        assignIssue,
         clearError
     } = useIssueDetails(params.id);
 
@@ -114,10 +115,37 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         refreshDocuments();
     };
 
-    const [resolving, setResolving] = useState(false);
+
     const [showDropdown, setShowDropdown] = useState(false);
     const [modalType, setModalType] = useState<'service_entry' | 'work_order' | 'resolve' | null>(null);
     const [resolveNote, setResolveNote] = useState('');
+    const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+    const [searchContact, setSearchContact] = useState('');
+
+    const filteredContacts = useMemo(() => {
+        if (!searchContact.trim()) return contacts;
+        const search = searchContact.toLowerCase();
+        return contacts.filter(c =>
+            c.firstName.toLowerCase().includes(search) ||
+            c.lastName.toLowerCase().includes(search) ||
+            c.email?.toLowerCase().includes(search)
+        );
+    }, [contacts, searchContact]);
+
+    const handleToggleAssign = async (userId: string) => {
+        if (!issue) return;
+        const currentAssigned = issue.assignedTo || [];
+        const isAssigned = currentAssigned.includes(userId);
+        const newAssigned = isAssigned
+            ? currentAssigned.filter(id => id !== userId)
+            : [...currentAssigned, userId];
+
+        try {
+            await assignIssue(params.id, newAssigned);
+        } catch (err) {
+            console.error('Failed to update assignment:', err);
+        }
+    };
 
     // Charger les données au montage
     useEffect(() => {
@@ -135,18 +163,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         router.push(`/issues/${params.id}/edit`);
     };
 
-    const handleResolve = async () => {
-        if (!issue) return;
 
-        try {
-            setResolving(true);
-            await updateIssueStatus(params.id, 'RESOLVED');
-        } catch (err) {
-            console.error('Erreur lors de la résolution:', err);
-        } finally {
-            setResolving(false);
-        }
-    };
 
     // Legacy handleAddComment removed/commented as Sidebar handles it
     /* 
@@ -204,7 +221,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
     const formatDate = (date: Date | string) => {
         const d = new Date(date);
-        return d.toLocaleDateString('en-US', {
+        return d.toLocaleDateString('fr-FR', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -219,12 +236,12 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
         const diffMs = now.getTime() - d.getTime();
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) return `${diffDays} days ago`;
-        if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-        if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-        return `${Math.floor(diffDays / 365)} years ago`;
+        if (diffDays === 0) return 'Aujourd\'hui';
+        if (diffDays === 1) return 'Hier';
+        if (diffDays < 7) return `Il y a ${diffDays} jours`;
+        if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaines`;
+        if (diffDays < 365) return `Il y a ${Math.floor(diffDays / 30)} mois`;
+        return `Il y a ${Math.floor(diffDays / 365)} ans`;
     };
 
     const getPriorityColor = (priority: string) => {
@@ -308,19 +325,90 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-1">
                     <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium mr-4">
-                        <ArrowLeft size={16} /> Issues
+                        <ArrowLeft size={16} /> Problèmes
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900">{issue.summary}</h1>
                 </div>
 
                 <div className="flex gap-2">
-                    <div className="flex items-center gap-2 mr-2">
-                        {issue.user && (
-                            <div className="bg-purple-200 text-purple-700 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                                {issue.user.name.charAt(0).toUpperCase()}
-                            </div>
+                    <div className="flex items-center -space-x-2 mr-4 relative">
+                        {issue.assignedTo && issue.assignedTo.length > 0 ? (
+                            issue.assignedTo.map((userId) => {
+                                const contact = contactMap[userId];
+                                const initials = contact
+                                    ? `${contact.firstName.charAt(0)}${contact.lastName.charAt(0)}`.toUpperCase()
+                                    : '?';
+                                return (
+                                    <div
+                                        key={userId}
+                                        title={contact ? `${contact.firstName} ${contact.lastName}` : 'Contact inconnu'}
+                                        onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                                        className="bg-purple-200 text-purple-700 text-[10px] font-bold rounded-full w-7 h-7 flex items-center justify-center border-2 border-white ring-1 ring-gray-100 shadow-sm transition-transform hover:scale-110 cursor-pointer"
+                                    >
+                                        {initials}
+                                    </div>
+                                );
+                            })
+                        ) : null}
+
+                        <button
+                            onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                            className="bg-gray-100 text-gray-400 text-[10px] font-bold rounded-full w-7 h-7 flex items-center justify-center border-2 border-white ring-1 ring-gray-100 shadow-sm hover:bg-gray-200 transition-colors"
+                            title="Assigner des contacts"
+                        >
+                            <Plus size={12} />
+                        </button>
+
+                        {showAssignDropdown && (
+                            <>
+                                <div className="fixed inset-0 z-20" onClick={() => setShowAssignDropdown(false)}></div>
+                                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-30 overflow-hidden">
+                                    <div className="p-2 border-b border-gray-100">
+                                        <input
+                                            type="text"
+                                            autoFocus
+                                            placeholder="Rechercher un contact..."
+                                            className="w-full text-sm px-3 py-1.5 bg-gray-50 border border-gray-200 rounded outline-none focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751]"
+                                            value={searchContact}
+                                            onChange={(e) => setSearchContact(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="max-h-60 overflow-y-auto">
+                                        {filteredContacts.length > 0 ? (
+                                            filteredContacts.map(contact => {
+                                                const isAssigned = issue.assignedTo?.includes(contact.id);
+                                                return (
+                                                    <div
+                                                        key={contact.id}
+                                                        onClick={() => handleToggleAssign(contact.id)}
+                                                        className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                                                                {contact.firstName.charAt(0)}{contact.lastName.charAt(0)}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-medium text-gray-900 leading-none">
+                                                                    {contact.firstName} {contact.lastName}
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-500">
+                                                                    {contact.jobTitle || 'Contact'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        {isAssigned && <Check size={14} className="text-[#008751]" />}
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="p-4 text-center text-xs text-gray-400">
+                                                Aucun contact trouvé
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
                         )}
-                        <div className="bg-gray-200 text-gray-500 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">+</div>
                     </div>
                     {/* <button className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
                         <EyeOff size={16} /> Unwatch
@@ -351,7 +439,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                             }}
                                             className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                                         >
-                                            Add to Service Entry <ListPlus size={14} className="text-gray-400" />
+                                            Ajouter au Journal d'Entretien <ListPlus size={14} className="text-gray-400" />
                                         </button>
                                         <button
                                             onClick={() => {
@@ -360,28 +448,19 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                             }}
                                             className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                                         >
-                                            Add to Work Order <Wrench size={14} className="text-gray-400" />
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setModalType('resolve');
-                                                setShowDropdown(false);
-                                            }}
-                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left border-t border-gray-100"
-                                        >
-                                            Resolve with Note <CheckCircle2 size={14} className="text-gray-400" />
+                                            Ajouter au Bon de Travail <Wrench size={14} className="text-gray-400" />
                                         </button>
                                         <button
                                             onClick={handleCloseIssue}
-                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left border-t border-gray-100"
                                         >
-                                            Close <XCircle size={14} className="text-gray-400" />
+                                            Fermer <XCircle size={14} className="text-gray-400" />
                                         </button>
                                         <button
                                             onClick={handleDeleteIssue}
                                             className="flex items-center justify-between px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                                         >
-                                            Delete <Trash2 size={14} className="text-red-400" />
+                                            Supprimer <Trash2 size={14} className="text-red-400" />
                                         </button>
                                     </div>
                                 </div>
@@ -389,14 +468,14 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                         )}
                     </div>
                     <button onClick={handleEdit} className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
-                        <Edit size={16} /> Edit
+                        <Edit size={16} /> Modifier
                     </button>
                     <button
-                        onClick={handleResolve}
-                        disabled={resolving || issue.status === 'RESOLVED' || issue.status === 'CLOSED'}
+                        onClick={() => setModalType('resolve')}
+                        disabled={issue.status === 'RESOLVED' || issue.status === 'CLOSED'}
                         className="px-3 py-2 bg-[#008751] hover:bg-[#007043] disabled:bg-gray-400 text-white font-bold rounded flex items-center gap-2 text-sm shadow-sm"
                     >
-                        <Check size={16} /> {resolving ? 'Résolution...' : 'Resolve'}
+                        <Check size={16} /> Résoudre
                     </button>
                 </div>
             </div>
@@ -408,10 +487,10 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     {/* Details Card */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-gray-900">Details</h2>
+                            <h2 className="text-lg font-bold text-gray-900">Détails</h2>
                         </div>
                         <div className="p-6">
-                            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4">All Fields</h3>
+                            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4">Tous les champs</h3>
 
                             <div className="space-y-4">
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
@@ -420,29 +499,29 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Status</div>
+                                    <div className="text-sm text-gray-500">Statut</div>
                                     <div><span data-testid="issue-status" className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(issue.status)}`}>{issue.status}</span></div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Summary</div>
+                                    <div className="text-sm text-gray-500">Résumé</div>
                                     <div className="text-sm text-gray-900">{issue.summary}</div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Priority</div>
+                                    <div className="text-sm text-gray-500">Priorité</div>
                                     <div className="flex items-center gap-2">
                                         <div data-testid="issue-priority" className={`font-bold text-sm ${getPriorityColor(issue.priority)}`}>! {issue.priority}</div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Vehicle</div>
+                                    <div className="text-sm text-gray-500">Véhicule</div>
                                     <div className="flex items-center gap-2" data-testid="issue-vehicle">
                                         {issue.vehicle ? (
                                             <>
                                                 <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
-                                                    <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${issue.vehicle.id}`} className="w-full h-full object-cover" alt="Vehicle" />
+                                                    <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${issue.vehicle.id}`} className="w-full h-full object-cover" alt="Véhicule" />
                                                 </div>
                                                 <span className="text-[#008751] font-medium hover:underline cursor-pointer">
                                                     {issue.vehicle.make} {issue.vehicle.model}
@@ -456,17 +535,17 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Reported Date</div>
+                                    <div className="text-sm text-gray-500">Date de signalement</div>
                                     <div className="text-sm text-gray-900 underline decoration-dotted underline-offset-4">{formatDate(issue.reportedDate)}</div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Reported By</div>
+                                    <div className="text-sm text-gray-500">Signalé par</div>
                                     <div className="text-sm text-gray-900">{issue.user?.name || '—'}</div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Assigned To</div>
+                                    <div className="text-sm text-gray-500">Assigné à</div>
                                     <div className="text-sm text-gray-900">
                                         {issue.assignedTo && issue.assignedTo.length > 0 ? (
                                             <div className="flex flex-wrap gap-1">
@@ -487,7 +566,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
                                 {issue.labels.length > 0 && (
                                     <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                        <div className="text-sm text-gray-500">Labels</div>
+                                        <div className="text-sm text-gray-500">Étiquettes</div>
                                         <div className="flex flex-wrap gap-1">
                                             {issue.labels.map((label, index) => (
                                                 <span key={index} className="text-xs bg-blue-100 text-blue-800 px-1 rounded">{label}</span>
@@ -505,13 +584,13 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     </div>
 
                     <div className="text-center text-xs text-[#008751] cursor-pointer hover:underline mb-8">
-                        Created {formatDateRelative(issue.createdAt)} · Updated {formatDateRelative(issue.updatedAt)}
+                        Créé {formatDateRelative(issue.createdAt)} · Mis à jour {formatDateRelative(issue.updatedAt)}
                     </div>
 
                     {/* Timeline moved to main column */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div className="px-6 py-4 border-b border-gray-200">
-                            <h2 className="text-lg font-bold text-gray-900">Timeline</h2>
+                            <h2 className="text-lg font-bold text-gray-900">Chronologie</h2>
                         </div>
                         <div className="p-6">
                             <div className="flex gap-4 items-start">
@@ -522,7 +601,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex justify-between items-baseline">
-                                        <span className="font-bold text-gray-900 text-sm">Issue Opened</span>
+                                        <span className="font-bold text-gray-900 text-sm">Problème ouvert</span>
                                         <span className="text-xs text-gray-500">{formatDate(issue.createdAt)}</span>
                                     </div>
                                 </div>
@@ -579,9 +658,9 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
                         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
                             <h2 className="text-xl font-bold text-gray-900">
-                                {modalType === 'service_entry' ? 'Add to Service Entry' :
-                                    modalType === 'work_order' ? 'Add to Work Order' :
-                                        `Resolve Issue #${issue.id.slice(-6)}`}
+                                {modalType === 'service_entry' ? 'Ajouter au Journal d\'Entretien' :
+                                    modalType === 'work_order' ? 'Ajouter à un Bon de Travail' :
+                                        `Résoudre le Problème #${issue.id.slice(-6)}`}
                             </h2>
                             <button
                                 onClick={() => { setModalType(null); }}
@@ -594,7 +673,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                         <div className="p-6 space-y-6">
                             {/* Vehicle Info */}
                             <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-gray-500 w-24">Vehicle</span>
+                                <span className="text-sm font-medium text-gray-500 w-24">Véhicule</span>
                                 <div className="flex items-center gap-2">
                                     <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${issue.id}`} className="w-8 h-8 rounded object-cover" alt="" />
                                     <span className="text-[#008751] font-bold">{issue.vehicle?.make} {issue.vehicle?.model}</span>
@@ -605,14 +684,14 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                             {modalType === 'resolve' ? (
                                 <>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-sm font-medium text-gray-500 w-24">Summary</span>
+                                        <span className="text-sm font-medium text-gray-500 w-24">Résumé</span>
                                         <span className="text-gray-900">{issue.summary}</span>
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <label className="text-sm font-medium text-gray-500">Note <span className="text-red-500">*</span></label>
                                         <textarea
                                             className="w-full border border-gray-300 rounded-md p-3 h-32 focus:ring-1 focus:ring-[#008751] focus:border-[#008751] outline-none"
-                                            placeholder="Describe what work was performed to resolve the issue."
+                                            placeholder="Décrivez les travaux effectués pour résoudre ce problème."
                                             value={resolveNote}
                                             onChange={(e) => setResolveNote(e.target.value)}
                                         ></textarea>
@@ -621,35 +700,35 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                             ) : (
                                 <>
                                     <div className="flex items-start gap-4">
-                                        <span className="text-sm font-medium text-gray-500 w-24 pt-1">Issues</span>
+                                        <span className="text-sm font-medium text-gray-500 w-24 pt-1">Problèmes</span>
                                         <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-1.5 rounded-sm">1</span>
-                                                <span className="text-sm font-medium">Issue will be added</span>
+                                                <span className="text-sm font-medium">Le problème sera ajouté</span>
                                             </div>
                                             <div className="bg-white border border-gray-200 rounded p-3 flex items-start gap-3">
                                                 <input type="checkbox" checked readOnly className="mt-1 rounded border-gray-300 text-[#008751]" />
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 rounded-sm uppercase">Open</span>
+                                                        <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 rounded-sm uppercase">OUVERT</span>
                                                         <span className="text-sm font-bold">1 - {issue.summary}</span>
                                                     </div>
-                                                    <p className="text-sm text-gray-500 mt-1">Reported {formatDate(issue.reportedDate)}</p>
+                                                    <p className="text-sm text-gray-500 mt-1">Signalé le {formatDate(issue.reportedDate)}</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-4">
-                                        <span className="text-sm font-medium text-gray-500 w-24">{modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                                        <span className="text-sm font-medium text-gray-500 w-24">{modalType === 'service_entry' ? 'Journal d\'Entretien' : 'Bon de Travail'}</span>
                                         <div className="flex flex-col gap-2">
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input type="radio" name="entry_type" checked readOnly className="text-[#008751] focus:ring-[#008751]" />
-                                                <span className="text-sm">Add to New {modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                                                <span className="text-sm">Ajouter à un Nouveau {modalType === 'service_entry' ? 'Journal d\'Entretien' : 'Bon de Travail'}</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer opacity-50">
                                                 <input type="radio" name="entry_type" disabled className="text-[#008751] focus:ring-[#008751]" />
-                                                <span className="text-sm">Add to Existing {modalType === 'service_entry' ? 'Service Entry' : 'Work Order'}</span>
+                                                <span className="text-sm">Ajouter à un existant {modalType === 'service_entry' ? 'Journal d\'Entretien' : 'Bon de Travail'}</span>
                                             </label>
                                         </div>
                                     </div>
@@ -662,7 +741,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                 onClick={() => { setModalType(null); }}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded"
                             >
-                                Cancel
+                                Annuler
                             </button>
                             <button
                                 onClick={() => {
@@ -671,7 +750,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                 }}
                                 className="px-4 py-2 text-sm font-bold text-white bg-[#008751] hover:bg-[#007043] rounded"
                             >
-                                {modalType === 'resolve' ? 'Resolve Issue' : 'Continue'}
+                                {modalType === 'resolve' ? 'Résoudre le problème' : 'Continuer'}
                             </button>
                         </div>
                     </div>

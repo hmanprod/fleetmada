@@ -18,7 +18,8 @@
                         "required": true,
                         "unit": "km",
                         "require_secondary_meter": true,
-                        "short_description": "Relevé du compteur kilométrique"
+                        "short_description": "Relevé du compteur kilométrique",
+                        "can_create_issue": false
                     }
                 ]
             },
@@ -30,51 +31,59 @@
                         "item_name": "Air Compressor",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Air Lines",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Battery",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Belts and Hoses",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Body",
                         "type": "Pass/Fail",
                         "required": true,
                         "require_photo_pass": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Brake Accessories",
                         "type": "Pass/Fail",
                         "required": true,
                         "enable_na": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Brakes, Parking",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Brakes, Service",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Clutch",
@@ -82,61 +91,71 @@
                         "required": true,
                         "enable_na": true,
                         "require_photo_fail": true,
-                        "instructions": "N/A if no clutch"
+                        "instructions": "N/A if no clutch",
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Coupling Devices",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Defroster/Heater",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Drive Line",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Engine",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Exhaust",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Fifth Wheel",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Fluid Levels",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Frame and Assembly",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Front Axle",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Fuel tanks",
@@ -164,134 +183,156 @@
                                 "label": "Empty"
                             }
                         ],
-                        "require_photo_pass": true
+                        "require_photo_pass": true,
+                        "can_create_issue": false
                     },
                     {
                         "item_name": "Horn",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Lights - Head/Stop",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Lights - Tail/Dash",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Lights - Turn Indicators",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Lights - Clearance/Marker",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Mirrors",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Muffler",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Oil Pressure",
                         "type": "Numeric",
                         "unit": "psi",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": false
                     },
                     {
                         "item_name": "Radiator",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Rear End",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Reflectors",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Starter",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Steering",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Suspension System",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Tire Chains",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Tires",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Transmission",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Trip Recorder",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Wheels and Rims",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Windows",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Windshield Wipers",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -303,32 +344,37 @@
                         "item_name": "Fire Extinguisher",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Flags/Flares/Fusees",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Reflective Triangles",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Spare Bulbs and Fuses",
                         "type": "Pass/Fail",
                         "required": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Spare Seal Beam",
                         "type": "Pass/Fail",
                         "required": true,
                         "enable_na": true,
-                        "require_photo_fail": true
+                        "require_photo_fail": true,
+                        "can_create_issue": true
                     }
                 ]
             },
@@ -340,13 +386,15 @@
                         "item_name": "Remarks",
                         "type": "Free Text",
                         "required": false,
-                        "instructions": "Notes additionnelles sur l'état du véhicule"
+                        "instructions": "Notes additionnelles sur l'état du véhicule",
+                        "can_create_issue": false
                     },
                     {
                         "item_name": "Vehicle Condition",
                         "type": "Pass/Fail",
                         "required": true,
-                        "short_description": "Condition of this vehicle is satisfactory"
+                        "short_description": "Condition of this vehicle is satisfactory",
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Above Defects Corrected",
@@ -354,12 +402,14 @@
                         "required": true,
                         "pass_label": "Yes",
                         "fail_label": "No",
-                        "require_photo_pass": true
+                        "require_photo_pass": true,
+                        "can_create_issue": true
                     },
                     {
                         "item_name": "Driver's Signature",
                         "type": "Signature",
-                        "required": true
+                        "required": true,
+                        "can_create_issue": false
                     }
                 ]
             }

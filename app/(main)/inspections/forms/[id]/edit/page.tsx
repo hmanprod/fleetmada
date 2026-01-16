@@ -6,10 +6,11 @@ import {
     Hash, FileText, CheckSquare, PenTool, Image as ImageIcon, Heading,
     Layout, ChevronDown, ChevronUp, GripVertical, Copy, MoreVertical,
     CheckCircle2, XCircle, AlertCircle, Type, ListChecks, Info,
-    Gauge, CalendarClock, Palette, MapPin, CameraOff, HelpCircle
+    Gauge, CalendarClock, Palette, MapPin, CameraOff, HelpCircle, Search
 } from 'lucide-react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
+import { useVehicles } from '@/lib/hooks/useVehicles';
 import type { InspectionTemplateUpdateData, InspectionTemplateItem, InspectionTemplate } from '@/lib/services/inspections-api';
 import inspectionsAPI from '@/lib/services/inspections-api';
 import { useToast, ToastContainer } from '@/components/NotificationToast';
@@ -60,6 +61,29 @@ export default function EditInspectionFormPage() {
         frequencyType: 'WEEKLY',
         frequencyInterval: 1
     });
+
+    // Vehicles for selection
+    const vehiclesQuery = React.useMemo(() => ({ limit: '500' }), []);
+    const { vehicles } = useVehicles({ query: vehiclesQuery as any });
+    const [vehicleSearch, setVehicleSearch] = useState('');
+    const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
+
+    const vehicleTypes = Array.from(new Set(vehicles.map(v => v.type))).filter(Boolean);
+
+    // Click outside handler for vehicle dropdown
+    const vehicleDropdownRef = React.useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target as Node)) {
+                setIsVehicleDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
         if (id) {
@@ -124,7 +148,8 @@ export default function EditInspectionFormPage() {
             dateTimeType: 'DATE_ONLY',
             minRange: undefined,
             maxRange: undefined,
-            requireSecondaryMeter: false
+            requireSecondaryMeter: false,
+            canCreateIssue: false
         };
 
         setFormData((prev: any) => {
@@ -181,6 +206,7 @@ export default function EditInspectionFormPage() {
             };
             await inspectionsAPI.createSchedule(id as string, payload);
             await loadSchedules();
+            toast.success('Règle ajoutée', 'La nouvelle règle de planification a été enregistrée.');
             setNewSchedule({
                 ruleType: 'ALL_VEHICLES',
                 ruleValue: '',
@@ -188,19 +214,20 @@ export default function EditInspectionFormPage() {
                 frequencyType: 'WEEKLY',
                 frequencyInterval: 1
             });
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Failed to add schedule');
+            toast.error('Erreur', err.message || 'Impossible d\'ajouter la règle de planification.');
         }
     };
 
     const handleDeleteSchedule = async (scheduleId: string) => {
-        if (!confirm('Are you sure you want to remove this rule?')) return;
         try {
             await inspectionsAPI.deleteSchedule(id as string, scheduleId);
             await loadSchedules();
-        } catch (err) {
+            toast.success('Règle supprimée', 'La règle a été retirée avec succès.');
+        } catch (err: any) {
             console.error(err);
+            toast.error('Erreur', err.message || 'Impossible de supprimer la règle.');
         }
     };
 
@@ -519,6 +546,15 @@ export default function EditInspectionFormPage() {
                                                                         />
                                                                         <span className="text-xs font-bold text-gray-700">Autoriser N/A</span>
                                                                     </label>
+                                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="rounded text-[#008751] focus:ring-[#008751]"
+                                                                            checked={item.canCreateIssue}
+                                                                            onChange={e => handleUpdateItem(index, { canCreateIssue: e.target.checked })}
+                                                                        />
+                                                                        <span className="text-xs font-bold text-orange-600">Auto-créer une issue sur échec</span>
+                                                                    </label>
                                                                 </div>
 
                                                                 <div className="grid grid-cols-2 gap-4">
@@ -643,8 +679,8 @@ export default function EditInspectionFormPage() {
                 ) : activeTab === 'schedules' ? (
                     <div className="space-y-6">
                         {/* New Schedule Card */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
                                 <div>
                                     <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2 italic">
                                         <CalendarClock size={16} className="text-[#008751]" />
@@ -672,16 +708,95 @@ export default function EditInspectionFormPage() {
                                         </div>
                                     </div>
 
-                                    {newSchedule.ruleType !== 'ALL_VEHICLES' && (
+                                    {newSchedule.ruleType === 'VEHICLE_TYPE' && (
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Valeur du filtre</label>
-                                            <input
-                                                type="text"
-                                                className="w-full p-3 text-sm bg-white border border-gray-200 rounded-xl focus:border-[#008751] outline-none font-bold placeholder:font-medium placeholder:italic text-gray-900 shadow-sm transition-all"
-                                                placeholder={newSchedule.ruleType === 'VEHICLE_TYPE' ? "ex: SUV, Truck..." : "ex: ID du véhicule"}
-                                                value={newSchedule.ruleValue}
-                                                onChange={e => setNewSchedule({ ...newSchedule, ruleValue: e.target.value })}
-                                            />
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Type de véhicule</label>
+                                            <div className="relative group">
+                                                <select
+                                                    className="w-full p-3 text-sm bg-white border border-gray-200 rounded-xl focus:border-[#008751] outline-none appearance-none font-bold"
+                                                    value={newSchedule.ruleValue}
+                                                    onChange={e => setNewSchedule({ ...newSchedule, ruleValue: e.target.value })}
+                                                >
+                                                    <option value="">Sélectionner un type...</option>
+                                                    {vehicleTypes.map(type => (
+                                                        <option key={type} value={type}>{type}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-900" size={16} />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {newSchedule.ruleType === 'VEHICLE_ID' && (
+                                        <div className="space-y-2 relative" ref={vehicleDropdownRef}>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Véhicule spécifique</label>
+                                            <div
+                                                className={`w-full p-3 text-sm bg-white border border-gray-200 rounded-xl focus-within:border-[#008751] outline-none font-bold flex items-center gap-2 cursor-pointer ${isVehicleDropdownOpen ? 'ring-2 ring-[#008751]/10 border-[#008751]' : ''}`}
+                                                onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
+                                            >
+                                                <Car size={16} className="text-gray-400" />
+                                                <span className="flex-1 truncate">
+                                                    {newSchedule.ruleValue ?
+                                                        vehicles.find(v => v.id === newSchedule.ruleValue)?.name || 'Véhicule sélectionné' :
+                                                        'Choisir un véhicule...'}
+                                                </span>
+                                                <ChevronDown size={16} className="text-gray-400" />
+                                            </div>
+
+                                            {isVehicleDropdownOpen && (
+                                                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 top-full">
+                                                    <div className="p-2 border-b border-gray-100 bg-gray-50">
+                                                        <div className="relative">
+                                                            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                            <input
+                                                                autoFocus
+                                                                type="text"
+                                                                placeholder="Rechercher nom, VIN ou plaque..."
+                                                                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751]"
+                                                                value={vehicleSearch}
+                                                                onChange={(e) => setVehicleSearch(e.target.value)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="max-h-60 overflow-y-auto">
+                                                        {vehicles
+                                                            .filter(v => {
+                                                                const s = vehicleSearch.toLowerCase();
+                                                                return v.name.toLowerCase().includes(s) ||
+                                                                    (v.vin && v.vin.toLowerCase().includes(s)) ||
+                                                                    (v.licensePlate && v.licensePlate.toLowerCase().includes(s));
+                                                            })
+                                                            .map(v => (
+                                                                <div
+                                                                    key={v.id}
+                                                                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors ${newSchedule.ruleValue === v.id ? 'bg-green-50' : ''}`}
+                                                                    onClick={() => {
+                                                                        setNewSchedule({ ...newSchedule, ruleValue: v.id });
+                                                                        setIsVehicleDropdownOpen(false);
+                                                                        setVehicleSearch('');
+                                                                    }}
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-sm font-bold text-gray-900 group-hover:text-[#008751]">{v.name}</div>
+                                                                        <div className="text-[11px] text-gray-500 font-medium">
+                                                                            {v.make} {v.model} • {v.licensePlate || v.vin}
+                                                                        </div>
+                                                                    </div>
+                                                                    {newSchedule.ruleValue === v.id && (
+                                                                        <CheckCircle2 size={16} className="text-[#008751]" />
+                                                                    )}
+                                                                </div>
+                                                            ))
+                                                        }
+                                                        {vehicles.length === 0 && (
+                                                            <div className="p-8 text-center text-gray-400 italic text-sm">
+                                                                Aucun véhicule trouvé
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -724,8 +839,8 @@ export default function EditInspectionFormPage() {
                         </div>
 
                         {/* Schedules List */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+                            <div className="p-6 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">
                                 <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2 italic uppercase">
                                     <Clock size={16} className="text-[#008751]" />
                                     Règles de planification actives ({schedules.length})
@@ -747,7 +862,10 @@ export default function EditInspectionFormPage() {
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className="text-xs font-black bg-gray-900 text-white px-2 py-0.5 rounded uppercase tracking-tighter">
-                                                            {schedule.ruleType === 'ALL_VEHICLES' ? 'Tous les véhicules' : schedule.ruleValue}
+                                                            {schedule.ruleType === 'ALL_VEHICLES' ? 'Tous les véhicules' :
+                                                                schedule.ruleType === 'VEHICLE_ID' ?
+                                                                    (vehicles.find(v => v.id === schedule.ruleValue)?.name || schedule.ruleValue) :
+                                                                    schedule.ruleValue}
                                                         </span>
                                                         <span className="text-gray-300">•</span>
                                                         <span className="text-sm font-bold text-gray-900">
