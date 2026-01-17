@@ -44,7 +44,8 @@ export default function ServiceTasksPage() {
   };
 
   const handleTaskClick = (taskId: string) => {
-    router.push(`/service/tasks/${taskId}`);
+    // router.push(`/service/tasks/${taskId}`);
+    console.log('Task click:', taskId);
   };
 
   const handleSelectTask = (taskId: string) => {
@@ -218,17 +219,38 @@ export default function ServiceTasksPage() {
             className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
           />
         </div>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Type de Tâche <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
-        </button>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Catégorie <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
-        </button>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Système <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
-        </button>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          <Filter size={14} /> Filtres
+
+        <select
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-[#008751] focus:border-[#008751]"
+          value={filters.category}
+          onChange={(e) => handleFilterChange({ ...filters, category: e.target.value })}
+        >
+          <option value="">Toutes les Catégories</option>
+          {Object.keys(tasksByCategory).map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+
+        <select
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-[#008751] focus:border-[#008751]"
+          value={filters.system}
+          onChange={(e) => handleFilterChange({ ...filters, system: e.target.value })}
+        >
+          <option value="">Tous les Systèmes</option>
+          {Object.keys(tasksBySystem).map(sys => (
+            <option key={sys} value={sys}>{sys}</option>
+          ))}
+        </select>
+
+        <button
+          onClick={() => {
+            setSearchTerm('');
+            setFilters({ category: '', system: '' });
+            refresh();
+          }}
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+        >
+          <Filter size={14} /> Effacer les filtres
         </button>
         <div className="flex-1 text-right text-sm text-gray-500">
           {pagination ? `${((pagination.page - 1) * pagination.limit) + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total}` : '0 - 0 sur 0'}

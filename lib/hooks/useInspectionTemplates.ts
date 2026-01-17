@@ -242,6 +242,11 @@ export function useInspectionTemplates(initialFilters: InspectionTemplateFilters
     }
   }, [templates])
 
+  // Charger les données initiales
+  useEffect(() => {
+    fetchTemplates()
+  }, [])
+
   return {
     templates,
     loading,

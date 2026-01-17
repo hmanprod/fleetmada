@@ -12,6 +12,8 @@ import { type MeterEntriesQuery } from '@/lib/validations/vehicle-validations';
 import { FiltersSidebar } from '../components/filters/FiltersSidebar';
 import { type FilterCriterion } from '../components/filters/FilterCard';
 import { METER_HISTORY_FIELDS } from '../components/filters/filter-definitions';
+import { VehicleSelect } from '../components/VehicleSelect';
+
 
 export default function VehicleMeterPage() {
   const { token } = useAuthToken();
@@ -414,16 +416,12 @@ export default function VehicleMeterPage() {
                     {getVehicleName(formData.vehicleId || '')}
                   </div>
                 ) : (
-                  <select
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751]"
-                    value={formData.vehicleId || ''}
-                    onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                  >
-                    <option value="">Please select</option>
-                    {vehicles.map(v => (
-                      <option key={v.id} value={v.id}>{v.name} ({v.vin})</option>
-                    ))}
-                  </select>
+                  <VehicleSelect
+                    vehicles={vehicles}
+                    selectedVehicleId={formData.vehicleId || ''}
+                    onSelect={(id) => setFormData({ ...formData, vehicleId: id })}
+                  />
+
                 )}
               </div>
 

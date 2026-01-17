@@ -111,16 +111,16 @@ export function useToast() {
         duration?: number;
     }>>([]);
 
-    const addToast = (toast: Omit<typeof toasts[0], 'id'>) => {
+    const addToast = React.useCallback((toast: Omit<typeof toasts[0], 'id'>) => {
         const id = Math.random().toString(36).substr(2, 9);
         setToasts(prev => [...prev, { ...toast, id }]);
-    };
+    }, []);
 
-    const removeToast = (id: string) => {
+    const removeToast = React.useCallback((id: string) => {
         setToasts(prev => prev.filter(toast => toast.id !== id));
-    };
+    }, []);
 
-    const toast = {
+    const toast = React.useMemo(() => ({
         success: (title: string, message?: string, duration?: number) =>
             addToast({ type: 'success', title, message, duration }),
         error: (title: string, message?: string, duration?: number) =>
@@ -129,7 +129,7 @@ export function useToast() {
             addToast({ type: 'warning', title, message, duration }),
         info: (title: string, message?: string, duration?: number) =>
             addToast({ type: 'info', title, message, duration }),
-    };
+    }), [addToast]);
 
     return { toast, toasts, removeToast };
 }

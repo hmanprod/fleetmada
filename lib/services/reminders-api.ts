@@ -10,6 +10,7 @@ export interface ServiceReminder {
     name: string
     make: string
     model: string
+    image?: string
   }
   serviceTaskId?: string
   task?: string
@@ -27,6 +28,9 @@ export interface ServiceReminder {
   type: 'date' | 'meter' | 'both'
   watchers: string[]
   escalationDays?: number
+  timeThreshold?: number
+  timeThresholdUnit?: string
+  meterThreshold?: number
   isOverdue?: boolean
   daysUntilDue?: number
   priority?: 'NORMAL' | 'SOON' | 'OVERDUE'
@@ -42,6 +46,7 @@ export interface VehicleRenewal {
     name: string
     make: string
     model: string
+    image?: string
   }
   type: 'REGISTRATION' | 'INSURANCE' | 'INSPECTION' | 'EMISSION_TEST' | 'OTHER'
   status: 'DUE' | 'COMPLETED' | 'OVERDUE' | 'DISMISSED'
@@ -124,6 +129,8 @@ class RemindersApiService {
     vehicleId?: string
     contactId?: string
     overdue?: boolean
+    dueSoon?: boolean
+    search?: string
   } = {}): Promise<ServiceRemindersResponse | null> {
     const queryParams = new URLSearchParams()
 
@@ -133,6 +140,8 @@ class RemindersApiService {
     if (params.vehicleId) queryParams.append('vehicleId', params.vehicleId)
     if (params.contactId) queryParams.append('contactId', params.contactId)
     if (params.overdue) queryParams.append('overdue', 'true')
+    if (params.dueSoon) queryParams.append('dueSoon', 'true')
+    if (params.search) queryParams.append('search', params.search)
 
     const result = await this.makeRequest<ServiceRemindersResponse>(
       `/service/reminders?${queryParams.toString()}`,
@@ -166,6 +175,9 @@ class RemindersApiService {
     description?: string
     watchers?: string[]
     escalationDays?: number
+    timeThreshold?: number
+    timeThresholdUnit?: string
+    meterThreshold?: number
   }): Promise<ServiceReminder | null> {
     const result = await this.makeRequest<ServiceReminder>(
       '/service/reminders',
@@ -189,6 +201,9 @@ class RemindersApiService {
     snoozedUntil?: string
     watchers?: string[]
     escalationDays?: number
+    timeThreshold?: number
+    timeThresholdUnit?: string
+    meterThreshold?: number
     title?: string
     description?: string
   }): Promise<ServiceReminder | null> {
@@ -245,6 +260,7 @@ class RemindersApiService {
     vehicleId?: string
     overdue?: boolean
     dueSoon?: boolean
+    search?: string
   } = {}): Promise<VehicleRenewalsResponse | null> {
     const queryParams = new URLSearchParams()
 
@@ -255,6 +271,7 @@ class RemindersApiService {
     if (params.vehicleId) queryParams.append('vehicleId', params.vehicleId)
     if (params.overdue) queryParams.append('overdue', 'true')
     if (params.dueSoon) queryParams.append('dueSoon', 'true')
+    if (params.search) queryParams.append('search', params.search)
 
     const result = await this.makeRequest<VehicleRenewalsResponse>(
       `/vehicle-renewals?${queryParams.toString()}`,

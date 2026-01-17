@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+import { checkVehicleAccess } from '@/lib/api-utils'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -88,15 +89,26 @@ export async function GET(request: NextRequest) {
     const overdue = searchParams.get('overdue') === 'true'
     const dueSoon = searchParams.get('dueSoon') === 'true'
 
+    const search = searchParams.get('search')
+
     const skip = (page - 1) * limit
 
     logAction('GET Vehicle Renewals', userId, {
-      page, limit, status, type, vehicleId, overdue, dueSoon
+      page, limit, status, type, vehicleId, overdue, dueSoon, search
+    })
+
+    // Récupérer l'utilisateur pour son companyId
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true }
     })
 
     const where: any = {
       vehicle: {
-        userId
+        OR: [
+          { userId },
+          ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+        ]
       },
       isActive: true
     }
@@ -111,6 +123,23 @@ export async function GET(request: NextRequest) {
 
     if (vehicleId) {
       where.vehicleId = vehicleId
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        {
+          vehicle: {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { make: { contains: search, mode: 'insensitive' } },
+              { model: { contains: search, mode: 'insensitive' } },
+              { licensePlate: { contains: search, mode: 'insensitive' } }
+            ]
+          }
+        }
+      ]
     }
 
     const now = new Date()
@@ -133,7 +162,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         include: {
           vehicle: {
-            select: { id: true, name: true, make: true, model: true }
+            select: { id: true, name: true, make: true, model: true, image: true, licensePlate: true }
           }
         }
       }),
@@ -144,21 +173,21 @@ export async function GET(request: NextRequest) {
     const renewalsWithStatus = renewals.map(renewal => {
       let isOverdue = false
       let daysUntilDue: number | null = null
-      let priority = 'NORMAL'
-      
+      let computedPriority = 'NORMAL'
+
       if (renewal.dueDate) {
         isOverdue = renewal.dueDate < now
         daysUntilDue = Math.ceil((renewal.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-        
-        if (isOverdue) priority = 'OVERDUE'
-        else if (daysUntilDue !== null && daysUntilDue <= 7) priority = 'SOON'
+
+        if (isOverdue) computedPriority = 'OVERDUE'
+        else if (daysUntilDue !== null && daysUntilDue <= 7) computedPriority = 'SOON'
       }
-      
+
       return {
         ...renewal,
         isOverdue,
         daysUntilDue,
-        priority
+        computedPriority
       }
     })
 
@@ -281,10 +310,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Vérifier que le véhicule appartient à l'utilisateur
-      const vehicle = await prisma.vehicle.findFirst({
-        where: { id: vehicleId, userId }
-      })
+      // Vérifier que l'utilisateur a accès au véhicule (propriétaire ou même entreprise)
+      const vehicle = await checkVehicleAccess(vehicleId, userId)
 
       if (!vehicle) {
         logAction('POST Vehicle Renewal - Vehicle not found or access denied', userId, {

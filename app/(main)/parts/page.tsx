@@ -72,12 +72,12 @@ export default function PartsPage() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Parts</h1>
-          <button
+          {/* <button
             onClick={handleLearnMore}
             className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2 flex items-center gap-1"
           >
             <Lightbulb size={12} /> Learn
-          </button>
+          </button> */}
         </div>
         <div className="flex gap-2">
           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>

@@ -194,17 +194,22 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
     const handleAddRecords = async (type: 'service_entry' | 'work_order') => {
         if (!issue) return;
-        try {
-            await serviceAPI.createServiceEntry({
-                vehicleId: issue.vehicleId || '',
-                date: new Date().toISOString(),
-                isWorkOrder: type === 'work_order',
-                notes: `Created from issue: ${issue.summary}`,
-                status: 'SCHEDULED'
-            });
-            setModalType(null);
-        } catch (err) {
-            console.error(`Failed to create ${type}:`, err);
+
+        if (type === 'service_entry') {
+            router.push(`/service/history/create?issueId=${issue.id}&vehicleId=${issue.vehicleId}`);
+        } else {
+            try {
+                await serviceAPI.createServiceEntry({
+                    vehicleId: issue.vehicleId || '',
+                    date: new Date().toISOString(),
+                    isWorkOrder: true,
+                    notes: `Created from issue: ${issue.summary}`,
+                    status: 'SCHEDULED'
+                });
+                setModalType(null);
+            } catch (err) {
+                console.error(`Failed to create ${type}:`, err);
+            }
         }
     };
 

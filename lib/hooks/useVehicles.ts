@@ -37,10 +37,10 @@ export const useVehicles = (options: UseVehiclesOptions = {}): UseVehiclesReturn
     try {
       const queryToUse = newQuery || currentQuery
       const response = await vehiclesAPI.getVehicles(queryToUse)
-      
+
       setVehicles(response.vehicles)
       setPagination(response.pagination)
-      
+
       if (newQuery) {
         setCurrentQuery(newQuery)
       }
@@ -67,7 +67,8 @@ export const useVehicles = (options: UseVehiclesOptions = {}): UseVehiclesReturn
 
   // Effet pour mettre à jour la requête
   useEffect(() => {
-    if (query !== currentQuery) {
+    const queryChanged = JSON.stringify(query) !== JSON.stringify(currentQuery);
+    if (queryChanged) {
       setCurrentQuery(query)
       if (autoFetch) {
         fetchVehicles(query)

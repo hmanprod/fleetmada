@@ -328,6 +328,7 @@ model ServiceEntry {
   assignedToContactId String?    // Foreign key vers Contact
   watchers    Int                @default(0)
   isWorkOrder Boolean            @default(false)
+  reasonForRepairCode String?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   user        User               @relation(fields: [userId], references: [id])
@@ -350,6 +351,7 @@ model ServiceTask {
   categoryCode  String?
   systemCode    String?
   assemblyCode  String?
+  reasonForRepairCode String?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   taskEntries   ServiceTaskEntry[]
@@ -484,6 +486,9 @@ model ServiceReminder {
   // New fields for enhanced functionality
   watchers          String[]       // List of users to notify
   escalationDays    Int?           // Days before escalation
+  timeThreshold     Int?           // Threshold for "Soon Due" (time)
+  timeThresholdUnit String?        // Unit for time threshold (days, weeks)
+  meterThreshold    Float?         // Threshold for "Soon Due" (meter)
   title             String?        // Custom reminder title
   description       String?        // Custom reminder description
   createdAt         DateTime       @default(now())

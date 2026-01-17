@@ -73,12 +73,21 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     logAction('GET Vehicle Renewal Detail', userId, { renewalId })
 
-    // Vérifier que le renouvellement existe et appartient à l'utilisateur
+    // Récupérer l'utilisateur pour son companyId
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true }
+    })
+
+    // Vérifier que le renouvellement existe et que l'utilisateur a accès au véhicule associé
     const renewal = await prisma.vehicleRenewal.findFirst({
       where: {
         id: renewalId,
         vehicle: {
-          userId
+          OR: [
+            { userId },
+            ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+          ]
         }
       },
       include: {
@@ -100,7 +109,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const now = new Date()
     let isOverdue = false
     let daysUntilDue: number | null = null
-    
+
     if (renewal.dueDate) {
       isOverdue = renewal.dueDate < now
       daysUntilDue = Math.ceil((renewal.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
@@ -110,7 +119,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       ...renewal,
       isOverdue,
       daysUntilDue,
-      priority: isOverdue ? 'OVERDUE' : (daysUntilDue !== null && daysUntilDue <= 7 ? 'SOON' : 'NORMAL')
+      computedPriority: isOverdue ? 'OVERDUE' : (daysUntilDue !== null && daysUntilDue <= 7 ? 'SOON' : 'NORMAL')
     }
 
     logAction('GET Vehicle Renewal Detail - Success', userId, { renewalId })
@@ -190,12 +199,21 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     logAction('PUT Vehicle Renewal', userId, { renewalId, type, title })
 
     try {
-      // Vérifier que le renouvellement existe et appartient à l'utilisateur
+      // Récupérer l'utilisateur pour son companyId
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true }
+      })
+
+      // Vérifier que le renouvellement existe et que l'utilisateur a accès au véhicule associé
       const existingRenewal = await prisma.vehicleRenewal.findFirst({
         where: {
           id: renewalId,
           vehicle: {
-            userId
+            OR: [
+              { userId },
+              ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+            ]
           }
         }
       })
@@ -313,12 +331,21 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     logAction('DELETE Vehicle Renewal', userId, { renewalId })
 
     try {
-      // Vérifier que le renouvellement existe et appartient à l'utilisateur
+      // Récupérer l'utilisateur pour son companyId
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true }
+      })
+
+      // Vérifier que le renouvellement existe et que l'utilisateur a accès au véhicule associé
       const existingRenewal = await prisma.vehicleRenewal.findFirst({
         where: {
           id: renewalId,
           vehicle: {
-            userId
+            OR: [
+              { userId },
+              ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+            ]
           }
         }
       })

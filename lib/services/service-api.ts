@@ -50,6 +50,7 @@ export interface ServiceEntry {
   assignedTo?: string
   watchers: number
   isWorkOrder: boolean
+  reasonForRepairCode?: string
   createdAt: string
   updatedAt: string;
   vehicle?: {
@@ -71,6 +72,8 @@ export interface ServiceEntry {
       name: string
       description: string
     }
+    cost?: number
+    notes?: string
   }>
   parts?: Array<{
     id: string
@@ -98,6 +101,7 @@ export interface ServiceTask {
   categoryCode?: string
   systemCode?: string
   assemblyCode?: string
+  reasonForRepairCode?: string
   createdAt: string
   updatedAt: string
   _count?: {
@@ -244,7 +248,8 @@ export interface CreateServiceEntryData {
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   assignedTo?: string
   isWorkOrder?: boolean
-  tasks?: string[]
+  reasonForRepairCode?: string
+  tasks?: string[] | Array<{ serviceTaskId: string; cost?: number; notes?: string }>
   parts?: Array<{
     partId: string
     quantity?: number
@@ -259,6 +264,7 @@ export interface CreateServiceTaskData {
   categoryCode?: string
   systemCode?: string
   assemblyCode?: string
+  reasonForRepairCode?: string
 }
 
 export interface CreatePartData {

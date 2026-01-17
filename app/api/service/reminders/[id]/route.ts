@@ -73,17 +73,26 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     logAction('GET Service Reminder Detail', userId, { reminderId })
 
-    // Vérifier que le rappel existe et appartient à l'utilisateur
+    // Récupérer l'utilisateur pour son companyId
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true }
+    })
+
+    // Vérifier que le rappel existe et que l'utilisateur a accès au véhicule associé
     const reminder = await prisma.serviceReminder.findFirst({
       where: {
         id: reminderId,
         vehicle: {
-          userId
+          OR: [
+            { userId },
+            ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+          ]
         }
       },
       include: {
         vehicle: {
-          select: { id: true, name: true, make: true, model: true, vin: true }
+          select: { id: true, name: true, make: true, model: true, vin: true, meterReading: true }
         },
         serviceTask: {
           select: { id: true, name: true, description: true }
@@ -103,17 +112,37 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const now = new Date()
     let isOverdue = false
     let daysUntilDue: number | null = null
-    
+
     if (reminder.nextDue) {
       isOverdue = reminder.nextDue < now
       daysUntilDue = Math.ceil((reminder.nextDue.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     }
 
+    // Logique de priorité
+    let priority = 'NORMAL'
+    if (isOverdue) {
+      priority = 'OVERDUE'
+    } else {
+      // Vérifier le seuil temporel
+      const timeThresh = (reminder as any).timeThreshold || 7
+      const isSoonDate = daysUntilDue !== null && daysUntilDue <= ((reminder as any).timeThresholdUnit === 'week(s)' ? timeThresh * 7 : timeThresh)
+
+      // Vérifier le seuil kilométrique
+      let isSoonMeter = false
+      if (reminder.nextDueMeter && (reminder as any).meterThreshold && reminder.vehicle?.meterReading) {
+        isSoonMeter = (reminder.nextDueMeter - reminder.vehicle.meterReading) <= (reminder as any).meterThreshold
+      }
+
+      if (isSoonDate || isSoonMeter) {
+        priority = 'SOON'
+      }
+    }
+
     const enrichedReminder = {
-      ...reminder,
+      ...(reminder as any),
       isOverdue,
       daysUntilDue,
-      priority: isOverdue ? 'OVERDUE' : (daysUntilDue !== null && daysUntilDue <= 7 ? 'SOON' : 'NORMAL')
+      priority
     }
 
     logAction('GET Service Reminder Detail - Success', userId, { reminderId })
@@ -188,18 +217,30 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       watchers,
       escalationDays,
       title,
-      description
+      description,
+      timeThreshold,
+      timeThresholdUnit,
+      meterThreshold
     } = body
 
     logAction('PUT Service Reminder', userId, { reminderId, task })
 
     try {
-      // Vérifier que le rappel existe et appartient à l'utilisateur
+      // Récupérer l'utilisateur pour son companyId
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true }
+      })
+
+      // Vérifier que le rappel existe et appartient à l'utilisateur ou à son entreprise
       const existingReminder = await prisma.serviceReminder.findFirst({
         where: {
           id: reminderId,
           vehicle: {
-            userId
+            OR: [
+              { userId },
+              ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+            ]
           }
         }
       })
@@ -216,7 +257,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       const updateData: any = {}
 
       if (task !== undefined) updateData.task = task
-      if (serviceTaskId !== undefined) updateData.serviceTaskId = serviceTaskId
+      if (serviceTaskId !== undefined) {
+        if (serviceTaskId) {
+          updateData.serviceTask = { connect: { id: serviceTaskId } }
+        } else {
+          updateData.serviceTask = { disconnect: true }
+        }
+      }
       if (type !== undefined) updateData.type = type
       if (intervalMonths !== undefined) updateData.intervalMonths = parseInt(intervalMonths) || null
       if (intervalMeter !== undefined) updateData.intervalMeter = parseFloat(intervalMeter) || null
@@ -225,6 +272,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       if (escalationDays !== undefined) updateData.escalationDays = parseInt(escalationDays) || null
       if (title !== undefined) updateData.title = title
       if (description !== undefined) updateData.description = description
+      if (timeThreshold !== undefined) updateData.timeThreshold = parseInt(timeThreshold) || null
+      if (timeThresholdUnit !== undefined) updateData.timeThresholdUnit = timeThresholdUnit || null
+      if (meterThreshold !== undefined) updateData.meterThreshold = parseFloat(meterThreshold) || null
 
       if (nextDue !== undefined) {
         updateData.nextDue = nextDue ? new Date(nextDue) : null
@@ -321,12 +371,21 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     logAction('DELETE Service Reminder', userId, { reminderId })
 
     try {
-      // Vérifier que le rappel existe et appartient à l'utilisateur
+      // Récupérer l'utilisateur pour son companyId
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true }
+      })
+
+      // Vérifier que le rappel existe et appartient à l'utilisateur ou à son entreprise
       const existingReminder = await prisma.serviceReminder.findFirst({
         where: {
           id: reminderId,
           vehicle: {
-            userId
+            OR: [
+              { userId },
+              ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+            ]
           }
         }
       })

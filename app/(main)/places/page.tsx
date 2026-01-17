@@ -73,12 +73,12 @@ export default function PlacesPage() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-gray-900" data-testid="places-title">Places</h1>
-          <button
+          {/* <button
             onClick={handleLearnMore}
             className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2"
           >
             Learn
-          </button>
+          </button> */}
         </div>
         <div className="flex gap-2">
           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
@@ -107,8 +107,8 @@ export default function PlacesPage() {
         <button
           onClick={() => toggleFilter('locationType')}
           className={`bg-white border px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2 ${selectedFilters.locationType
-              ? 'border-[#008751] bg-[#008751] text-white'
-              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            ? 'border-[#008751] bg-[#008751] text-white'
+            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
         >
           Location Entry Type <ChevronDown size={14} />
@@ -116,8 +116,8 @@ export default function PlacesPage() {
         <button
           onClick={() => toggleFilter('locationDate')}
           className={`bg-white border px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2 ${selectedFilters.locationDate
-              ? 'border-[#008751] bg-[#008751] text-white'
-              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            ? 'border-[#008751] bg-[#008751] text-white'
+            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
         >
           Location Entry Date <ChevronDown size={14} />
@@ -125,8 +125,8 @@ export default function PlacesPage() {
         <button
           onClick={() => toggleFilter('geofenceRadius')}
           className={`bg-white border px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2 ${selectedFilters.geofenceRadius
-              ? 'border-[#008751] bg-[#008751] text-white'
-              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            ? 'border-[#008751] bg-[#008751] text-white'
+            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
         >
           Place Geofence Radius <ChevronDown size={14} />
@@ -218,11 +218,11 @@ export default function PlacesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${place.placeType === 'FUEL_STATION' ? 'bg-green-100 text-green-800' :
-                        place.placeType === 'SERVICE_CENTER' ? 'bg-blue-100 text-blue-800' :
-                          place.placeType === 'OFFICE' ? 'bg-purple-100 text-purple-800' :
-                            place.placeType === 'CLIENT_SITE' ? 'bg-orange-100 text-orange-800' :
-                              place.placeType === 'HOME' ? 'bg-pink-100 text-pink-800' :
-                                'bg-gray-100 text-gray-800'
+                      place.placeType === 'SERVICE_CENTER' ? 'bg-blue-100 text-blue-800' :
+                        place.placeType === 'OFFICE' ? 'bg-purple-100 text-purple-800' :
+                          place.placeType === 'CLIENT_SITE' ? 'bg-orange-100 text-orange-800' :
+                            place.placeType === 'HOME' ? 'bg-pink-100 text-pink-800' :
+                              'bg-gray-100 text-gray-800'
                       }`}>
                       {place.placeType.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
                     </span>

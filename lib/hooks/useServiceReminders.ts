@@ -8,6 +8,8 @@ export interface UseServiceRemindersOptions {
   vehicleId?: string
   contactId?: string
   overdue?: boolean
+  dueSoon?: boolean
+  search?: string
 }
 
 export interface UseServiceRemindersReturn {
@@ -38,6 +40,9 @@ export interface UseServiceRemindersReturn {
     description?: string
     watchers?: string[]
     escalationDays?: number
+    timeThreshold?: number
+    timeThresholdUnit?: string
+    meterThreshold?: number
   }) => Promise<ServiceReminder>
   updateReminder: (id: string, data: {
     task?: string
@@ -50,6 +55,9 @@ export interface UseServiceRemindersReturn {
     snoozedUntil?: string
     watchers?: string[]
     escalationDays?: number
+    timeThreshold?: number
+    timeThresholdUnit?: string
+    meterThreshold?: number
     title?: string
     description?: string
   }) => Promise<ServiceReminder>
@@ -212,7 +220,7 @@ export function useServiceReminders(options: UseServiceRemindersOptions = {}): U
   // Charger les rappels au montage du composant et quand les options changent
   useEffect(() => {
     fetchReminders()
-  }, [options.page, options.limit, options.status, options.vehicleId, options.contactId, options.overdue])
+  }, [options.page, options.limit, options.status, options.vehicleId, options.contactId, options.overdue, options.dueSoon, options.search])
 
   return {
     reminders,

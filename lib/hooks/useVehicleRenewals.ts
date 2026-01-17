@@ -9,6 +9,7 @@ export interface UseVehicleRenewalsOptions {
   vehicleId?: string
   overdue?: boolean
   dueSoon?: boolean
+  search?: string
 }
 
 export interface UseVehicleRenewalsReturn {
@@ -197,7 +198,7 @@ export function useVehicleRenewals(options: UseVehicleRenewalsOptions = {}): Use
   // Charger les renouvellements au montage du composant et quand les options changent
   useEffect(() => {
     fetchRenewals()
-  }, [options.page, options.limit, options.status, options.type, options.vehicleId, options.overdue, options.dueSoon])
+  }, [options.page, options.limit, options.status, options.type, options.vehicleId, options.overdue, options.dueSoon, options.search])
 
   return {
     renewals,

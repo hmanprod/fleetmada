@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import issuesAPI, { Issue, IssueFilters, IssuesResponse } from '@/lib/services/issues-api'
 
 interface UseIssuesReturn {
@@ -30,16 +30,22 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     limit: 20,
     ...initialFilters
   })
+  const lastFiltersRef = useRef<IssueFilters>(filters)
 
   const fetchIssues = useCallback(async (newFilters: IssueFilters = {}) => {
     try {
       setLoading(true)
       setError(null)
 
-      const currentFilters = { ...filters, ...newFilters }
-      setFilters(currentFilters)
+      const updatedFilters = { ...lastFiltersRef.current, ...newFilters }
 
-      const response = await issuesAPI.getIssues(currentFilters)
+      // Only update state if filters actually changed to avoid unnecessary re-renders
+      if (JSON.stringify(updatedFilters) !== JSON.stringify(lastFiltersRef.current)) {
+        setFilters(updatedFilters)
+        lastFiltersRef.current = updatedFilters
+      }
+
+      const response = await issuesAPI.getIssues(updatedFilters)
       setIssues(response.issues)
       setPagination(response.pagination)
     } catch (err) {
@@ -49,7 +55,7 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, []) // Stable fetchIssues
 
   const createIssue = useCallback(async (data: any): Promise<Issue> => {
     try {
@@ -160,6 +166,11 @@ export function useIssues(initialFilters: IssueFilters = {}): UseIssuesReturn {
   useEffect(() => {
     setFilters(prev => ({ ...prev, ...initialFilters }));
   }, [initialFilters.status, initialFilters.assignedTo, initialFilters.vehicleId, initialFilters.priority, initialFilters.groupId, initialFilters.labels]);
+
+  // Fetch whenever filters change
+  useEffect(() => {
+    fetchIssues();
+  }, [filters, fetchIssues]);
 
   return {
     issues,

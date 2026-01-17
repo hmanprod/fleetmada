@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+import { checkVehicleAccess } from '@/lib/api-utils'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -86,11 +87,19 @@ export async function GET(request: NextRequest) {
     const vehicleId = searchParams.get('vehicleId')
     const contactId = searchParams.get('contactId')
     const overdue = searchParams.get('overdue') === 'true'
+    const dueSoon = searchParams.get('dueSoon') === 'true'
+    const search = searchParams.get('search')
 
     const skip = (page - 1) * limit
 
     logAction('GET Service Reminders', userId, {
-      page, limit, status, vehicleId, contactId, overdue
+      page, limit, status, vehicleId, contactId, overdue, dueSoon, search
+    })
+
+    // Récupérer l'utilisateur pour son companyId
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true }
     })
 
     const where: any = {}
@@ -106,7 +115,10 @@ export async function GET(request: NextRequest) {
       }
     } else {
       where.vehicle = {
-        userId
+        OR: [
+          { userId },
+          ...(currentUser?.companyId ? [{ user: { companyId: currentUser.companyId } }] : [])
+        ]
       }
     }
 
@@ -121,14 +133,35 @@ export async function GET(request: NextRequest) {
       where.status = { in: ['ACTIVE', 'OVERDUE', 'DISMISSED'] }
     }
 
-    if (vehicleId) {
-      where.vehicleId = vehicleId
+    if (search) {
+      where.OR = [
+        { task: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { vehicle: { name: { contains: search, mode: 'insensitive' } } },
+        { vehicle: { make: { contains: search, mode: 'insensitive' } } },
+        { vehicle: { model: { contains: search, mode: 'insensitive' } } }
+      ]
     }
 
     if (overdue) {
       const now = new Date()
       where.nextDue = { lt: now }
       where.status = { in: ['ACTIVE', 'OVERDUE'] }
+    }
+
+    if (dueSoon) {
+      const now = new Date()
+      // On récupère tout et on filtre après ou on utilise une approximation?
+      // Pour faire propre en Prisma on peut pas facilement comparer avec differentes thresholds par ligne
+      // Mais on peut faire une approximation (ex: 30 jours) et affiner après, ou juste filtrer ici avec une valeur par defaut
+      const soonThreshold = new Date()
+      soonThreshold.setDate(soonThreshold.getDate() + 30) // Prend large
+
+      where.nextDue = {
+        gt: now,
+        lte: soonThreshold
+      }
+      where.status = 'ACTIVE'
     }
 
     const [reminders, total] = await Promise.all([
@@ -139,7 +172,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         include: {
           vehicle: {
-            select: { id: true, name: true, make: true, model: true }
+            select: { id: true, name: true, make: true, model: true, meterReading: true }
           }
         }
       }),
@@ -159,8 +192,23 @@ export async function GET(request: NextRequest) {
 
       // Logique de priorité
       let priority = 'NORMAL'
-      if (isOverdue) priority = 'OVERDUE'
-      else if (daysUntilDue !== null && daysUntilDue <= 7) priority = 'SOON'
+      if (isOverdue) {
+        priority = 'OVERDUE'
+      } else {
+        // Vérifier le seuil temporel
+        const timeThresh = (reminder as any).timeThreshold || 7
+        const isSoonDate = daysUntilDue !== null && daysUntilDue <= ((reminder as any).timeThresholdUnit === 'week(s)' ? timeThresh * 7 : timeThresh)
+
+        // Vérifier le seuil kilométrique
+        let isSoonMeter = false
+        if (reminder.nextDueMeter && (reminder as any).meterThreshold && reminder.vehicle?.meterReading) {
+          isSoonMeter = (reminder.nextDueMeter - reminder.vehicle.meterReading) <= (reminder as any).meterThreshold
+        }
+
+        if (isSoonDate || isSoonMeter) {
+          priority = 'SOON'
+        }
+      }
 
       return {
         ...reminder,
@@ -258,7 +306,10 @@ export async function POST(request: NextRequest) {
       intervalMeter,
       type = 'date',
       lastServiceDate,
-      lastServiceMeter
+      lastServiceMeter,
+      timeThreshold,
+      timeThresholdUnit,
+      meterThreshold
     } = body
 
     logAction('POST Service Reminder', userId, {
@@ -288,10 +339,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Vérifier que le véhicule appartient à l'utilisateur
-      const vehicle = await prisma.vehicle.findFirst({
-        where: { id: vehicleId, userId }
-      })
+      // Vérifier que l'utilisateur a accès au véhicule (propriétaire ou même entreprise)
+      const vehicle = await checkVehicleAccess(vehicleId, userId)
 
       if (!vehicle) {
         logAction('POST Service Reminder - Vehicle not found or access denied', userId, {
@@ -305,14 +354,17 @@ export async function POST(request: NextRequest) {
 
       // Création du rappel
       const reminderData: any = {
-        vehicleId,
+        vehicle: { connect: { id: vehicleId } },
         task,
-        serviceTaskId,
+        serviceTask: serviceTaskId ? { connect: { id: serviceTaskId } } : undefined,
         type,
         status: 'ACTIVE',
         intervalMonths: intervalMonths ? parseInt(intervalMonths) : null,
         intervalMeter: intervalMeter ? parseFloat(intervalMeter) : null,
-        lastServiceMeter: lastServiceMeter ? parseFloat(lastServiceMeter) : null
+        lastServiceMeter: lastServiceMeter ? parseFloat(lastServiceMeter) : null,
+        timeThreshold: timeThreshold ? parseInt(timeThreshold) : null,
+        timeThresholdUnit: timeThresholdUnit || null,
+        meterThreshold: meterThreshold ? parseFloat(meterThreshold) : null
       }
 
       if (lastServiceDate) {

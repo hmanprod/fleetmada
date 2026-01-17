@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+import { checkVehicleAccess } from '@/lib/api-utils'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -248,10 +249,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Vérifier que le véhicule appartient à l'utilisateur
-      const vehicle = await prisma.vehicle.findFirst({
-        where: { id: vehicleId, userId }
-      })
+      // Vérifier que le véhicule appartient à l'utilisateur ou à son entreprise
+      const vehicle = await checkVehicleAccess(vehicleId, userId)
 
       if (!vehicle) {
         logAction('POST Service Entry - Vehicle not found or access denied', userId, {
@@ -272,15 +271,23 @@ export async function POST(request: NextRequest) {
           status,
           totalCost,
           meter,
-          vendor,
+          vendorId: vendor,
           notes,
           priority,
           assignedToContactId,
           isWorkOrder,
           tasks: {
-            create: tasks.map((taskId: string) => ({
-              serviceTaskId: taskId
-            }))
+            create: tasks.map((task: any) => {
+              // Support both simple ID strings and detailed objects
+              if (typeof task === 'string') {
+                return { serviceTaskId: task }
+              }
+              return {
+                serviceTaskId: task.serviceTaskId,
+                cost: task.cost,
+                notes: task.notes
+              }
+            })
           },
           parts: {
             create: serviceParts.map((part: any) => ({

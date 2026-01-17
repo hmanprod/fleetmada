@@ -91,9 +91,9 @@ export default function ServiceProgramsPage() {
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
                     <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Service Programs</h1>
-                    <button className="text-[#008751] hover:underline text-sm font-medium flex items-center gap-1">
+                    {/* <button className="text-[#008751] hover:underline text-sm font-medium flex items-center gap-1">
                         Learn More <span className="transform -rotate-45">➜</span>
-                    </button>
+                    </button> */}
                 </div>
                 <button
                     onClick={handleAddProgram}

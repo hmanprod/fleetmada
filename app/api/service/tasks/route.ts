@@ -210,7 +210,8 @@ export async function POST(request: NextRequest) {
       description,
       categoryCode,
       systemCode,
-      assemblyCode
+      assemblyCode,
+      reasonForRepairCode
     } = body
 
     logAction('POST Service Task', userId, {
@@ -252,7 +253,8 @@ export async function POST(request: NextRequest) {
           description,
           categoryCode,
           systemCode,
-          assemblyCode
+          assemblyCode,
+          reasonForRepairCode
         }
       })
 

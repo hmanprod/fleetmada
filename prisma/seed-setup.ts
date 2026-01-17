@@ -163,6 +163,82 @@ async function main() {
         }
     }
 
+    // Seed Service Tasks
+    console.log('🛠️ Seeding Service Tasks...');
+    const serviceTasks = [
+        // 🛑 Freinage / Sécurité
+        { name: 'Remplacement du module de contrôle ABS', categoryCode: '1', systemCode: '013', assemblyCode: '001', reasonForRepairCode: '02' },
+        { name: 'Remplacement de la cartouche déshiccante du sécheur d’air', categoryCode: '1', systemCode: '013', assemblyCode: '002', reasonForRepairCode: '01' },
+        { name: 'Remplacement de l’airbag – porte conducteur', categoryCode: '1', systemCode: '014', assemblyCode: '001', reasonForRepairCode: '02' },
+        { name: 'Remplacement de l’airbag – côté conducteur avant', categoryCode: '1', systemCode: '014', assemblyCode: '002', reasonForRepairCode: '02' },
+        { name: 'Remplacement de l’airbag – porte passager', categoryCode: '1', systemCode: '014', assemblyCode: '003', reasonForRepairCode: '02' },
+        { name: 'Remplacement de l’airbag – côté passager avant', categoryCode: '1', systemCode: '014', assemblyCode: '004', reasonForRepairCode: '02' },
+        { name: 'Remplacement de l’airbag – porte de cabine', categoryCode: '1', systemCode: '014', assemblyCode: '005', reasonForRepairCode: '02' },
+        { name: 'Remplacement de l’airbag – latéral / rideau', categoryCode: '1', systemCode: '014', assemblyCode: '006', reasonForRepairCode: '02' },
+        { name: 'Inspection du système d’airbags', categoryCode: '1', systemCode: '014', assemblyCode: '007', reasonForRepairCode: '01' },
+
+        // ❄️ Climatisation / Chauffage
+        { name: 'Remplacement de l’accumulateur de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '001', reasonForRepairCode: '02' },
+        { name: 'Remplacement du compresseur de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '002', reasonForRepairCode: '02' },
+        { name: 'Remplacement du condenseur de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '003', reasonForRepairCode: '02' },
+        { name: 'Remplacement de l’évaporateur de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '004', reasonForRepairCode: '02' },
+        { name: 'Remplacement de la vanne d’expansion de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '005', reasonForRepairCode: '02' },
+        { name: 'Remplacement du réservoir déshydrateur (receiver dryer)', categoryCode: '2', systemCode: '001', assemblyCode: '006', reasonForRepairCode: '02' },
+        { name: 'Vidange, mise sous vide et recharge du système de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '007', reasonForRepairCode: '01' },
+        { name: 'Test du système de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '008', reasonForRepairCode: '01' },
+        { name: 'Inspection du condenseur de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '009', reasonForRepairCode: '01' },
+        { name: 'Inspection du système de climatisation', categoryCode: '2', systemCode: '001', assemblyCode: '010', reasonForRepairCode: '01' },
+
+        // ⚙️ Moteur / Admission
+        { name: 'Inspection de la pédale d’accélérateur', categoryCode: '3', systemCode: '041', assemblyCode: '001', reasonForRepairCode: '01' },
+        { name: 'Nettoyage de la grille anti-debris du conduit d’admission d’air', categoryCode: '3', systemCode: '042', assemblyCode: '001', reasonForRepairCode: '01' },
+        { name: 'Inspection du manomètre de restriction du filtre à air', categoryCode: '3', systemCode: '042', assemblyCode: '002', reasonForRepairCode: '01' },
+
+        // 🛠️ Suspension
+        { name: 'Inspection des rotules de suspension pneumatique', categoryCode: '4', systemCode: '016', assemblyCode: '001', reasonForRepairCode: '01' },
+        { name: 'Remplacement des rotules de suspension pneumatique', categoryCode: '4', systemCode: '016', assemblyCode: '002', reasonForRepairCode: '02' },
+        { name: 'Suspension pneumatique – divers travaux', categoryCode: '4', systemCode: '016', assemblyCode: '003', reasonForRepairCode: '02' },
+        { name: 'Inspection du système de suspension pneumatique', categoryCode: '4', systemCode: '016', assemblyCode: '004', reasonForRepairCode: '01' },
+        { name: 'Lubrification du système de suspension pneumatique', categoryCode: '4', systemCode: '016', assemblyCode: '005', reasonForRepairCode: '01' },
+        { name: 'Serrage au couple du système de suspension pneumatique', categoryCode: '4', systemCode: '016', assemblyCode: '006', reasonForRepairCode: '01' },
+
+        // ⚡ Électricité / Démarrage
+        { name: 'Remplacement de l’alternateur', categoryCode: '5', systemCode: '032', assemblyCode: '001', reasonForRepairCode: '02' },
+        { name: 'Test de l’alternateur', categoryCode: '5', systemCode: '032', assemblyCode: '002', reasonForRepairCode: '01' },
+        { name: 'Inspection de la batterie', categoryCode: '5', systemCode: '031', assemblyCode: '001', reasonForRepairCode: '01' },
+        { name: 'Remplacement de la batterie', categoryCode: '5', systemCode: '031', assemblyCode: '002', reasonForRepairCode: '02' },
+        { name: 'Entretien de la batterie', categoryCode: '5', systemCode: '031', assemblyCode: '003', reasonForRepairCode: '01' },
+        { name: 'Test de la batterie', categoryCode: '5', systemCode: '031', assemblyCode: '004', reasonForRepairCode: '01' },
+        { name: 'Inspection des câbles de batterie', categoryCode: '5', systemCode: '031', assemblyCode: '005', reasonForRepairCode: '01' },
+        { name: 'Inspection des câbles de batterie (montage en série)', categoryCode: '5', systemCode: '031', assemblyCode: '006', reasonForRepairCode: '01' },
+        { name: 'Inspection du câble batterie–masse', categoryCode: '5', systemCode: '043', assemblyCode: '001', reasonForRepairCode: '01' },
+        { name: 'Inspection du câble batterie–boîtier de jonction', categoryCode: '5', systemCode: '043', assemblyCode: '002', reasonForRepairCode: '01' },
+        { name: 'Inspection du câble batterie–démarreur', categoryCode: '5', systemCode: '043', assemblyCode: '003', reasonForRepairCode: '01' },
+
+        // 🚗 Transmission automatique
+        { name: 'Remplacement de la boîte de vitesses automatique complète', categoryCode: '6', systemCode: '026', assemblyCode: '001', reasonForRepairCode: '02' },
+        { name: 'Remplacement du filtre de transmission automatique', categoryCode: '6', systemCode: '026', assemblyCode: '002', reasonForRepairCode: '01' },
+        { name: 'Inspection du niveau d’huile de transmission automatique', categoryCode: '6', systemCode: '026', assemblyCode: '003', reasonForRepairCode: '01' },
+        { name: 'Inspection des fuites de transmission automatique', categoryCode: '6', systemCode: '026', assemblyCode: '004', reasonForRepairCode: '01' },
+        { name: 'Transmission automatique – divers travaux', categoryCode: '6', systemCode: '026', assemblyCode: '005', reasonForRepairCode: '02' },
+        { name: 'Inspection du solénoïde de verrouillage de levier (Brake Shift Interlock)', categoryCode: '6', systemCode: '026', assemblyCode: '006', reasonForRepairCode: '01' },
+        { name: 'Remplacement du filtre AWD (transmission intégrale)', categoryCode: '6', systemCode: '027', assemblyCode: '001', reasonForRepairCode: '01' },
+
+        // 🚘 Transmission / Essieux
+        { name: 'Remplacement de l’arbre de transmission (cardan)', categoryCode: '7', systemCode: '022', assemblyCode: '001', reasonForRepairCode: '02' },
+
+        // 🧰 Divers / Administration
+        { name: 'Accessoires / aménagements spécifiques – divers', categoryCode: '8', systemCode: '050', assemblyCode: '001', reasonForRepairCode: '03' },
+        { name: 'Frais administratifs / divers', categoryCode: '8', systemCode: '091', assemblyCode: '001', reasonForRepairCode: '03' },
+        { name: 'Pose d’autocollants de carrosserie', categoryCode: '8', systemCode: '050', assemblyCode: '002', reasonForRepairCode: '03' },
+    ];
+
+    for (const task of serviceTasks) {
+        await prisma.serviceTask.create({
+            data: task
+        });
+    }
+
     console.log('✅ Setup Seeding completed successfully!');
 }
 
