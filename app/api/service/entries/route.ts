@@ -230,7 +230,9 @@ export async function POST(request: NextRequest) {
       assignedToContactId,
       isWorkOrder = false,
       tasks = [],
-      parts: serviceParts = []
+      parts: serviceParts = [],
+      resolvedIssueIds = [],
+      documents = []
     } = body
 
     logAction('POST Service Entry', userId, {
@@ -322,6 +324,37 @@ export async function POST(request: NextRequest) {
           }
         }
       })
+
+      // Resolve linked issues
+      if (resolvedIssueIds && resolvedIssueIds.length > 0) {
+        await prisma.issue.updateMany({
+          where: {
+            id: {
+              in: resolvedIssueIds
+            }
+          },
+          data: {
+            status: 'RESOLVED',
+            // If there's a relation field like resolvedByServiceEntryId, update it here.
+            // Assuming simplified requirement: just update status.
+          }
+        })
+      }
+
+      // Link uploaded documents
+      if (documents && documents.length > 0) {
+        await prisma.document.updateMany({
+          where: {
+            id: {
+              in: documents
+            }
+          },
+          data: {
+            attachedTo: 'service_entry',
+            attachedId: serviceEntry.id
+          }
+        })
+      }
 
       logAction('POST Service Entry - Success', userId, {
         userId, serviceEntryId: serviceEntry.id

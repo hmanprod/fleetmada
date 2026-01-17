@@ -10,7 +10,7 @@ export interface Photo {
   height?: number;
   userId: string;
   userName: string;
-  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
+  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense' | 'serviceEntry';
   entityId: string;
   locationType?: 'interior' | 'exterior' | 'engine' | 'dashboard' | 'other';
   description?: string;
@@ -22,7 +22,7 @@ export interface Photo {
 
 export interface PhotoUploadData {
   file: File;
-  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
+  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense' | 'serviceEntry';
   entityId: string;
   locationType?: 'interior' | 'exterior' | 'engine' | 'dashboard' | 'other';
   description?: string;
@@ -31,7 +31,7 @@ export interface PhotoUploadData {
 }
 
 export interface PhotoFilters {
-  entityType?: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
+  entityType?: 'vehicle' | 'service' | 'issue' | 'part' | 'expense' | 'serviceEntry';
   entityId?: string;
   attachedId?: string;
   userId?: string;

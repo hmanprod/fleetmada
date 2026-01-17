@@ -5,7 +5,7 @@ export interface Comment {
   userId: string;
   userName: string;
   userAvatar?: string;
-  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
+  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense' | 'serviceEntry';
   entityId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -27,7 +27,7 @@ export interface CommentAttachment {
 // Données pour créer un commentaire
 export interface CreateCommentData {
   message: string;
-  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
+  entityType: 'vehicle' | 'service' | 'issue' | 'part' | 'expense' | 'serviceEntry';
   entityId: string;
   parentId?: string;
   attachments?: File[];
@@ -48,7 +48,7 @@ export interface CommentsApiResponse {
 
 // Filtres pour la recherche de commentaires
 export interface CommentFilters {
-  entityType?: 'vehicle' | 'service' | 'issue' | 'part' | 'expense';
+  entityType?: 'vehicle' | 'service' | 'issue' | 'part' | 'expense' | 'serviceEntry';
   entityId?: string;
   userId?: string;
   search?: string;

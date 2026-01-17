@@ -1,11 +1,113 @@
 'use client';
 
-import React from 'react';
-import { ArrowLeft, Bell, Edit, MoreHorizontal, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Bell, Edit, MoreHorizontal, Sparkles, Calendar, Clock, Gauge, FileText, User, Store, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useServiceEntry } from '@/lib/hooks/useServiceEntry';
+import { serviceAPI, ServiceEntryCommentData } from '@/lib/services/service-api';
+import { EntitySidebar } from '@/components/EntitySidebar';
+import { useServiceEntryComments } from '@/lib/hooks/useServiceEntryComments';
+import { useServiceEntryPhotos } from '@/lib/hooks/useServiceEntryPhotos';
+import { useDocuments } from '@/lib/hooks/useDocuments';
+import { useUploadDocuments } from '@/lib/hooks/useUploadDocuments';
 
 export default function ServiceEntryDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { entry, loading, error } = useServiceEntry(params.id);
+    const [showMenu, setShowMenu] = useState(false);
+
+    // Sidebar State
+    const [activePanel, setActivePanel] = useState<'comments' | 'photos' | 'documents' | null>('comments');
+
+    // Comments Hook
+    const {
+        comments,
+        loading: commentsLoading,
+        addComment,
+        fetchComments
+    } = useServiceEntryComments(params.id);
+
+    // Photos Hook
+    const {
+        photos,
+        loading: photosLoading,
+        error: photosError,
+        addPhoto: addPhotoHandler,
+        deletePhoto: deletePhotoHandler,
+        refreshPhotos
+    } = useServiceEntryPhotos(params.id);
+
+    // Documents Hook
+    const {
+        documents,
+        loading: documentsLoading,
+        error: documentsError,
+        refreshDocuments,
+    } = useDocuments({
+        attachedTo: 'serviceEntry',
+        attachedId: params.id,
+        limit: 50
+    });
+
+    const { uploadSingleDocument } = useUploadDocuments();
+
+    // Handlers for Sidebar
+    const handleAddCommentWrapper = async (message: string, attachments?: File[]) => {
+        if (!entry) return;
+        try {
+            const commentData: ServiceEntryCommentData = {
+                author: 'CurrentUser',
+                content: message
+            };
+            await addComment(params.id, commentData);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleAddPhotoWrapper = async (files: FileList) => {
+        await addPhotoHandler(files);
+    };
+
+    const handleAddDocumentWrapper = async (files: FileList) => {
+        for (let i = 0; i < files.length; i++) {
+            await uploadSingleDocument(files[i], {
+                attachedTo: 'serviceEntry',
+                attachedId: params.id,
+                fileName: files[i].name,
+                mimeType: files[i].type
+            });
+        }
+        refreshDocuments();
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showMenu && !(event.target as Element).closest('.more-menu-container')) {
+                setShowMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showMenu]);
+
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this service entry? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await serviceAPI.deleteServiceEntry(params.id);
+            if (response.success) {
+                router.push('/service/history');
+            } else {
+                alert('Failed to delete service entry: ' + (response.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting entry:', error);
+            alert('An error occurred while deleting the entry');
+        }
+    };
 
     const handleBack = () => {
         router.push('/service/history');
@@ -15,152 +117,164 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
         router.push(`/service/history/${params.id}/edit`);
     };
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008751]"></div>
+            </div>
+        );
+    }
+
+    if (error || !entry) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+                <div className="text-red-500 font-medium mb-2">Error loading service entry</div>
+                <div className="text-gray-500 text-sm mb-4">{error || 'Service entry not found'}</div>
+                <button onClick={handleBack} className="text-[#008751] hover:underline">
+                    Back to History
+                </button>
+            </div>
+        );
+    }
+
+    const formatDate = (dateString: string) => {
+        try {
+            return new Date(dateString).toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return dateString;
+        }
+    };
+
+    // Calculate totals from tasks since we don't have separate parts/labor breakdown in the API response structure typically used here yet
+    // Assuming task.cost is the total line item cost
+    const tasksTotal = entry.tasks?.reduce((sum, task) => sum + (task.cost || 0), 0) || 0;
+
+    // Check if we have parts cost (if using separate parts model in future)
+    const partsTotal = entry.parts?.reduce((sum, part) => sum + (part.totalCost || 0), 0) || 0;
+
+    const grandTotal = entry.totalCost || (tasksTotal + partsTotal);
+
     return (
         <div className="bg-gray-50 min-h-screen pb-12">
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-1">
                     <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium mr-2">
-                        Service Entries <ArrowLeft size={16} className="rotate-180" />
+                        <ArrowLeft size={16} /> Journal d'Entretien
                     </button>
                 </div>
 
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
-                        <span className="flex items-center gap-1"><Bell size={14} /> Watch</span>
-                    </button>
-                    <button className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded text-sm shadow-sm">
-                        ...
-                    </button>
+                    <div className="relative more-menu-container">
+                        <button
+                            onClick={() => setShowMenu(!showMenu)}
+                            className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded text-sm shadow-sm flex items-center justify-center min-w-[36px]"
+                        >
+                            <MoreHorizontal size={14} />
+                        </button>
+
+                        {showMenu && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1">
+                                <button
+                                    onClick={handleDelete}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                    <Trash2 size={14} />
+                                    Supprimer
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <button
                         onClick={handleEdit}
                         className="px-3 py-1.5 bg-gray-50 border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium rounded text-sm shadow-sm flex items-center gap-2"
                     >
-                        <Edit size={14} /> Edit
+                        <Edit size={14} /> Modifier
                     </button>
                 </div>
             </div>
 
-            <div className="px-6 py-6 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="max-w-[1600px] mx-auto py-6 px-6 flex gap-6 items-start">
+                {/* Main Content */}
+                <div className="flex-1 space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Service Entry #43324076</h1>
+                        <div className="flex items-center justify-between mb-6">
+                            <h1 className="text-3xl font-bold text-gray-900">Entrée de Service #{entry.id.slice(-8)}</h1>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${entry.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                entry.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-gray-100 text-gray-800'
+                                }`}>
+                                {entry.status}
+                            </span>
+                        </div>
 
                         {/* Details Card */}
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-6">Details</h2>
-                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">ALL FIELDS</h3>
+                            <h2 className="text-lg font-bold text-gray-900 mb-6">Détails</h2>
+                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">TOUS LES CHAMPS</h3>
 
                             <div className="space-y-4">
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Vehicle</div>
+                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
+                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Gauge size={14} /> Véhicule</div>
                                     <div className="flex items-center gap-2">
-                                        <img src="https://source.unsplash.com/random/30x30/?truck" className="w-6 h-6 rounded object-cover" alt="" />
-                                        <span className="text-sm font-medium text-[#008751] hover:underline cursor-pointer">MV110TRNS</span>
-                                        <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Sample</span>
+                                        {entry.vehicle ? (
+                                            <>
+                                                <span className="text-sm font-medium text-[#008751] hover:underline cursor-pointer">{entry.vehicle.name}</span>
+                                                <span className="text-xs text-gray-500">({entry.vehicle.licensePlate || 'Pas de plaque'})</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-sm text-gray-400">Véhicule inconnu</span>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Repair Priority Class</div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <span className="text-sm text-gray-900">Scheduled</span>
+                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
+                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Calendar size={14} /> Date</div>
+                                    <div className="text-sm text-gray-900">{formatDate(entry.date)}</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
+                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Gauge size={14} /> Compteur</div>
+                                    <div className="text-sm text-gray-900">{entry.meter ? `${entry.meter.toLocaleString()} km` : '—'}</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
+                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Store size={14} /> Fournisseur</div>
+                                    <div className="text-sm text-gray-900">
+                                        {entry.vendorName || (typeof entry.vendor === 'object' ? entry.vendor?.name : entry.vendor) || '—'}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Start Date</div>
-                                    <div className="text-sm text-gray-900">12/19/2025 4:18pm</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Completion Date</div>
-                                    <div className="text-sm text-gray-900">12/21/2025 11:18pm</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Duration</div>
-                                    <div className="text-sm text-gray-900">2 days 7 hrs 0 mins</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Odometer</div>
-                                    <div className="text-sm text-gray-900">19 mi</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Work Order</div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <span className="text-sm text-[#008751] hover:underline cursor-pointer">#24</span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Created By</div>
-                                    <div className="text-sm text-gray-900">—</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Vendor</div>
-                                    <div className="text-sm text-gray-900">—</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Reference</div>
-                                    <div className="text-sm text-gray-900">—</div>
-                                </div>
-
-                                <div className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                                    <div className="text-sm text-gray-500">Notes</div>
-                                    <div className="text-sm text-gray-900">—</div>
+                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
+                                    <div className="text-sm text-gray-500 flex items-center gap-2"><FileText size={14} /> Notes</div>
+                                    <div className="text-sm text-gray-900 whitespace-pre-wrap">{entry.notes || '—'}</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Resolved Issues */}
-                    <div>
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Resolved Issues</h2>
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 flex flex-col items-center justify-center text-center">
-                            <div className="w-12 h-12 mb-3 text-green-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-sm text-gray-500 max-w-xs">No issues to show. If this service entry resolves any issues, you can add them by editing the service entry.</p>
-                        </div>
-                    </div>
-
-                    {/* Smart Assessments Banner */}
-                    <div className="bg-gradient-to-r from-purple-50 to-white rounded-lg border border-purple-100 p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Sparkles size={16} className="text-purple-600" />
-                            <span className="font-bold text-gray-900">Smart Assessments</span>
-                            <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">Early Access</span>
-                        </div>
-                        <button className="text-sm text-gray-600 flex items-center gap-1">
-                            <span className="text-gray-400">🔒</span> Ask your account administrator to enable
-                        </button>
                     </div>
 
                     {/* Line Items */}
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Line Items</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Lignes d'Articles</h2>
 
                         <div className="grid grid-cols-3 gap-4 mb-6">
                             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <div className="text-xs font-bold text-gray-500 uppercase">Labor</div>
-                                <div className="text-xl font-bold text-gray-900 mt-1">MGA 755</div>
+                                <div className="text-xs font-bold text-gray-500 uppercase">Coût des tâches</div>
+                                <div className="text-xl font-bold text-gray-900 mt-1">€{tasksTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                             </div>
                             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <div className="text-xs font-bold text-gray-500 uppercase">Parts</div>
-                                <div className="text-xl font-bold text-gray-900 mt-1">MGA 581</div>
+                                <div className="text-xs font-bold text-gray-500 uppercase">Coût des pièces</div>
+                                <div className="text-xl font-bold text-gray-900 mt-1">€{partsTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                             </div>
                             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                                 <div className="text-xs font-bold text-gray-500 uppercase">Total</div>
-                                <div className="text-xl font-bold text-gray-900 mt-1">MGA 1,336</div>
+                                <div className="text-xl font-bold text-[#008751] mt-1">€{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                             </div>
                         </div>
 
@@ -168,99 +282,94 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Item</th>
-                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Labor</th>
-                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Parts</th>
-                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Subtotal</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Article</th>
+                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Notes</th>
+                                        <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Coût</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {/* Item 1 */}
-                                    <tr>
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-gray-900 text-sm mb-2">Engine Oil & Filter Replacement <span className="text-gray-400 font-normal">🗑</span></div>
-                                            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-xs">
-                                                <div className="text-gray-500">Reason for Repair</div>
-                                                <div className="text-gray-900">Consumption, Oil</div>
-                                                <div className="text-gray-500">Category / System / Assembly</div>
-                                                <div className="text-gray-900">Engine / Motor Systems / Power Plant / Filter Assembly - Oil</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 align-top">MGA 373</td>
-                                        <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 align-top">MGA 581</td>
-                                        <td className="px-6 py-4 text-right text-sm font-bold text-gray-900 align-top">MGA 954</td>
-                                    </tr>
-
-                                    {/* Item 2 */}
-                                    <tr>
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-gray-900 text-sm mb-2">Tire Rotation <span className="text-gray-400 font-normal">🗑</span></div>
-                                            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-xs">
-                                                <div className="text-gray-500">Reason for Repair</div>
-                                                <div className="text-gray-900">Routine</div>
-                                                <div className="text-gray-500">Category / System / Assembly</div>
-                                                <div className="text-gray-900">Chassis / Tires, Tubes, Liners & V... / Tire - Pneumatic</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 align-top">MGA 382</td>
-                                        <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 align-top">MGA 0</td>
-                                        <td className="px-6 py-4 text-right text-sm font-bold text-gray-900 align-top">MGA 382</td>
-                                    </tr>
+                                    {entry.tasks && entry.tasks.length > 0 ? (
+                                        entry.tasks.map((task) => (
+                                            <tr key={task.id}>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-gray-900 text-sm">{task.serviceTask?.name || 'Tâche inconnue'}</div>
+                                                    {task.serviceTask?.description && (
+                                                        <div className="text-xs text-gray-500 mt-1">{task.serviceTask.description}</div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right text-sm text-gray-500">
+                                                    {task.notes || '—'}
+                                                </td>
+                                                <td className="px-6 py-4 text-right text-sm font-bold text-gray-900">
+                                                    €{(task.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3} className="px-6 py-8 text-center text-sm text-gray-500">
+                                                Aucune tâche enregistrée
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                                 <tfoot className="bg-gray-50">
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-2 text-right text-xs font-medium text-gray-500">Subtotal</td>
-                                        <td className="px-6 py-2 text-right text-xs font-medium text-gray-900">~ MGA 1,336</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-1 text-right text-xs font-medium text-gray-500">Labor</td>
-                                        <td className="px-6 py-1 text-right text-xs font-medium text-gray-500">MGA 755</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-1 text-right text-xs font-medium text-gray-500">Parts</td>
-                                        <td className="px-6 py-1 text-right text-xs font-medium text-gray-500">MGA 581</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-2 text-right text-xs font-medium text-gray-500">Discount (null%)</td>
-                                        <td className="px-6 py-2 text-right text-xs font-medium text-gray-900">-</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-2 text-right text-xs font-medium text-gray-500 border-b border-gray-200">Tax (null%)</td>
-                                        <td className="px-6 py-2 text-right text-xs font-medium text-gray-900 border-b border-gray-200">+</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-4 text-right text-sm font-bold text-gray-900">Total</td>
-                                        <td className="px-6 py-4 text-right text-sm font-bold text-gray-900">MGA 1,336</td>
+                                        <td colSpan={2} className="px-6 py-4 text-right text-sm font-bold text-gray-900">Total</td>
+                                        <td className="px-6 py-4 text-right text-sm font-bold text-[#008751]">
+                                            €{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
 
-                            <div className="px-6 py-3 bg-gray-50 text-xs text-green-600 text-center font-medium border-t border-gray-200">
-                                Created 16 hours ago
+                            <div className="px-6 py-3 bg-gray-50 text-xs text-gray-500 text-center font-medium border-t border-gray-200">
+                                Créé le {new Date(entry.createdAt).toLocaleDateString('fr-FR')}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Sidebar */}
-                <div className="space-y-6">
-                    {/* Comments */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 min-h-[400px] flex flex-col">
-                        <h2 className="text-lg font-bold text-gray-900 mb-6">Comments</h2>
+                {/* Right Sidebar - Entity Sidebar */}
+                <div className="shrink-0">
+                    <EntitySidebar
+                        entityType="serviceEntry"
+                        entityId={entry.id}
+                        activePanel={activePanel}
+                        onPanelChange={setActivePanel}
 
-                        <div className="flex-1 flex flex-col items-center justify-center text-center">
-                            <div className="h-14 w-14 rounded border-2 border-green-500 flex items-center justify-center mb-4 text-green-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                                </svg>
-                            </div>
-                            <p className="text-gray-500 text-sm mb-12">Start a conversation or @mention someone to ask a question in the comment box below.</p>
-                        </div>
+                        comments={comments.map(c => ({
+                            id: c.id,
+                            message: c.content,
+                            userName: c.author,
+                            createdAt: new Date(c.createdAt),
+                            entityType: 'serviceEntry',
+                            entityId: entry.id,
+                            userId: 'unknown',
+                            updatedAt: new Date(c.createdAt),
+                            isEdited: false
+                        }))}
+                        commentsLoading={commentsLoading}
+                        onAddComment={handleAddCommentWrapper}
+                        onUpdateComment={async () => { }}
+                        onDeleteComment={async () => { }}
+                        onRefreshComments={() => fetchComments(params.id)}
 
-                        <div className="text-xs text-gray-400 mt-auto">
-                            You cannot comment on service entries generated by work orders.
-                        </div>
-                    </div>
+                        photos={photos}
+                        photosLoading={photosLoading}
+                        photosError={photosError}
+                        onAddPhoto={handleAddPhotoWrapper}
+                        onDeletePhoto={deletePhotoHandler}
+                        onRefreshPhotos={refreshPhotos}
+
+                        documents={documents}
+                        documentsLoading={documentsLoading}
+                        documentsError={documentsError}
+                        onAddDocument={handleAddDocumentWrapper}
+                        onDeleteDocument={async () => { }}
+                        onDownloadDocument={async () => { }}
+                        onRefreshDocuments={refreshDocuments}
+                    />
                 </div>
             </div>
         </div>

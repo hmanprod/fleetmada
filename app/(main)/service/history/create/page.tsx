@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ArrowLeft, Upload, Plus, Search, X, Calendar, Clock, AlertCircle, FileText, Camera, CreditCard, ChevronDown, ChevronRight, Info, MoreHorizontal, AlertTriangle, Settings2, SlidersHorizontal, ListFilter } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { ArrowLeft, Upload, Plus, Search, X, Calendar, Clock, AlertCircle, FileText, Camera, CreditCard, ChevronDown, ChevronRight, Info, MoreHorizontal, AlertTriangle, Settings2, SlidersHorizontal, ListFilter, Trash2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useVehicles } from '@/lib/hooks/useVehicles';
 import { useIssues } from '@/lib/hooks/useIssues';
@@ -9,8 +9,11 @@ import { useVendors } from '@/lib/hooks/useVendors';
 import { useServiceTasks } from '@/lib/hooks/useServiceTasks';
 import { VehicleSelect } from '../../../vehicles/components/VehicleSelect';
 import { serviceAPI } from '@/lib/services/service-api';
+import { authAPI } from '@/lib/auth-api';
+import { useToast, ToastContainer } from '@/components/NotificationToast'; // Adjusted path based on grep results
 import type { Vehicle } from '../../../vehicles/types';
 import type { Issue } from '@/lib/services/issues-api';
+import { ServiceTaskSelect } from '../../components/ServiceTaskSelect';
 
 export default function ServiceEntryCreatePage() {
   const router = useRouter();
@@ -42,25 +45,31 @@ export default function ServiceEntryCreatePage() {
 
   const [selectedIssueIds, setSelectedIssueIds] = useState<string[]>(preIssueId ? [preIssueId] : []);
   const [lineItems, setLineItems] = useState<any[]>([]);
-  const [taskSearch, setTaskSearch] = useState('');
-  const [debouncedTaskSearch, setDebouncedTaskSearch] = useState('');
   const [activeIssueTab, setActiveIssueTab] = useState<'open' | 'resolved' | 'closed'>('open');
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [docList, setDocList] = useState<{ id: string; name: string; type: 'photo' | 'document'; url?: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
+  const { toast, toasts, removeToast } = useToast();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedTaskSearch(taskSearch);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [taskSearch]);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId && !(event.target as Element).closest('.line-item-menu')) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuId]);
 
   // 2. Memoized Options for Hooks
   const vehicleQuery = useMemo(() => ({ limit: 500 }), []);
   const vendorOptions = useMemo(() => ({}), []);
   const tasksOptions = useMemo(() => ({
-    limit: 50,
-    search: debouncedTaskSearch.length >= 2 ? debouncedTaskSearch : undefined
-  }), [debouncedTaskSearch]);
+    limit: 100,
+  }), []);
 
   const issueFilters = useMemo(() => ({
     vehicleId: formData.vehicleId || undefined,
@@ -114,7 +123,6 @@ export default function ServiceEntryCreatePage() {
         subtotal: 0,
       }
     ]);
-    setTaskSearch('');
   };
 
   const removeLineItem = (id: string) => {
@@ -167,9 +175,59 @@ export default function ServiceEntryCreatePage() {
     };
   }, [lineItems, formData.discountType, formData.discountValue, formData.taxType, formData.taxValue]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'document') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const uploadData = new FormData();
+    Array.from(files).forEach(file => {
+      uploadData.append('files', file);
+    });
+    uploadData.append('labels', type);
+    uploadData.append('attachedTo', 'temp_service_entry'); // Temporary attachment until saved
+
+    setIsUploading(true);
+    try {
+      const token = authAPI.getToken();
+      const res = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: uploadData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const newDocs = data.data.successful.map((item: any) => ({
+          id: item.document.id,
+          name: item.document.fileName,
+          type: type,
+          url: item.document.filePath
+        }));
+        setDocList(prev => [...prev, ...newDocs]);
+        toast.success(`${type === 'photo' ? 'Photos' : 'Documents'} uploaded successfully`);
+      } else {
+        toast.error('Upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error('Error uploading files');
+    } finally {
+      setIsUploading(false);
+    }
+
+    // Reset input
+    if (e.target) e.target.value = '';
+  };
+
+  const handleRemoveFile = (id: string) => {
+    setDocList(prev => prev.filter(doc => doc.id !== id));
+  };
+
   const handleSave = async () => {
     if (!formData.vehicleId) {
-      alert('Please select a vehicle');
+      toast.error('Please select a vehicle');
       return;
     }
 
@@ -187,6 +245,8 @@ export default function ServiceEntryCreatePage() {
           cost: item.subtotal,
           notes: item.notes
         })),
+        documents: docList.map(d => d.id),
+        resolvedIssueIds: selectedIssueIds,
       };
 
       await serviceAPI.createServiceEntry(payload);
@@ -198,6 +258,7 @@ export default function ServiceEntryCreatePage() {
 
   return (
     <div className="bg-[#f9fafb] min-h-screen">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       {/* Sticky Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-3 sticky top-0 z-20 flex justify-between items-center shadow-sm">
         <div className="flex flex-col">
@@ -460,45 +521,13 @@ export default function ServiceEntryCreatePage() {
           </div>
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <div className="relative flex-1 group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#008751] transition-colors" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search Service Tasks..."
-                  value={taskSearch}
-                  onChange={(e) => setTaskSearch(e.target.value)}
-                  className="w-full pl-10 pr-24 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#008751]/10 focus:border-[#008751] transition-all outline-none"
+              <div className="relative flex-1">
+                <ServiceTaskSelect
+                  tasks={availableTasks}
+                  onSelect={(taskId, taskName) => addLineItem({ id: taskId, name: taskName })}
+                  loading={tasksLoading}
+                  placeholder="Rechercher une tâche..."
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 border-l border-gray-200 pl-3 flex items-center gap-1.5 text-gray-500 hover:text-gray-700 cursor-pointer">
-                  <SlidersHorizontal size={14} />
-                  <span className="text-xs font-bold">Customize</span>
-                </div>
-                {taskSearch.length >= 2 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 shadow-xl rounded-md z-30 max-h-60 overflow-y-auto">
-                    {tasksLoading ? (
-                      <div className="p-4 text-center text-gray-500 italic flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-[#008751] border-t-transparent rounded-full animate-spin"></div>
-                        Searching tasks...
-                      </div>
-                    ) : availableTasks.length > 0 ? (
-                      availableTasks.map(task => (
-                        <button
-                          key={task.id}
-                          onClick={() => addLineItem(task)}
-                          className="w-full text-left px-4 py-3 hover:bg-[#008751]/5 flex items-center justify-between border-b border-gray-50 last:border-0 transition-colors"
-                        >
-                          <div>
-                            <div className="text-sm font-bold text-gray-900">{task.name}</div>
-                            {task.description && <div className="text-xs text-gray-500">{task.description}</div>}
-                          </div>
-                          <Plus size={16} className="text-[#008751]" />
-                        </button>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-500 italic">No tasks found matching "{taskSearch}"</div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -519,7 +548,7 @@ export default function ServiceEntryCreatePage() {
                 {lineItems.map(item => {
                   const isExpanded = expandedItems.includes(item.id);
                   return (
-                    <div key={item.id} className="border border-gray-100 rounded-lg bg-white mb-2 overflow-hidden shadow-sm">
+                    <div key={item.id} className="border border-gray-100 rounded-lg bg-white mb-2 shadow-sm">
                       <div className="flex items-center p-4 hover:bg-gray-50/30 transition-colors">
                         <button
                           onClick={() => toggleItemExpansion(item.id)}
@@ -561,9 +590,32 @@ export default function ServiceEntryCreatePage() {
                               className="w-full pl-6 pr-2 py-2 border border-gray-100 bg-gray-50/50 rounded text-sm font-bold text-gray-900 text-right opacity-80"
                             />
                           </div>
-                          <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors ml-2">
-                            <MoreHorizontal size={18} />
-                          </button>
+                          <div className="relative line-item-menu">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(openMenuId === item.id ? null : item.id);
+                              }}
+                              className={`p-2 rounded-full transition-colors ml-2 ${openMenuId === item.id ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                            >
+                              <MoreHorizontal size={18} />
+                            </button>
+                            {openMenuId === item.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-32 py-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeLineItem(item.id);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                  <Trash2 size={14} />
+                                  Supprimer
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -731,31 +783,90 @@ export default function ServiceEntryCreatePage() {
         {/* Photos & Documents */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <section className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-[#fcfcfc]">
+            <div className="px-6 py-4 border-b border-gray-100 bg-[#fcfcfc] flex justify-between items-center">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2"><Camera size={18} className="text-gray-400" /> Photos</h2>
             </div>
             <div className="p-8">
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/50 hover:border-[#008751]/30 transition-all group">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                ref={photoInputRef}
+                className="hidden"
+                onChange={(e) => handleFileUpload(e, 'photo')}
+              />
+              <div
+                onClick={() => photoInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/50 hover:border-[#008751]/30 transition-all group mb-4"
+              >
                 <div className="bg-gray-100 p-4 rounded-full mb-4 group-hover:bg-green-50 transition-colors">
                   <Upload size={28} className="text-gray-400 group-hover:text-[#008751]" />
                 </div>
-                <p className="text-sm font-bold text-gray-900">Drag and drop files to upload</p>
-                <p className="text-xs text-gray-500 mt-2 font-medium">or click to pick files</p>
+                <p className="text-sm font-bold text-gray-900">Click to upload photos</p>
+                {isUploading && <p className="text-xs text-[#008751] mt-2 font-medium animate-pulse">Uploading...</p>}
+              </div>
+
+              {/* Photos List */}
+              <div className="grid grid-cols-2 gap-4">
+                {docList.filter(d => d.type === 'photo').map(doc => (
+                  <div key={doc.id} className="relative group border border-gray-200 rounded-lg p-2 flex items-center gap-2">
+                    <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-gray-500">
+                      <Camera size={16} />
+                    </div>
+                    <span className="text-xs font-medium truncate flex-1">{doc.name}</span>
+                    <button
+                      onClick={() => handleRemoveFile(doc.id)}
+                      className="text-gray-400 hover:text-red-500 p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                    {/* If we had a real file URL, we could show a preview here */}
+                  </div>
+                ))}
               </div>
             </div>
           </section>
 
           <section className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-[#fcfcfc]">
+            <div className="px-6 py-4 border-b border-gray-100 bg-[#fcfcfc] flex justify-between items-center">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2"><FileText size={18} className="text-gray-400" /> Documents</h2>
             </div>
             <div className="p-8">
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/50 hover:border-[#008751]/30 transition-all group">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                ref={documentInputRef}
+                className="hidden"
+                onChange={(e) => handleFileUpload(e, 'document')}
+              />
+              <div
+                onClick={() => documentInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/50 hover:border-[#008751]/30 transition-all group mb-4"
+              >
                 <div className="bg-gray-100 p-4 rounded-full mb-4 group-hover:bg-green-50 transition-colors">
                   <Upload size={28} className="text-gray-400 group-hover:text-[#008751]" />
                 </div>
-                <p className="text-sm font-bold text-gray-900">Drag and drop files to upload</p>
-                <p className="text-xs text-gray-500 mt-2 font-medium">or click to pick files</p>
+                <p className="text-sm font-bold text-gray-900">Click to upload documents</p>
+                {isUploading && <p className="text-xs text-[#008751] mt-2 font-medium animate-pulse">Uploading...</p>}
+              </div>
+
+              {/* Documents List */}
+              <div className="space-y-2">
+                {docList.filter(d => d.type === 'document').map(doc => (
+                  <div key={doc.id} className="relative group border border-gray-200 rounded-lg p-2 flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center text-gray-500">
+                      <FileText size={16} />
+                    </div>
+                    <span className="text-xs font-medium truncate flex-1">{doc.name}</span>
+                    <button
+                      onClick={() => handleRemoveFile(doc.id)}
+                      className="text-gray-400 hover:text-red-500 p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </section>

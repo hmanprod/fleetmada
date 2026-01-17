@@ -26,7 +26,7 @@ import { Photo } from '@/types/photos';
 import { Document } from '@/types/documents';
 
 interface EntitySidebarProps {
-    entityType: 'vehicle' | 'issue' | 'contact' | 'expense';
+    entityType: 'vehicle' | 'issue' | 'contact' | 'expense' | 'serviceEntry';
     entityId: string;
     activePanel: 'comments' | 'photos' | 'documents' | null;
     onPanelChange: (panel: 'comments' | 'photos' | 'documents' | null) => void;

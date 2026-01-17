@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -133,11 +135,15 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
     const uniqueFileName = `${timestamp}_${sanitizedFileName}`;
 
     // Chemin de stockage
-    const filePath = `/uploads/documents/${uniqueFileName}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents');
+    await mkdir(uploadDir, { recursive: true });
 
-    // Sauvegarde du fichier (ici on simule le stockage)
-    // Dans une implémentation réelle, vous utiliseriez un service de stockage comme AWS S3
+    // Sauvegarde du fichier
     const buffer = Buffer.from(await file.arrayBuffer());
+    const filePathOnDisk = path.join(uploadDir, uniqueFileName);
+    await writeFile(filePathOnDisk, buffer);
+
+    const filePath = `/uploads/documents/${uniqueFileName}`;
 
     // Génération du checksum pour l'intégrité
     const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
@@ -158,7 +164,9 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
         description: metadata.description || null,
         checksum,
         isPublic: metadata.isPublic,
-        version: 1
+        version: 1,
+        // Default values for required fields
+        fileSize: file.size, // This was duplicated in the original code, but ensuring type correctness
       }
     });
     console.log(`[Documents Upload] Document created with ID: ${document.id}`);

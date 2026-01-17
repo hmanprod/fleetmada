@@ -35,6 +35,33 @@ export interface ApiResponse<T> {
   error?: string
 }
 
+export interface ServiceEntryComment {
+  id: string
+  serviceEntryId: string
+  author: string
+  content: string
+  createdAt: string
+}
+
+export interface ServiceEntryPhoto {
+  id: string
+  serviceEntryId: string
+  fileName: string
+  filePath: string
+  fileSize: number
+  mimeType: string
+  createdAt: string
+}
+
+export interface ServiceEntryCommentData {
+  author: string
+  content: string
+}
+
+export interface ServiceEntryCommentUpdateData {
+  content: string
+}
+
 // Interface pour les entrées de service
 export interface ServiceEntry {
   id: string
@@ -44,7 +71,8 @@ export interface ServiceEntry {
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   totalCost: number
   meter?: number
-  vendor?: string
+  vendor?: string | { id: string; name: string }
+  vendorName?: string
   notes?: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   assignedTo?: string
@@ -256,6 +284,8 @@ export interface CreateServiceEntryData {
     unitCost?: number
     notes?: string
   }>
+  resolvedIssueIds?: string[]
+  documents?: string[]
 }
 
 export interface CreateServiceTaskData {
@@ -359,6 +389,70 @@ class ServiceAPI {
   async completeServiceEntry(id: string): Promise<ApiResponse<ServiceEntry>> {
     return this.makeRequest(`/service/entries/${id}/complete`, {
       method: 'POST'
+    })
+  }
+
+  // === Service Entry Comments ===
+  async getServiceEntryComments(serviceEntryId: string): Promise<ServiceEntryComment[]> {
+    const result = await this.makeRequest<ServiceEntryComment[]>(`/service/entries/${serviceEntryId}/comments`)
+    return result
+  }
+
+  async addServiceEntryComment(serviceEntryId: string, data: ServiceEntryCommentData): Promise<ServiceEntryComment> {
+    const result = await this.makeRequest<ServiceEntryComment>(`/service/entries/${serviceEntryId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+    return result
+  }
+
+  async updateServiceEntryComment(serviceEntryId: string, commentId: string, data: ServiceEntryCommentUpdateData): Promise<ServiceEntryComment> {
+    const result = await this.makeRequest<ServiceEntryComment>(`/service/entries/${serviceEntryId}/comments/${commentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+    return result
+  }
+
+  async deleteServiceEntryComment(serviceEntryId: string, commentId: string): Promise<void> {
+    await this.makeRequest(`/service/entries/${serviceEntryId}/comments/${commentId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  // === Service Entry Photos ===
+  async getServiceEntryPhotos(serviceEntryId: string): Promise<ServiceEntryPhoto[]> {
+    const result = await this.makeRequest<ServiceEntryPhoto[]>(`/service/entries/${serviceEntryId}/photos`)
+    return result
+  }
+
+  async uploadServiceEntryPhotos(serviceEntryId: string, files: File[]): Promise<ServiceEntryPhoto[]> {
+    const token = authAPI.getToken()
+    if (!token) throw new Error('Authentication token missing')
+
+    const formData = new FormData()
+    files.forEach(file => formData.append('photos', file))
+
+    const response = await fetch(`${API_BASE_URL}/service/entries/${serviceEntryId}/photos`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Error uploading photos' }))
+      throw new Error(error.message || `HTTP Error: ${response.status}`)
+    }
+
+    const result = await response.json()
+    return result.data
+  }
+
+  async deleteServiceEntryPhoto(serviceEntryId: string, photoId: string): Promise<void> {
+    await this.makeRequest(`/service/entries/${serviceEntryId}/photos/${photoId}`, {
+      method: 'DELETE'
     })
   }
 
