@@ -15,7 +15,7 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
     const router = useRouter();
     const entry = MOCK_EXPENSE_ENTRIES.find(e => e.id === params.id) || MOCK_EXPENSE_ENTRIES[0]; // Fallback for dev
 
-    if (!entry) return <div>Entry not found</div>;
+    if (!entry) return <div>Dépense non trouvée</div>;
 
     const vehicle = MOCK_VEHICLES.find(v => v.id === entry.vehicleId);
 
@@ -122,9 +122,9 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-1">
                     <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium mr-4">
-                        <ArrowLeft size={16} /> Expense Entries
+                        <ArrowLeft size={16} /> Entrées de dépenses
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Expense Entry #{entry.id}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Entrée de dépense #{entry.id}</h1>
                 </div>
 
                 <div className="flex gap-2">
@@ -134,7 +134,7 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
                         </button>
                     </div> */}
                     <button onClick={handleEdit} className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
-                        <Edit size={16} /> Edit
+                        <Edit size={16} /> Modifier
                     </button>
                 </div>
             </div>
@@ -145,14 +145,14 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
 
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-gray-900">Details</h2>
+                            <h2 className="text-lg font-bold text-gray-900">Détails</h2>
                         </div>
                         <div className="p-6">
-                            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4">All Fields</h3>
+                            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4">Tous les champs</h3>
 
                             <div className="space-y-4">
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Vehicle</div>
+                                    <div className="text-sm text-gray-500">Véhicule</div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
                                             {/* Placeholder for vehicle image if needed */}
@@ -161,7 +161,7 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
                                         <Link href={`/vehicles/${vehicle?.id}`} className="text-[#008751] font-medium hover:underline">
                                             {vehicle?.name}
                                         </Link>
-                                        <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Sample</span>
+                                        <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Exemple</span>
                                     </div>
                                 </div>
 
@@ -181,12 +181,12 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Vendor</div>
+                                    <div className="text-sm text-gray-500">Vendeur</div>
                                     <div className="text-sm text-gray-900">{entry.vendor || '—'}</div>
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Amount</div>
+                                    <div className="text-sm text-gray-500">Montant</div>
                                     <div className="text-sm text-gray-900 font-medium">{entry.amount} {entry.currency}</div>
                                 </div>
 

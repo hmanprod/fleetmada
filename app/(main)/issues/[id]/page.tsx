@@ -182,7 +182,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
     const handleDeleteIssue = async () => {
         if (!issue) return;
-        if (window.confirm('Are you sure you want to delete this issue?')) {
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce problème ?')) {
             try {
                 // In a real app we'd call an API here.
                 router.push('/issues');
@@ -499,7 +499,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
                             <div className="space-y-4">
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Issue #</div>
+                                    <div className="text-sm text-gray-500">Problème #</div>
                                     <div className="text-sm text-gray-900">#{issue.id.slice(-6)}</div>
                                 </div>
 
@@ -680,9 +680,8 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                             <div className="flex items-center gap-4">
                                 <span className="text-sm font-medium text-gray-500 w-24">Véhicule</span>
                                 <div className="flex items-center gap-2">
-                                    <img src={`https://source.unsplash.com/random/50x50/?truck&sig=${issue.id}`} className="w-8 h-8 rounded object-cover" alt="" />
                                     <span className="text-[#008751] font-bold">{issue.vehicle?.make} {issue.vehicle?.model}</span>
-                                    <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded">Sample</span>
+                                    <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded">Échantillon</span>
                                 </div>
                             </div>
 
@@ -733,7 +732,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer opacity-50">
                                                 <input type="radio" name="entry_type" disabled className="text-[#008751] focus:ring-[#008751]" />
-                                                <span className="text-sm">Ajouter à un existant {modalType === 'service_entry' ? 'Journal d\'Entretien' : 'Bon de Travail'}</span>
+                                                <span className="text-sm">Ajouter à un {modalType === 'service_entry' ? 'Journal d\'Entretien' : 'Bon de Travail'} existant</span>
                                             </label>
                                         </div>
                                     </div>

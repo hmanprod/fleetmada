@@ -63,7 +63,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
     const { toast, toasts, removeToast } = useToast();
 
     // Mock Labels (Keep until Labels API exists)
-    const mockLabels = ['Electrical', 'Mechanical', 'Body', 'Safety', 'Recall'];
+    const mockLabels = ['Électrique', 'Mécanique', 'Carrosserie', 'Sécurité', 'Rappel'];
 
     const filteredContacts = contacts.filter(contact => {
         const searchLower = contactSearch.toLowerCase();
@@ -169,7 +169,7 @@ export default function IssueEditPage({ params }: { params: { id: string } }) {
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
-                        <ArrowLeft size={16} /> Issues
+                        <ArrowLeft size={16} /> Problèmes
                     </button>
                     <h1 className="text-2xl font-bold text-gray-900">Modifier le Problème #{params.id.slice(-6)}</h1>
                 </div>

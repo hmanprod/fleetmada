@@ -41,11 +41,11 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
         const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
 
         if (diffDays === 0) {
-            return `${diffHours} hrs ago`;
+            return `il y a ${diffHours} h`;
         } else if (diffDays < 7) {
-            return `${diffDays} days ago`;
+            return `il y a ${diffDays} j`;
         } else {
-            return `${Math.floor(diffDays / 7)} weeks ago`;
+            return `il y a ${Math.floor(diffDays / 7)} sem.`;
         }
     };
 
@@ -58,35 +58,35 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
                 >
-                    <option>Meter Date</option>
-                    <option>Last 7 days</option>
-                    <option>Last 30 days</option>
-                    <option>Last 90 days</option>
+                    <option>Date du compteur</option>
+                    <option value="last7">7 derniers jours</option>
+                    <option value="last30">30 derniers jours</option>
+                    <option value="last90">90 derniers jours</option>
                 </select>
                 <select
                     className="px-3 py-2 text-sm border border-gray-300 rounded-md"
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
                 >
-                    <option>Meter Type</option>
-                    <option>Primary</option>
-                    <option>Secondary</option>
+                    <option>Type de compteur</option>
+                    <option value="PRIMARY">Primaire</option>
+                    <option value="SECONDARY">Secondaire</option>
                 </select>
                 <select
                     className="px-3 py-2 text-sm border border-gray-300 rounded-md"
                     value={voidFilter}
                     onChange={(e) => setVoidFilter(e.target.value)}
                 >
-                    <option>Void Status</option>
-                    <option>Valid</option>
-                    <option>Auto-Voided</option>
-                    <option>Manually Voided</option>
+                    <option>Statut d'annulation</option>
+                    <option value="VALID">Valide</option>
+                    <option value="AUTO_VOIDED">Auto-annulé</option>
+                    <option value="MANUALLY_VOIDED">Annulé manuellement</option>
                 </select>
                 <button className="text-sm text-[#008751] hover:underline flex items-center gap-1">
-                    More Actions <ExternalLink className="w-3 h-3" />
+                    Plus d'actions <ExternalLink className="w-3 h-3" />
                 </button>
                 <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
-                    <span>{filteredData.length > 0 ? `1 - ${Math.min(18, filteredData.length)} of ${filteredData.length}` : '0 results'}</span>
+                    <span>{filteredData.length > 0 ? `1 - ${Math.min(18, filteredData.length)} sur ${filteredData.length}` : '0 résultat'}</span>
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4" /></button>
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronRight className="w-4 h-4" /></button>
                     <button className="p-1 hover:bg-gray-100 rounded"><Settings className="w-4 h-4" /></button>
@@ -101,12 +101,12 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-8">
                                 <input type="checkbox" className="rounded border-gray-300" />
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meter Date ▼</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meter Value</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meter Type</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Void</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Auto-Void Reason</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Void Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date du compteur ▼</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valeur du compteur</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type de compteur</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Annulé</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Raison de l'auto-annulation</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut d'annulation</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                         </tr>
                     </thead>
@@ -118,7 +118,7 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
                                         <div className="w-12 h-12 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
                                             <Search className="w-6 h-6" />
                                         </div>
-                                        <p>No results to show.</p>
+                                        <p>Aucun résultat à afficher.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -137,7 +137,7 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
                                         </span>
                                         <span className="block text-xs text-gray-500">{formatRelativeTime(item.date)}</span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-900">{item.type || 'Primary'}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-900">{item.type === 'SECONDARY' ? 'Secondaire' : 'Primaire'}</td>
                                     <td className="px-4 py-3 text-sm text-gray-500">
                                         {item.void ? '✓' : '—'}
                                     </td>
@@ -146,14 +146,16 @@ export function VehicleMeterHistory({ vehicleId, data }: VehicleMeterHistoryProp
                                     </td>
                                     <td className="px-4 py-3">
                                         {item.voidStatus && (
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${item.voidStatus === 'Auto-Voided' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${item.voidStatus === 'Auto-Voided' || item.voidStatus === 'AUTO_VOIDED' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
                                                 }`}>
-                                                {item.voidStatus}
+                                                {item.voidStatus === 'AUTO_VOIDED' || item.voidStatus === 'Auto-Voided' ? 'Auto-annulé' :
+                                                    item.voidStatus === 'MANUALLY_VOIDED' || item.voidStatus === 'Manually Voided' ? 'Annulé manuellement' :
+                                                        item.voidStatus}
                                             </span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-[#008751]">
-                                        {item.source === 'Manual' ? 'Manual' : item.source}
+                                        {item.source === 'Manual' || item.source === 'MANUAL' ? 'Manuel' : item.source}
                                         {item.sourceId && ` #${item.sourceId}`}
                                     </td>
                                 </tr>

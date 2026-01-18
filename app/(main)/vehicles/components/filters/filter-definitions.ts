@@ -1,4 +1,4 @@
-export type FilterCategory = 'VEHICLE' | 'METER ENTRY' | 'ASSIGNMENT' | 'ISSUE' | 'EXPENSE';
+export type FilterCategory = 'VÉHICULE' | 'LECTURE COMPTEUR' | 'AFFECTATION' | 'PROBLÈME' | 'DÉPENSE';
 
 export interface FilterOption {
     value: string;
@@ -18,98 +18,98 @@ export interface FilterField {
 
 export const ALL_FILTER_FIELDS: FilterField[] = [
     // METER ENTRY CATEGORY
-    { id: 'date', label: 'Meter Date', type: 'date', category: 'METER ENTRY' },
-    { id: 'value', label: 'Meter Value', type: 'number', category: 'METER ENTRY' },
+    { id: 'date', label: 'Date du compteur', type: 'date', category: 'LECTURE COMPTEUR' },
+    { id: 'value', label: 'Valeur du compteur', type: 'number', category: 'LECTURE COMPTEUR' },
     {
         id: 'type',
-        label: 'Meter Type',
+        label: 'Type de compteur',
         type: 'enum',
-        category: 'METER ENTRY',
+        category: 'LECTURE COMPTEUR',
         options: [
-            { value: 'MILEAGE', label: 'Mileage' },
-            { value: 'HOURS', label: 'Hours' },
+            { value: 'MILEAGE', label: 'Kilométrage' },
+            { value: 'HOURS', label: 'Heures' },
         ]
     },
     {
         id: 'void',
-        label: 'Void Status',
+        label: 'Statut d\'annulation',
         type: 'enum',
-        category: 'METER ENTRY',
+        category: 'LECTURE COMPTEUR',
         options: [
-            { value: 'true', label: 'Voided' },
-            { value: 'false', label: 'Active' },
+            { value: 'true', label: 'Annulé' },
+            { value: 'false', label: 'Actif' },
         ]
     },
-    { id: 'source', label: 'Source', type: 'text', category: 'METER ENTRY' },
-    { id: 'createdAt', label: 'Created On', type: 'date', category: 'METER ENTRY' },
-    { id: 'updatedAt', label: 'Updated On', type: 'date', category: 'METER ENTRY' },
+    { id: 'source', label: 'Source', type: 'text', category: 'LECTURE COMPTEUR' },
+    { id: 'createdAt', label: 'Créé le', type: 'date', category: 'LECTURE COMPTEUR' },
+    { id: 'updatedAt', label: 'Mis à jour le', type: 'date', category: 'LECTURE COMPTEUR' },
 
     // VEHICLE CATEGORY
     {
-        id: 'status', label: 'Vehicle Status', type: 'enum', category: 'VEHICLE', options: [
-            { value: 'ACTIVE', label: 'Active' },
-            { value: 'INACTIVE', label: 'Inactive' },
-            { value: 'MAINTENANCE', label: 'In Shop' },
-            { value: 'DISPOSED', label: 'Out of Service' },
+        id: 'status', label: 'Statut du véhicule', type: 'enum', category: 'VÉHICULE', options: [
+            { value: 'ACTIVE', label: 'Actif' },
+            { value: 'INACTIVE', label: 'Inactif' },
+            { value: 'MAINTENANCE', label: 'En atelier' },
+            { value: 'DISPOSED', label: 'Hors service' },
         ]
     },
-    { id: 'name', label: 'Vehicle Name', type: 'text', category: 'VEHICLE' },
-    { id: 'vin', label: 'VIN', type: 'text', category: 'VEHICLE' },
-    { id: 'licensePlate', label: 'License Plate', type: 'text', category: 'VEHICLE' },
-    { id: 'make', label: 'Make', type: 'text', category: 'VEHICLE' },
-    { id: 'model', label: 'Model', type: 'text', category: 'VEHICLE' },
-    { id: 'year', label: 'Year', type: 'number', category: 'VEHICLE' },
-    { id: 'group', label: 'Group', type: 'text', category: 'VEHICLE' },
-    { id: 'operator', label: 'Operator', type: 'text', category: 'VEHICLE' },
-    { id: 'type', label: 'Vehicle Type', type: 'text', category: 'VEHICLE' },
+    { id: 'name', label: 'Nom du véhicule', type: 'text', category: 'VÉHICULE' },
+    { id: 'vin', label: 'VIN', type: 'text', category: 'VÉHICULE' },
+    { id: 'licensePlate', label: 'Plaque d\'immatriculation', type: 'text', category: 'VÉHICULE' },
+    { id: 'make', label: 'Marque', type: 'text', category: 'VÉHICULE' },
+    { id: 'model', label: 'Modèle', type: 'text', category: 'VÉHICULE' },
+    { id: 'year', label: 'Année', type: 'number', category: 'VÉHICULE' },
+    { id: 'group', label: 'Groupe', type: 'text', category: 'VÉHICULE' },
+    { id: 'operator', label: 'Opérateur', type: 'text', category: 'VÉHICULE' },
+    { id: 'type', label: 'Type de véhicule', type: 'text', category: 'VÉHICULE' },
     {
         id: 'ownership',
-        label: 'Ownership',
+        label: 'Propriété',
         type: 'enum',
-        category: 'VEHICLE',
+        category: 'VÉHICULE',
         options: [
-            { value: 'Owned', label: 'Owned' },
-            { value: 'Leased', label: 'Leased' },
-            { value: 'Rented', label: 'Rented' },
-            { value: 'Customer', label: 'Customer' },
+            { value: 'Owned', label: 'Propriétaire' },
+            { value: 'Leased', label: 'Bail (Leasing)' },
+            { value: 'Rented', label: 'Loué' },
+            { value: 'Customer', label: 'Client' },
         ]
     },
-    { id: 'meterReading', label: 'Current Meter Value', type: 'number', category: 'VEHICLE' },
+    { id: 'meterReading', label: 'Valeur actuelle du compteur', type: 'number', category: 'VÉHICULE' },
 
     // ASSIGNMENT CATEGORY
-    { id: 'startDate', label: 'Assignment Start', type: 'date', category: 'ASSIGNMENT' },
-    { id: 'endDate', label: 'Assignment End', type: 'date', category: 'ASSIGNMENT' },
-    { id: 'operator', label: 'Assigned Operator', type: 'text', category: 'ASSIGNMENT' },
+    { id: 'startDate', label: 'Début de l\'affectation', type: 'date', category: 'AFFECTATION' },
+    { id: 'endDate', label: 'Fin de l\'affectation', type: 'date', category: 'AFFECTATION' },
+    { id: 'operator', label: 'Opérateur affecté', type: 'text', category: 'AFFECTATION' },
     {
         id: 'status',
-        label: 'Assignment Status',
+        label: 'Statut de l\'affectation',
         type: 'enum',
-        category: 'ASSIGNMENT',
+        category: 'AFFECTATION',
         options: [
-            { value: 'ACTIVE', label: 'Active' },
-            { value: 'INACTIVE', label: 'Inactive' },
-            { value: 'TEMPORARY', label: 'Temporary' },
+            { value: 'ACTIVE', label: 'Actif' },
+            { value: 'INACTIVE', label: 'Inactif' },
+            { value: 'TEMPORARY', label: 'Temporaire' },
         ]
     },
 
     // EXPENSE CATEGORY
-    { id: 'date', label: 'Expense Date', type: 'date', category: 'EXPENSE' },
-    { id: 'type', label: 'Expense Type', type: 'text', category: 'EXPENSE' },
-    { id: 'vendor', label: 'Vendor', type: 'text', category: 'EXPENSE' },
-    { id: 'amount', label: 'Amount', type: 'number', category: 'EXPENSE' },
-    { id: 'source', label: 'Source', type: 'text', category: 'EXPENSE' },
+    { id: 'date', label: 'Date de la dépense', type: 'date', category: 'DÉPENSE' },
+    { id: 'type', label: 'Type de dépense', type: 'text', category: 'DÉPENSE' },
+    { id: 'vendor', label: 'Vendeur', type: 'text', category: 'DÉPENSE' },
+    { id: 'amount', label: 'Montant', type: 'number', category: 'DÉPENSE' },
+    { id: 'source', label: 'Source', type: 'text', category: 'DÉPENSE' },
 ];
 
 export const METER_HISTORY_FIELDS = ALL_FILTER_FIELDS.filter(f =>
-    f.category === 'METER ENTRY' || (f.category === 'VEHICLE' && ['status', 'group', 'operator', 'name', 'vin', 'make', 'model', 'year'].includes(f.id))
+    f.category === 'LECTURE COMPTEUR' || (f.category === 'VÉHICULE' && ['status', 'group', 'operator', 'name', 'vin', 'make', 'model', 'year'].includes(f.id))
 );
 
-export const VEHICLE_LIST_FIELDS = ALL_FILTER_FIELDS.filter(f => f.category === 'VEHICLE');
+export const VEHICLE_LIST_FIELDS = ALL_FILTER_FIELDS.filter(f => f.category === 'VÉHICULE');
 
 export const ASSIGNMENT_FIELDS = ALL_FILTER_FIELDS.filter(f =>
-    f.category === 'ASSIGNMENT' || (f.category === 'VEHICLE' && ['status', 'group', 'operator', 'name', 'vin', 'type'].includes(f.id))
+    f.category === 'AFFECTATION' || (f.category === 'VÉHICULE' && ['status', 'group', 'operator', 'name', 'vin', 'type'].includes(f.id))
 );
 
 export const EXPENSE_FIELDS = ALL_FILTER_FIELDS.filter(f =>
-    f.category === 'EXPENSE' || (f.category === 'VEHICLE' && ['status', 'group', 'name', 'vin'].includes(f.id))
+    f.category === 'DÉPENSE' || (f.category === 'VÉHICULE' && ['status', 'group', 'name', 'vin'].includes(f.id))
 );

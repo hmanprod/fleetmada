@@ -598,36 +598,36 @@ export default function CreateVehicle() {
                                 </div>
                             </div>
 
-                            {/* Fuel Economy & Fuel */}
+                            {/* Consommation et Carburant */}
                             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Fuel Economy & Fuel</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Consommation et Carburant</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">EPA City (L/100km)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville EPA (L/100km)</label>
                                         <input type="number" step="0.1" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.epaCity || ''} onChange={(e) => setFormData({ ...formData, epaCity: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">EPA Highway (L/100km)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Autoroute EPA (L/100km)</label>
                                         <input type="number" step="0.1" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.epaHighway || ''} onChange={(e) => setFormData({ ...formData, epaHighway: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">EPA Combined (L/100km)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Combiné EPA (L/100km)</label>
                                         <input type="number" step="0.1" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.epaCombined || ''} onChange={(e) => setFormData({ ...formData, epaCombined: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Quality</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualité du carburant</label>
                                         <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.fuelQuality || ''} onChange={(e) => setFormData({ ...formData, fuelQuality: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Tank Capacity (L)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacité du réservoir (L)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.fuelTankCapacity || ''} onChange={(e) => setFormData({ ...formData, fuelTankCapacity: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Tank 2 Capacity (L)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacité du réservoir 2 (L)</label>
                                         <input type="number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.fuelTank2Capacity || ''} onChange={(e) => setFormData({ ...formData, fuelTank2Capacity: Number(e.target.value) })} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Oil Capacity (L)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacité d'huile (L)</label>
                                         <input type="number" step="0.1" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={formData.oilCapacity || ''} onChange={(e) => setFormData({ ...formData, oilCapacity: Number(e.target.value) })} />
                                     </div>
                                 </div>

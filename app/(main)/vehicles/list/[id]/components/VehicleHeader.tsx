@@ -76,38 +76,38 @@ export function VehicleHeader({
                                 onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${params.id}/edit`); }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                                <Settings size={14} /> Edit Vehicle Settings
+                                <Settings size={14} /> Modifier les paramètres du véhicule
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); onInspectionFormsClick(); }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                                <CheckCircle size={14} /> Manage Inspection Forms
+                                <CheckCircle size={14} /> Gérer les formulaires d'inspection
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); onServiceProgramsClick(); }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                                <Wrench size={14} /> Manage Service Programs
+                                <Wrench size={14} /> Gérer les programmes de service
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                                <Fuel size={14} /> Recalculate Fuel Entries
+                                <Fuel size={14} /> Recalculer les entrées de carburant
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); }}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                             >
-                                <History size={14} /> View Record History
+                                <History size={14} /> Voir l'historique des enregistrements
                             </button>
                             <div className="border-t border-gray-100 my-1"></div>
                             <button
                                 onClick={(e) => { e.stopPropagation(); onArchiveClick(); }}
                                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                             >
-                                <Archive size={14} /> Archive
+                                <Archive size={14} /> Archiver
                             </button>
                         </div>
                     </div>
@@ -115,7 +115,7 @@ export function VehicleHeader({
                         onClick={() => router.push(`/vehicles/list/${params.id}/edit`)}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm"
                     >
-                        Edit Vehicle
+                        Modifier le véhicule
                     </button>
                 </div>
             </div>

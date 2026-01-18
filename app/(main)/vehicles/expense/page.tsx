@@ -124,7 +124,7 @@ export default function VehicleExpensePage() {
         <div className="p-6 max-w-[1800px] mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-3xl font-bold text-gray-900">Expense History</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">Historique des dépenses</h1>
                     <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-yellow-400"></span> Beta
                     </span>
@@ -135,7 +135,7 @@ export default function VehicleExpensePage() {
                         href="/vehicles/expense/create"
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
                     >
-                        <Plus size={20} /> Add Expense Entry
+                        <Plus size={20} /> Ajouter une dépense
                     </Link>
                 </div>
             </div>
@@ -144,13 +144,13 @@ export default function VehicleExpensePage() {
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                     <div className="text-red-800">
-                        <strong>Error:</strong> {error}
+                        <strong>Erreur:</strong> {error}
                     </div>
                     <button
                         onClick={() => fetchExpenses()}
                         className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
                     >
-                        Retry
+                        Réessayer
                     </button>
                 </div>
             )}
@@ -160,7 +160,7 @@ export default function VehicleExpensePage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                         type="text"
-                        placeholder="Search expense entries, vehicles, vendors..."
+                        placeholder="Rechercher des dépenses, véhicules, vendeurs..."
                         className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,7 +170,7 @@ export default function VehicleExpensePage() {
                     onClick={() => setIsFiltersSidebarOpen(true)}
                     className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                 >
-                    <Filter size={14} /> Filters
+                    <Filter size={14} /> Filtres
                 </button>
             </div>
 
@@ -184,13 +184,13 @@ export default function VehicleExpensePage() {
                     <thead>
                         <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200 font-medium">
                             <th className="p-4 w-8"><input type="checkbox" className="rounded border-gray-300" /></th>
-                            <th className="p-4">Vehicle</th>
+                            <th className="p-4">Véhicule</th>
                             <th className="p-4">Date</th>
                             <th className="p-4">Type</th>
-                            <th className="p-4">Vendor</th>
+                            <th className="p-4">Vendeur</th>
                             <th className="p-4">Source</th>
-                            <th className="p-4 text-right">Amount</th>
-                            <th className="p-4">Attachments</th>
+                            <th className="p-4 text-right">Montant</th>
+                            <th className="p-4">Pièces jointes</th>
                             <th className="p-4 w-10"></th>
                         </tr>
                     </thead>
@@ -203,7 +203,7 @@ export default function VehicleExpensePage() {
                                         <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
                                             {(entry.vehicle?.name || '??').substring(0, 2).toUpperCase()}
                                         </div>
-                                        <span className="font-medium text-[#008751] hover:underline">{entry.vehicle?.name || 'Unknown Vehicle'}</span>
+                                        <span className="font-medium text-[#008751] hover:underline">{entry.vehicle?.name || 'Véhicule inconnu'}</span>
                                     </Link>
                                 </td>
                                 <td className="p-4 text-gray-900">{new Date(entry.date).toLocaleDateString()}</td>
@@ -235,14 +235,14 @@ export default function VehicleExpensePage() {
                                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                <Eye size={14} /> View Details
+                                                <Eye size={14} /> Voir les détails
                                             </Link>
                                             <Link
                                                 href={`/vehicles/expense/${entry.id}/edit`}
                                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                <Settings size={14} /> Edit
+                                                <Settings size={14} /> Modifier
                                             </Link>
                                             <button
                                                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -251,7 +251,7 @@ export default function VehicleExpensePage() {
                                                     // Handle delete
                                                 }}
                                             >
-                                                <Trash2 size={14} /> Delete
+                                                <Trash2 size={14} /> Supprimer
                                             </button>
                                         </div>
                                     </div>
@@ -261,7 +261,7 @@ export default function VehicleExpensePage() {
                         {!loading && expenses.length === 0 && (
                             <tr>
                                 <td colSpan={8} className="p-12 text-center text-gray-500">
-                                    No expense entries found matching your search.
+                                    Aucune dépense trouvée correspondant à votre recherche.
                                 </td>
                             </tr>
                         )}
@@ -272,7 +272,7 @@ export default function VehicleExpensePage() {
                     <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                         <div>
                             <p className="text-sm text-gray-700">
-                                Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.totalCount)}</span> of <span className="font-medium">{pagination.totalCount}</span> results
+                                Affichage de <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> à <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.totalCount)}</span> sur <span className="font-medium">{pagination.totalCount}</span> résultats
                             </p>
                         </div>
                         <div>

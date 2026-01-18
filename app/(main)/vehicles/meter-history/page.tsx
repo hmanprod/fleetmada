@@ -131,7 +131,7 @@ export default function VehicleMeterPage() {
 
   const getVehicleName = (id: string, vehicleData?: any) => {
     if (vehicleData?.name) return vehicleData.name;
-    return vehicles.find(v => v.id === id)?.name || 'Unknown Vehicle';
+    return vehicles.find(v => v.id === id)?.name || 'Véhicule inconnu';
   };
 
   const handleSave = async () => {
@@ -165,11 +165,11 @@ export default function VehicleMeterPage() {
         fetchData(filters);
         closeModal();
       } else {
-        setError(data.error || 'Failed to save meter entry');
+        setError(data.error || 'Échec de l\'enregistrement de la lecture du compteur');
       }
     } catch (err) {
-      console.error('Error saving meter entry:', err);
-      setError('Failed to save meter entry');
+      console.error('Erreur lors de l\'enregistrement de la lecture du compteur:', err);
+      setError('Échec de l\'enregistrement de la lecture du compteur');
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +251,7 @@ export default function VehicleMeterPage() {
     <div className="p-6 max-w-[1800px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900">Meter History</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Historique des compteurs</h1>
         </div>
         <div className="flex gap-2">
           <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
@@ -259,7 +259,7 @@ export default function VehicleMeterPage() {
             onClick={openAddModal}
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
           >
-            <Plus size={20} /> Add Meter Reading
+            <Plus size={20} /> Ajouter une lecture
           </button>
         </div>
       </div>
@@ -269,7 +269,7 @@ export default function VehicleMeterPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
-            placeholder="Search meter readings..."
+            placeholder="Rechercher des lectures..."
             className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
@@ -279,7 +279,7 @@ export default function VehicleMeterPage() {
           onClick={() => setIsFiltersSidebarOpen(true)}
           className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
         >
-          <Filter size={14} /> Filters
+          <Filter size={14} /> Filtres
         </button>
       </div>
 
@@ -300,11 +300,11 @@ export default function VehicleMeterPage() {
           <thead>
             <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200 font-medium">
               <th className="p-4 w-8"><input type="checkbox" className="rounded border-gray-300" /></th>
-              <th className="p-4">Vehicle</th>
-              <th className="p-4">Meter Date</th>
-              <th className="p-4">Meter Value</th>
-              <th className="p-4">Meter Type</th>
-              <th className="p-4">Void</th>
+              <th className="p-4">Véhicule</th>
+              <th className="p-4">Date du compteur</th>
+              <th className="p-4">Valeur du compteur</th>
+              <th className="p-4">Type de compteur</th>
+              <th className="p-4">Annulé</th>
               <th className="p-4">Source</th>
               <th className="p-4 text-right">Actions</th>
             </tr>
@@ -321,20 +321,20 @@ export default function VehicleMeterPage() {
                   {getVehicleName(entry.vehicleId, entry.vehicle)}
                 </td>
                 <td className={`p-4 text-gray-700 underline decoration-dotted ${entry.isVoid ? 'line-through' : ''}`}>
-                  {new Date(entry.date).toLocaleDateString()}
+                  {new Date(entry.date).toLocaleDateString('fr-FR')}
                 </td>
                 <td className={`p-4 text-gray-900 font-medium ${entry.isVoid ? 'line-through' : ''}`}>
-                  {entry.value.toLocaleString()} {entry.unit || 'hrs'}
+                  {entry.value.toLocaleString()} {entry.unit === 'mi' ? 'mi' : entry.unit === 'km' ? 'km' : 'h'}
                 </td>
-                <td className="p-4 text-gray-500">{entry.type}</td>
+                <td className="p-4 text-gray-500">{entry.type === 'Primary' ? 'Primaire' : entry.type === 'SECONDARY' ? 'Secondaire' : entry.type}</td>
                 <td className="p-4 text-gray-500">
                   {entry.isVoid ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                      Void
+                      Annulé
                     </span>
                   ) : '—'}
                 </td>
-                <td className="p-4 text-[#008751] hover:underline">{entry.source || 'Manual'}</td>
+                <td className="p-4 text-[#008751] hover:underline">{entry.source === 'Manual' ? 'Manuel' : entry.source}</td>
                 <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="relative">
                     <button
@@ -349,26 +349,26 @@ export default function VehicleMeterPage() {
                           onClick={() => openEditModal(entry)}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <Edit2 size={14} className="mr-2" /> Edit
+                          <Edit2 size={14} className="mr-2" /> Modifier
                         </button>
                         <button
                           onClick={() => handleVoid(entry)}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <Ban size={14} className="mr-2" /> {entry.isVoid ? 'Unvoid' : 'Void'}
+                          <Ban size={14} className="mr-2" /> {entry.isVoid ? 'Rétablir' : 'Annuler'}
                         </button>
                         <button
                           onClick={() => setIsHistoryModalOpen(entry)}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <History size={14} className="mr-2" /> View record history
+                          <History size={14} className="mr-2" /> Voir l'historique
                         </button>
                         <div className="border-t border-gray-100 my-1"></div>
                         <button
                           onClick={() => setIsDeleteConfirmOpen(entry.id)}
                           className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                         >
-                          <Trash2 size={14} className="mr-2" /> Delete
+                          <Trash2 size={14} className="mr-2" /> Supprimer
                         </button>
                       </div>
                     )}
@@ -378,7 +378,7 @@ export default function VehicleMeterPage() {
             )) : !isLoading && (
               <tr>
                 <td colSpan={10} className="p-12 text-center text-gray-500">
-                  No meter readings found matching your search.
+                  Aucune lecture de compteur trouvée correspondant à votre recherche.
                 </td>
               </tr>
             )}
@@ -388,7 +388,7 @@ export default function VehicleMeterPage() {
 
       {/* Pagination placeholder */}
       <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-        <div>Showing {entries.length} entries</div>
+        <div>Affichage de {entries.length} entrées</div>
         <div className="flex gap-2">
           <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled><ChevronLeft size={16} /></button>
           <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled><ChevronRight size={16} /></button>
@@ -400,7 +400,7 @@ export default function VehicleMeterPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">{editingEntry ? 'Edit Meter Entry' : 'Add Meter Entry'}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{editingEntry ? 'Modifier la lecture du compteur' : 'Ajouter une lecture de compteur'}</h3>
               <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
                 <X size={20} />
               </button>
@@ -409,7 +409,7 @@ export default function VehicleMeterPage() {
             <div className="p-6 space-y-6">
               {/* Vehicle Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule</label>
                 {editingEntry ? (
                   <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded text-sm text-gray-900">
                     <Car size={16} className="text-gray-400" />
@@ -428,7 +428,7 @@ export default function VehicleMeterPage() {
               {/* Meter Details */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Meter Value <span className="text-red-500">*</span>
+                  Valeur du compteur <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4 items-center">
                   <div className="relative flex-1">
@@ -438,7 +438,7 @@ export default function VehicleMeterPage() {
                       value={formData.value || ''}
                       onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">{formData.unit || 'hrs'}</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">{formData.unit === 'mi' ? 'mi' : formData.unit === 'km' ? 'km' : 'h'}</span>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -447,13 +447,13 @@ export default function VehicleMeterPage() {
                       checked={formData.isVoid || false}
                       onChange={(e) => setFormData({ ...formData, isVoid: e.target.checked })}
                     />
-                    <span className="text-sm text-gray-700">Void</span>
+                    <span className="text-sm text-gray-700">Annulé</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Meter Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date du compteur</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
@@ -471,7 +471,7 @@ export default function VehicleMeterPage() {
                 onClick={closeModal}
                 className="px-4 py-2 hover:bg-gray-100 rounded font-medium text-gray-700 border border-gray-300 bg-white"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={handleSave}
@@ -479,7 +479,7 @@ export default function VehicleMeterPage() {
                 className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
               >
                 {isSaving && <Loader2 className="animate-spin" size={16} />}
-                Save
+                Enregistrer
               </button>
             </div>
           </div>
@@ -490,20 +490,20 @@ export default function VehicleMeterPage() {
       {isDeleteConfirmOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this meter reading? This action cannot be undone.</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Confirmer la suppression</h3>
+            <p className="text-gray-600 mb-6">Êtes-vous sûr de vouloir supprimer cette lecture de compteur ? Cette action est irréversible.</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsDeleteConfirmOpen(null)}
                 className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={() => handleDelete(isDeleteConfirmOpen)}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold"
               >
-                Delete
+                Supprimer
               </button>
             </div>
           </div>

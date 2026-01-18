@@ -21,7 +21,7 @@ interface VehicleRenewalsProps {
 
 export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [filter, setFilter] = useState<'Past/Future' | 'Past' | 'Future'>('Past/Future');
+    const [filter, setFilter] = useState<'Passé/Futur' | 'Passé' | 'Futur'>('Passé/Futur');
 
     const filteredData = data.filter(item => {
         const matchesSearch = (item.type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,7 +37,7 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Rechercher"
                         className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008751]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -48,16 +48,16 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
                     value={filter}
                     onChange={(e) => setFilter(e.target.value as any)}
                 >
-                    <option value="Past/Future">Past/Future</option>
-                    <option value="Past">Past</option>
-                    <option value="Future">Future</option>
+                    <option value="Passé/Futur">Passé/Futur</option>
+                    <option value="Passé">Passé</option>
+                    <option value="Futur">Futur</option>
                 </select>
                 <button className="text-sm text-[#008751] hover:underline flex items-center gap-1">
-                    More Actions <ExternalLink className="w-3 h-3" />
+                    Plus d'actions <ExternalLink className="w-3 h-3" />
                 </button>
-                <button className="text-sm text-[#008751] hover:underline">Clear all</button>
+                <button className="text-sm text-[#008751] hover:underline">Effacer tout</button>
                 <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
-                    <span>{filteredData.length > 0 ? `1 - ${filteredData.length} of ${filteredData.length}` : '0 results'}</span>
+                    <span>{filteredData.length > 0 ? `1 - ${filteredData.length} sur ${filteredData.length}` : '0 résultat'}</span>
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4" /></button>
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronRight className="w-4 h-4" /></button>
                     <button className="p-1 hover:bg-gray-100 rounded"><Settings className="w-4 h-4" /></button>
@@ -70,12 +70,12 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date ▼</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Future</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Futur</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendor</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fournisseur</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -86,7 +86,7 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
                                         <div className="w-12 h-12 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
                                             <Search className="w-6 h-6" />
                                         </div>
-                                        <p>No results to show.</p>
+                                        <p>Aucun résultat à afficher.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -101,7 +101,7 @@ export function VehicleRenewals({ vehicleId, data }: VehicleRenewalsProps) {
                                     <td className="px-4 py-3 text-sm text-gray-900">{item.notes || '—'}</td>
                                     <td className="px-4 py-3 text-sm text-gray-500">—</td>
                                     <td className="px-4 py-3 text-sm text-gray-900">{item.source}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-900">MGA {(item.amount ?? 0).toLocaleString()}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-900">{(item.amount ?? 0).toLocaleString()} Ar</td>
                                 </tr>
                             ))
                         )}

@@ -160,6 +160,30 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
         );
     };
 
+    // Work Order status mapper
+    const getWorkOrderStatusLabel = (status: string) => {
+        const statusMap: Record<string, string> = {
+            'OPEN': 'Ouvert',
+            'IN_PROGRESS': 'En cours',
+            'REJECTED': 'Rejeté',
+            'COMPLETED': 'Terminé',
+            'PENDING_REVIEW': 'En attente de révision',
+            'ON_HOLD': 'En attente'
+        };
+        return statusMap[status] || status;
+    };
+
+    // Work Order priority mapper
+    const getWorkOrderPriorityLabel = (priority: string) => {
+        const priorityMap: Record<string, string> = {
+            'LOW': 'Faible',
+            'MEDIUM': 'Moyenne',
+            'HIGH': 'Haute',
+            'CRITICAL': 'Critique'
+        };
+        return priorityMap[priority] || priority;
+    };
+
     // Archive handlers
     const handleArchiveClick = () => setIsArchiveModalOpen(true);
     const handleConfirmArchive = async () => {
@@ -229,8 +253,8 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
                         renderRow={(workOrder) => (
                             <tr key={workOrder.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap font-medium text-[#008751]">#{workOrder.id.slice(-6)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{workOrder.status}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{workOrder.priority}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{getWorkOrderStatusLabel(workOrder.status)}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{getWorkOrderPriorityLabel(workOrder.priority)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{workOrder.assignedTo || 'Non assigné'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{workOrder.dueDate ? new Date(workOrder.dueDate).toLocaleDateString() : '-'}</td>
                                 <td className="px-6 py-4">{workOrder.description}</td>

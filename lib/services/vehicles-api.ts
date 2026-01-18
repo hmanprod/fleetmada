@@ -217,6 +217,8 @@ export interface ExpenseEntry {
   date: string
   type: string
   vendor?: string
+  vendorId?: string
+  vendorName?: string
   source: string
   amount: number
   currency: string

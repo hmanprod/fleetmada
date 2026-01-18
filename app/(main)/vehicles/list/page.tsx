@@ -131,10 +131,10 @@ export default function VehicleList() {
   // Mapper les statuts API vers les statuts UI
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      'ACTIVE': { label: 'Active', class: 'bg-green-100 text-green-800' },
-      'INACTIVE': { label: 'Inactive', class: 'bg-gray-100 text-gray-800' },
-      'MAINTENANCE': { label: 'In Shop', class: 'bg-yellow-100 text-yellow-800' },
-      'DISPOSED': { label: 'Out of Service', class: 'bg-red-100 text-red-800' }
+      'ACTIVE': { label: 'Actif', class: 'bg-green-100 text-green-800' },
+      'INACTIVE': { label: 'Inactif', class: 'bg-gray-100 text-gray-800' },
+      'MAINTENANCE': { label: 'En atelier', class: 'bg-yellow-100 text-yellow-800' },
+      'DISPOSED': { label: 'Hors service', class: 'bg-red-100 text-red-800' }
     };
 
     const config = statusMap[status as keyof typeof statusMap] || { label: status, class: 'bg-gray-100 text-gray-800' };
@@ -273,13 +273,13 @@ export default function VehicleList() {
                         onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}`); }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                       >
-                        <Eye size={14} /> View
+                        <Eye size={14} /> Voir
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); router.push(`/vehicles/list/${vehicle.id}/edit`); }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                       >
-                        <Settings size={14} /> Edit
+                        <Settings size={14} /> Modifier
                       </button>
                       <button
                         onClick={(e) => handleArchiveClick(vehicle, e)}

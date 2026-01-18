@@ -36,8 +36,25 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
             'High': 'bg-red-100 text-red-800',
             'Medium': 'bg-yellow-100 text-yellow-800',
             'Low': 'bg-green-100 text-green-800',
+            'CRITICAL': 'bg-red-200 text-red-900',
+            'HIGH': 'bg-red-100 text-red-800',
+            'MEDIUM': 'bg-yellow-100 text-yellow-800',
+            'LOW': 'bg-green-100 text-green-800',
         };
         return colors[priority] || 'bg-gray-100 text-gray-800';
+    };
+
+    const getPriorityLabel = (priority: string) => {
+        const labels: Record<string, string> = {
+            'High': 'Haute',
+            'Medium': 'Moyenne',
+            'Low': 'Faible',
+            'CRITICAL': 'Critique',
+            'HIGH': 'Haute',
+            'MEDIUM': 'Moyenne',
+            'LOW': 'Faible',
+        };
+        return labels[priority] || priority;
     };
 
     const getStatusBadge = (status: string) => {
@@ -46,8 +63,26 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
             'In Progress': 'bg-yellow-100 text-yellow-800',
             'Resolved': 'bg-green-100 text-green-800',
             'Closed': 'bg-gray-100 text-gray-800',
+            'OPEN': 'bg-red-100 text-red-800',
+            'IN_PROGRESS': 'bg-yellow-100 text-yellow-800',
+            'RESOLVED': 'bg-green-100 text-green-800',
+            'CLOSED': 'bg-gray-100 text-gray-800',
         };
         return colors[status] || 'bg-gray-100 text-gray-800';
+    };
+
+    const getStatusLabel = (status: string) => {
+        const labels: Record<string, string> = {
+            'Open': 'Ouvert',
+            'In Progress': 'En cours',
+            'Resolved': 'Résolu',
+            'Closed': 'Fermé',
+            'OPEN': 'Ouvert',
+            'IN_PROGRESS': 'En cours',
+            'RESOLVED': 'Résolu',
+            'CLOSED': 'Fermé',
+        };
+        return labels[status] || status;
     };
 
     return (
@@ -58,7 +93,7 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Rechercher"
                         className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008751]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -69,14 +104,14 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                    <option>Issue Status</option>
-                    <option>Open</option>
-                    <option>In Progress</option>
-                    <option>Resolved</option>
-                    <option>Closed</option>
+                    <option>Statut du problème</option>
+                    <option value="OPEN">Ouvert</option>
+                    <option value="IN_PROGRESS">En cours</option>
+                    <option value="RESOLVED">Résolu</option>
+                    <option value="CLOSED">Fermé</option>
                 </select>
                 <button className="text-sm text-[#008751] hover:underline flex items-center gap-1">
-                    More Actions <ExternalLink className="w-3 h-3" />
+                    Plus d'actions <ExternalLink className="w-3 h-3" />
                 </button>
                 <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4" /></button>
@@ -90,15 +125,15 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Summary</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priorité</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Problème</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Résumé</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reported Date ▼</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Labels</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Watchers</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date de signalement ▼</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigné</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Étiquettes</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Observateurs</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -109,7 +144,7 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
                                         <div className="w-12 h-12 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
                                             <Search className="w-6 h-6" />
                                         </div>
-                                        <p>No results to show.</p>
+                                        <p>Aucun résultat à afficher.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -118,7 +153,7 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
                                 <tr key={item.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityBadge(item.priority)}`}>
-                                            {item.priority}
+                                            {getPriorityLabel(item.priority)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-sm text-[#008751] font-medium underline cursor-pointer">
@@ -127,7 +162,7 @@ export function VehicleIssues({ vehicleId, data }: VehicleIssuesProps) {
                                     <td className="px-4 py-3 text-sm text-gray-900">{item.summary}</td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(item.status)}`}>
-                                            {item.status}
+                                            {getStatusLabel(item.status)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-500">{item.source || '—'}</td>

@@ -75,19 +75,19 @@ export default function CreateExpensePage() {
 
     const validateForm = () => {
         if (!formData.vehicleId) {
-            toast.error('Please select a vehicle');
+            toast.error('Veuillez sélectionner un véhicule');
             return false;
         }
         if (!formData.type) {
-            toast.error('Please select an expense type');
+            toast.error('Veuillez sélectionner un type de dépense');
             return false;
         }
         if (formData.amount <= 0) {
-            toast.error('Please enter a valid amount');
+            toast.error('Veuillez entrer un montant valide');
             return false;
         }
         if (!formData.date) {
-            toast.error('Please select a date');
+            toast.error('Veuillez sélectionner une date');
             return false;
         }
         return true;
@@ -115,7 +115,7 @@ export default function CreateExpensePage() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to upload files');
+            throw new Error(errorData.error || 'Échec du téléchargement des fichiers');
         }
     };
 
@@ -137,13 +137,13 @@ export default function CreateExpensePage() {
 
             await uploadFiles(newExpense.id);
 
-            toast.success('Expense entry created successfully');
+            toast.success('Entrée de dépense créée avec succès');
 
             setTimeout(() => {
                 router.push('/vehicles/expense');
             }, 1000);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Error creating expense entry';
+            const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de la dépense';
             toast.error(errorMessage);
         } finally {
             setLoading(false);
@@ -167,7 +167,7 @@ export default function CreateExpensePage() {
 
             await uploadFiles(newExpense.id);
 
-            toast.success('Expense entry created successfully');
+            toast.success('Entrée de dépense créée avec succès');
 
             // Reset form
             setFormData({
@@ -184,7 +184,7 @@ export default function CreateExpensePage() {
             setSelectedPhotos([]);
             setSelectedDocs([]);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Error creating expense entry';
+            const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de la dépense';
             toast.error(errorMessage);
         } finally {
             setLoading(false);
@@ -199,9 +199,9 @@ export default function CreateExpensePage() {
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
                     <Link href="/vehicles/expense" className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
-                        <ArrowLeft size={16} /> Expense Entries
+                        <ArrowLeft size={16} /> Entrées de dépenses
                     </Link>
-                    <h1 className="text-2xl font-bold text-gray-900">New Expense Entry</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Nouvelle dépense</h1>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -209,14 +209,14 @@ export default function CreateExpensePage() {
                         className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
                         disabled={loading}
                     >
-                        Cancel
+                        Annuler
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm flex items-center gap-2 disabled:opacity-50"
                     >
-                        <Save size={18} /> {loading ? 'Saving...' : 'Save Expense Entry'}
+                        <Save size={18} /> {loading ? 'Enregistrement...' : 'Enregistrer la dépense'}
                     </button>
                 </div>
             </div>
@@ -224,11 +224,11 @@ export default function CreateExpensePage() {
             <div className="space-y-6">
                 {/* Details Section */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-2">Details</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-2">Détails</h2>
 
                     <div className="space-y-4 max-w-3xl">
                         <div className="relative" ref={vehicleDropdownRef}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule <span className="text-red-500">*</span></label>
 
                             <div className="relative">
                                 <div
@@ -243,7 +243,7 @@ export default function CreateExpensePage() {
                                                 <span className="ml-2 text-xs text-gray-500">{selectedVehicle.licensePlate || selectedVehicle.vin}</span>
                                             </div>
                                         ) : (
-                                            <span className="text-gray-500">{vehiclesLoading ? 'Loading...' : 'Select a vehicle...'}</span>
+                                            <span className="text-gray-500">{vehiclesLoading ? 'Chargement...' : 'Sélectionner un véhicule...'}</span>
                                         )}
                                     </div>
                                     <MoreHorizontal size={16} className="text-gray-400 rotate-90" />
@@ -257,7 +257,7 @@ export default function CreateExpensePage() {
                                                 <input
                                                     autoFocus
                                                     type="text"
-                                                    placeholder="Search vehicle..."
+                                                    placeholder="Rechercher un véhicule..."
                                                     className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
                                                     value={vehicleSearch}
                                                     onChange={(e) => setVehicleSearch(e.target.value)}
@@ -279,13 +279,13 @@ export default function CreateExpensePage() {
                                                     >
                                                         <div>
                                                             <div className="text-sm font-medium text-gray-900 group-hover:text-[#008751]">{v.name}</div>
-                                                            <div className="text-xs text-gray-500">{v.licensePlate || 'No Plate'} • {v.type || 'Standard'}</div>
+                                                            <div className="text-xs text-gray-500">{v.licensePlate || 'Sans plaque'} • {v.type || 'Standard'}</div>
                                                         </div>
                                                         {formData.vehicleId === v.id && <div className="text-[#008751]"><CheckCircle size={14} /></div>}
                                                     </div>
                                                 ))
                                             ) : (
-                                                <div className="px-4 py-4 text-center text-xs text-gray-500 italic">No vehicles found</div>
+                                                <div className="px-4 py-4 text-center text-xs text-gray-500 italic">Aucun véhicule trouvé</div>
                                             )}
                                         </div>
                                     </div>
@@ -294,26 +294,26 @@ export default function CreateExpensePage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Expense Type <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Type de dépense <span className="text-red-500">*</span></label>
                             <select
                                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751]"
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                             >
-                                <option value="">Please select</option>
-                                <option value="Fuel">Fuel</option>
-                                <option value="Insurance">Insurance</option>
+                                <option value="">Veuillez sélectionner</option>
+                                <option value="Fuel">Carburant</option>
+                                <option value="Insurance">Assurance</option>
                                 <option value="Maintenance">Maintenance</option>
-                                <option value="Tolls">Tolls</option>
-                                <option value="Vehicle Registration">Vehicle Registration</option>
-                                <option value="Vehicle Registration and Taxes">Vehicle Registration and Taxes</option>
-                                <option value="Telematics Device">Telematics Device</option>
-                                <option value="Safety Technology">Safety Technology</option>
+                                <option value="Tolls">Péages</option>
+                                <option value="Vehicle Registration">Immatriculation du véhicule</option>
+                                <option value="Vehicle Registration and Taxes">Immatriculation et taxes</option>
+                                <option value="Telematics Device">Dispositif télématique</option>
+                                <option value="Safety Technology">Technologie de sécurité</option>
                             </select>
                         </div>
 
                         <div className="relative" ref={vendorDropdownRef}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Vendeur</label>
                             <div className="relative">
                                 <div
                                     className={`w-full p-2 border rounded text-sm bg-white cursor-pointer flex items-center justify-between transition-all ${isVendorDropdownOpen ? 'ring-1 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
@@ -326,7 +326,7 @@ export default function CreateExpensePage() {
                                                 <span className="font-medium text-gray-900">{selectedVendor.name}</span>
                                             </div>
                                         ) : (
-                                            <span className="text-gray-500">{vendorsLoading ? 'Loading...' : 'Select a vendor...'}</span>
+                                            <span className="text-gray-500">{vendorsLoading ? 'Chargement...' : 'Sélectionner un vendeur...'}</span>
                                         )}
                                     </div>
                                     <MoreHorizontal size={16} className="text-gray-400 rotate-90" />
@@ -340,7 +340,7 @@ export default function CreateExpensePage() {
                                                 <input
                                                     autoFocus
                                                     type="text"
-                                                    placeholder="Search vendor..."
+                                                    placeholder="Rechercher un vendeur..."
                                                     className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
                                                     value={vendorSearch}
                                                     onChange={(e) => setVendorSearch(e.target.value)}
@@ -369,7 +369,7 @@ export default function CreateExpensePage() {
                                                 ))
                                             ) : (
                                                 <div className="px-4 py-4 text-center">
-                                                    <div className="text-xs text-gray-500 italic mb-2">No vendors found</div>
+                                                    <div className="text-xs text-gray-500 italic mb-2">Aucun vendeur trouvé</div>
                                                 </div>
                                             )}
                                         </div>
@@ -379,7 +379,7 @@ export default function CreateExpensePage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Amount <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Montant <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Ar</span>
                                 <input
@@ -422,7 +422,7 @@ export default function CreateExpensePage() {
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-gray-900">Photos</h3>
                             {selectedPhotos.length > 0 && (
-                                <span className="text-xs font-medium text-gray-500">{selectedPhotos.length} file(s) selected</span>
+                                <span className="text-xs font-medium text-gray-500">{selectedPhotos.length} fichier(s) sélectionné(s)</span>
                             )}
                         </div>
 
@@ -442,8 +442,8 @@ export default function CreateExpensePage() {
                             <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center mx-auto mb-3 text-gray-400">
                                 <Plus size={20} />
                             </div>
-                            <p className="text-sm font-medium text-gray-900">Add Photos</p>
-                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
+                            <p className="text-sm font-medium text-gray-900">Ajouter des photos</p>
+                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF jusqu'à 10Mo</p>
                         </div>
 
                         {selectedPhotos.length > 0 && (
@@ -473,7 +473,7 @@ export default function CreateExpensePage() {
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-gray-900">Documents</h3>
                             {selectedDocs.length > 0 && (
-                                <span className="text-xs font-medium text-gray-500">{selectedDocs.length} file(s) selected</span>
+                                <span className="text-xs font-medium text-gray-500">{selectedDocs.length} fichier(s) sélectionné(s)</span>
                             )}
                         </div>
 
@@ -493,8 +493,8 @@ export default function CreateExpensePage() {
                             <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center mx-auto mb-3 text-gray-400">
                                 <Plus size={20} />
                             </div>
-                            <p className="text-sm font-medium text-gray-900">Add Documents</p>
-                            <p className="text-xs text-gray-500 mt-1">PDF, Word, Excel up to 50MB</p>
+                            <p className="text-sm font-medium text-gray-900">Ajouter des documents</p>
+                            <p className="text-xs text-gray-500 mt-1">PDF, Word, Excel jusqu'à 50Mo</p>
                         </div>
 
                         {selectedDocs.length > 0 && (
@@ -527,14 +527,14 @@ export default function CreateExpensePage() {
                         disabled={loading}
                         className="bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded hover:bg-gray-50 disabled:opacity-50"
                     >
-                        Save & Add Another
+                        Enregistrer et ajouter un autre
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
                         className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm disabled:opacity-50"
                     >
-                        {loading ? 'Saving...' : 'Save Expense Entry'}
+                        {loading ? 'Enregistrement...' : 'Enregistrer la dépense'}
                     </button>
                 </div>
             </div>

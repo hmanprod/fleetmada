@@ -244,15 +244,15 @@ export default function VehicleAssignmentsPage() {
 
   const formatDate = (date: Date) => {
     if (viewMode === 'day') {
-      return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      return date.toLocaleDateString('fr-FR', { month: 'long', day: 'numeric', year: 'numeric' });
     } else if (viewMode === 'week') {
       const startOfWeek = new Date(date);
       startOfWeek.setDate(date.getDate() - date.getDay());
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
-      return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      return `${startOfWeek.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     } else {
-      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     }
   };
 
@@ -272,7 +272,7 @@ export default function VehicleAssignmentsPage() {
     return (
       <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white">
         <Loader2 className="w-8 h-8 text-[#008751] animate-spin mb-2" />
-        <p className="text-gray-500 font-medium">Loading assignments...</p>
+        <p className="text-gray-500 font-medium">Chargement des affectations...</p>
       </div>
     );
   }
@@ -283,16 +283,16 @@ export default function VehicleAssignmentsPage() {
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Vehicle Assignments</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Affectations de véhicules</h1>
             <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-yellow-400"></span> Learn
+              <span className="w-2 h-2 rounded-full bg-yellow-400"></span> Apprendre
             </span>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
           >
-            <Plus size={20} /> Add Assignment
+            <Plus size={20} /> Ajouter une affectation
           </button>
         </div>
 
@@ -302,7 +302,7 @@ export default function VehicleAssignmentsPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
-                placeholder="Search vehicles..."
+                placeholder="Rechercher des véhicules..."
                 className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -312,7 +312,7 @@ export default function VehicleAssignmentsPage() {
               onClick={() => setIsFiltersSidebarOpen(true)}
               className="border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
             >
-              <Filter size={14} /> Filters
+              <Filter size={14} /> Filtres
             </button>
           </div>
 
@@ -322,26 +322,26 @@ export default function VehicleAssignmentsPage() {
                 onClick={() => setViewMode('day')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-all ${viewMode === 'day' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
               >
-                Day
+                Jour
               </button>
               <button
                 onClick={() => setViewMode('week')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-all ${viewMode === 'week' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
               >
-                Week
+                Semaine
               </button>
               <button
                 onClick={() => setViewMode('month')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-all ${viewMode === 'month' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
               >
-                Month
+                Mois
               </button>
             </div>
             <button
               onClick={() => setCurrentDate(new Date())}
               className="px-3 py-1 text-sm font-medium p-2 text-gray-900 bg-gray-100 rounded transition-colors hover:bg-gray-200"
             >
-              Today
+              Aujourd'hui
             </button>
             <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-2 py-1">
               <button onClick={() => navigateDate(-1)} className="p-1 hover:bg-gray-100 rounded transition-colors"><ChevronLeft size={16} /></button>
@@ -358,11 +358,11 @@ export default function VehicleAssignmentsPage() {
         {/* Left Column: Vehicles */}
         <div className="w-64 border-r border-gray-200 overflow-y-auto flex-shrink-0 bg-white z-10">
           <div className="h-10 border-b border-gray-200 flex items-center px-4 bg-gray-50 text-sm font-medium text-gray-500 sticky top-0">
-            Vehicle
+            Véhicule
           </div>
           {vehicles.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-500 text-sm">No vehicles found matching filters.</p>
+              <p className="text-gray-500 text-sm">Aucun véhicule trouvé correspondant aux filtres.</p>
             </div>
           ) : vehicles.map(vehicle => (
             <div key={vehicle.id} className="h-16 border-b border-gray-100 px-4 flex items-center hover:bg-gray-50 transition-colors">
@@ -377,7 +377,7 @@ export default function VehicleAssignmentsPage() {
                                    ${(vehicle.status === 'Active' || vehicle.status === 'ACTIVE' || (vehicle.status as string) === 'active') ? 'bg-green-500' :
                         (vehicle.status === 'In Shop' || vehicle.status === 'MAINTENANCE' || (vehicle.status as string) === 'maintenance') ? 'bg-yellow-500' : 'bg-red-500'}`}
                     />
-                    {vehicle.status}
+                    {vehicle.status === 'ACTIVE' ? 'Actif' : vehicle.status === 'MAINTENANCE' ? 'En atelier' : vehicle.status}
                   </div>
                 </div>
               </div>
@@ -482,7 +482,7 @@ export default function VehicleAssignmentsPage() {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">
-                {editingAssignmentId ? 'Edit Assignment' : 'Add Assignment'}
+                {editingAssignmentId ? 'Modifier l\'affectation' : 'Ajouter une affectation'}
               </h3>
               <button
                 onClick={handleCloseModal}
@@ -501,7 +501,7 @@ export default function VehicleAssignmentsPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Vehicle <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule affecté <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <Car className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <select
@@ -510,7 +510,7 @@ export default function VehicleAssignmentsPage() {
                     disabled={isSaving}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, vehicleId: e.target.value })}
                   >
-                    <option value="">Please select</option>
+                    <option value="">Veuillez sélectionner</option>
                     {vehicles.map(v => (
                       <option key={v.id} value={v.id}>{v.name} ({v.vin})</option>
                     ))}
@@ -519,7 +519,7 @@ export default function VehicleAssignmentsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Operator <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Opérateur <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <select
@@ -535,7 +535,7 @@ export default function VehicleAssignmentsPage() {
                       });
                     }}
                   >
-                    <option value="">Please select</option>
+                    <option value="">Veuillez sélectionner</option>
                     {contacts.map(c => (
                       <option key={c.id} value={`${c.firstName} ${c.lastName}`}>
                         {c.firstName} {c.lastName}
@@ -547,7 +547,7 @@ export default function VehicleAssignmentsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date/Time</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date/Heure de début</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
@@ -566,7 +566,7 @@ export default function VehicleAssignmentsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date/Time</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date/Heure de fin</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
@@ -588,7 +588,7 @@ export default function VehicleAssignmentsPage() {
 
               <div>
                 <textarea
-                  placeholder="Add an optional comment"
+                  placeholder="Ajouter un commentaire optionnel"
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-[#008751] focus:border-[#008751] transition-all disabled:opacity-50"
                   rows={3}
                   value={assignmentForm.comments || ''}
@@ -603,7 +603,7 @@ export default function VehicleAssignmentsPage() {
                 {editingAssignmentId && (
                   <button
                     onClick={async () => {
-                      if (confirm('Are you sure you want to delete this assignment?')) {
+                      if (confirm('Êtes-vous sûr de vouloir supprimer cette affectation ?')) {
                         setIsSaving(true);
                         try {
                           const response = await fetch(`/api/vehicles/${assignmentForm.vehicleId}/assignments?id=${editingAssignmentId}`, {
@@ -615,7 +615,7 @@ export default function VehicleAssignmentsPage() {
                             handleCloseModal();
                           }
                         } catch (e) {
-                          console.error('Delete failed:', e);
+                          console.error('La suppression a échoué:', e);
                         } finally {
                           setIsSaving(false);
                         }
@@ -624,7 +624,7 @@ export default function VehicleAssignmentsPage() {
                     className="text-red-600 hover:text-red-700 font-medium text-sm transition-colors disabled:opacity-50"
                     disabled={isSaving}
                   >
-                    Delete
+                    Supprimer
                   </button>
                 )}
               </div>
@@ -634,7 +634,7 @@ export default function VehicleAssignmentsPage() {
                   className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors disabled:opacity-50"
                   disabled={isSaving}
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   onClick={handleSaveAssignment}
@@ -642,7 +642,7 @@ export default function VehicleAssignmentsPage() {
                   className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
                 >
                   {isSaving && <Loader2 size={16} className="animate-spin" />}
-                  {editingAssignmentId ? 'Update Assignment' : 'Save Assignment'}
+                  {editingAssignmentId ? 'Mettre à jour l\'affectation' : 'Enregistrer l\'affectation'}
                 </button>
               </div>
             </div>

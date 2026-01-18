@@ -96,7 +96,7 @@ export function FiltersSidebar({
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                 <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <X className="cursor-pointer hover:text-gray-600" size={24} onClick={onClose} /> Filters
+                        <X className="cursor-pointer hover:text-gray-600" size={24} onClick={onClose} /> Filtres
                     </h2>
                 </div>
                 {activeFilters.length > 0 && (
@@ -104,7 +104,7 @@ export function FiltersSidebar({
                         onClick={clearAll}
                         className="text-sm text-gray-500 hover:text-red-500 font-medium transition-colors"
                     >
-                        Clear all
+                        Tout effacer
                     </button>
                 )}
             </div>
@@ -128,14 +128,14 @@ export function FiltersSidebar({
                         onClick={() => setIsSelectingField(!isSelectingField)}
                         className="text-[#008751] hover:text-[#007043] font-bold py-2 flex items-center gap-2 transition-colors"
                     >
-                        <Plus size={20} /> Add Filter
+                        <Plus size={20} /> Ajouter un filtre
                     </button>
 
                     {isSelectingField && (
                         <div className="absolute left-0 top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-20 overflow-hidden flex flex-col max-h-[400px] animate-in fade-in zoom-in duration-200">
                             <div className="p-4 border-b border-gray-100 bg-white">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-bold text-gray-900">New Filter</span>
+                                    <span className="text-sm font-bold text-gray-900">Nouveau filtre</span>
                                     <button onClick={() => setIsSelectingField(false)} className="text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                                 </div>
                                 <div className="relative">
@@ -143,7 +143,7 @@ export function FiltersSidebar({
                                     <input
                                         autoFocus
                                         type="text"
-                                        placeholder="Select field"
+                                        placeholder="Sélectionner un champ"
                                         className="w-full pl-10 pr-10 py-2 text-sm border border-[#008751] rounded-md focus:ring-1 focus:ring-[#008751] outline-none"
                                         value={fieldSearchTerm}
                                         onChange={(e) => setFieldSearchTerm(e.target.value)}
@@ -173,7 +173,7 @@ export function FiltersSidebar({
                                 ))}
                                 {Object.keys(groupedFields).length === 0 && (
                                     <div className="p-4 text-center text-sm text-gray-500">
-                                        No fields found
+                                        Aucun champ trouvé
                                     </div>
                                 )}
                             </div>
@@ -183,7 +183,7 @@ export function FiltersSidebar({
 
                 {activeFilters.length === 0 && !isSelectingField && (
                     <div className="text-center py-12">
-                        <p className="text-gray-500">No filters applied.</p>
+                        <p className="text-gray-500">Aucun filtre appliqué.</p>
                     </div>
                 )}
             </div>
@@ -194,7 +194,7 @@ export function FiltersSidebar({
                     onClick={handleApply}
                     className="w-full bg-[#008751] hover:bg-[#007043] text-white font-bold py-3 px-4 rounded-md flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]"
                 >
-                    Apply Filters
+                    Appliquer les filtres
                 </button>
             </div>
         </div>

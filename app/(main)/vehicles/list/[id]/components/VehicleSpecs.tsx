@@ -57,7 +57,7 @@ export function VehicleSpecs({ vehicle }: VehicleSpecsProps) {
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900">Specifications</h2>
+                <h2 className="text-lg font-bold text-gray-900">Spécifications</h2>
             </div>
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -70,83 +70,83 @@ export function VehicleSpecs({ vehicle }: VehicleSpecsProps) {
                     </Section>
 
                     <Section title="Dimensions">
-                        <DetailRow label="Width" value={formatNumber(vehicle.width, ' mm')} />
-                        <DetailRow label="Height" value={formatNumber(vehicle.height, ' mm')} />
-                        <DetailRow label="Length" value={formatNumber(vehicle.length, ' mm')} />
-                        <DetailRow label="Interior Volume" value={formatNumber(vehicle.interiorVolume, ' L')} />
+                        <DetailRow label="Largeur" value={formatNumber(vehicle.width, ' mm')} />
+                        <DetailRow label="Hauteur" value={formatNumber(vehicle.height, ' mm')} />
+                        <DetailRow label="Longueur" value={formatNumber(vehicle.length, ' mm')} />
+                        <DetailRow label="Volume intérieur" value={formatNumber(vehicle.interiorVolume, ' L')} />
                         <DetailRow label="Nombre de passagers" value={vehicle.passengerCount} />
-                        <DetailRow label="Cargo Volume" value={formatNumber(vehicle.cargoVolume, ' L')} />
-                        <DetailRow label="Ground Clearance" value={formatNumber(vehicle.groundClearance, ' mm')} />
-                        <DetailRow label="Bed Length" value={formatNumber(vehicle.bedLength, ' mm')} />
+                        <DetailRow label="Volume de chargement" value={formatNumber(vehicle.cargoVolume, ' L')} />
+                        <DetailRow label="Garde au sol" value={formatNumber(vehicle.groundClearance, ' mm')} />
+                        <DetailRow label="Longueur de la caisse" value={formatNumber(vehicle.bedLength, ' mm')} />
                     </Section>
 
-                    <Section title="Weight">
-                        <DetailRow label="Curb Weight" value={formatNumber(vehicle.curbWeight, ' kg')} />
-                        <DetailRow label="Gross Vehicle Weight Rating" value={formatNumber(vehicle.grossVehicleWeight, ' kg')} />
+                    <Section title="Poids">
+                        <DetailRow label="Poids à vide" value={formatNumber(vehicle.curbWeight, ' kg')} />
+                        <DetailRow label="Poids nominal brut" value={formatNumber(vehicle.grossVehicleWeight, ' kg')} />
                     </Section>
 
                     <Section title="Performance">
-                        <DetailRow label="Base Towing Capacity" value={formatNumber(vehicle.towingCapacity, ' kg')} />
-                        <DetailRow label="Max Payload" value={formatNumber(vehicle.maxPayload, ' kg')} />
+                        <DetailRow label="Capacité de remorquage" value={formatNumber(vehicle.towingCapacity, ' kg')} />
+                        <DetailRow label="Charge utile maximale" value={formatNumber(vehicle.maxPayload, ' kg')} />
                     </Section>
 
-                    <Section title="Fuel Economy">
-                        <DetailRow label="EPA City" value={formatNumber(vehicle.epaCity, ' L/100km')} />
-                        <DetailRow label="EPA Highway" value={formatNumber(vehicle.epaHighway, ' L/100km')} />
-                        <DetailRow label="EPA Combined" value={formatNumber(vehicle.epaCombined, ' L/100km')} />
+                    <Section title="Consommation">
+                        <DetailRow label="Ville EPA" value={formatNumber(vehicle.epaCity, ' L/100km')} />
+                        <DetailRow label="Autoroute EPA" value={formatNumber(vehicle.epaHighway, ' L/100km')} />
+                        <DetailRow label="Combiné EPA" value={formatNumber(vehicle.epaCombined, ' L/100km')} />
                     </Section>
 
-                    <Section title="Fuel">
-                        <DetailRow label="Fuel Quality" value={vehicle.fuelQuality} />
-                        <DetailRow label="Fuel Tank Capacity" value={formatNumber(vehicle.fuelTankCapacity, ' L')} />
-                        <DetailRow label="Fuel Tank 2 Capacity" value={formatNumber(vehicle.fuelTank2Capacity, ' L')} />
+                    <Section title="Carburant">
+                        <DetailRow label="Qualité du carburant" value={vehicle.fuelQuality} />
+                        <DetailRow label="Capacité du réservoir" value={formatNumber(vehicle.fuelTankCapacity, ' L')} />
+                        <DetailRow label="Capacité du réservoir 2" value={formatNumber(vehicle.fuelTank2Capacity, ' L')} />
                     </Section>
 
-                    <Section title="Oil">
-                        <DetailRow label="Oil Capacity" value={formatNumber(vehicle.oilCapacity, ' L')} />
+                    <Section title="Huile">
+                        <DetailRow label="Capacité d'huile" value={formatNumber(vehicle.oilCapacity, ' L')} />
                     </Section>
                 </div>
 
                 {/* Right Column */}
                 <div>
-                    <Section title="Engine">
-                        <DetailRow label="Engine Description" value={vehicle.engineDescription} />
-                        <DetailRow label="Engine Brand" value={vehicle.engineBrand} />
-                        <DetailRow label="Engine Aspiration" value={vehicle.engineAspiration} />
-                        <DetailRow label="Engine Block Type" value={vehicle.engineBlockType} />
-                        <DetailRow label="Engine Bore" value={formatNumber(vehicle.engineBore, ' mm')} />
-                        <DetailRow label="Engine Cam Type" value={vehicle.engineCamType} />
-                        <DetailRow label="Engine Compression" value={vehicle.engineCompression} />
-                        <DetailRow label="Engine Cylinders" value={vehicle.engineCylinders} />
-                        <DetailRow label="Engine Displacement" value={formatNumber(vehicle.engineDisplacement, ' L')} />
-                        <DetailRow label="Fuel Induction" value={vehicle.fuelInduction} />
-                        <DetailRow label="Max HP" value={formatNumber(vehicle.maxHp, ' hp')} />
-                        <DetailRow label="Max Torque" value={formatNumber(vehicle.maxTorque, ' Nm')} />
-                        <DetailRow label="Redline RPM" value={formatNumber(vehicle.redlineRpm, ' RPM')} />
-                        <DetailRow label="Engine Stroke" value={formatNumber(vehicle.engineStroke, ' mm')} />
-                        <DetailRow label="Engine Valves" value={vehicle.engineValves} />
+                    <Section title="Moteur">
+                        <DetailRow label="Description du moteur" value={vehicle.engineDescription} />
+                        <DetailRow label="Marque du moteur" value={vehicle.engineBrand} />
+                        <DetailRow label="Aspiration du moteur" value={vehicle.engineAspiration} />
+                        <DetailRow label="Type de bloc moteur" value={vehicle.engineBlockType} />
+                        <DetailRow label="Alésage du moteur" value={formatNumber(vehicle.engineBore, ' mm')} />
+                        <DetailRow label="Type de came du moteur" value={vehicle.engineCamType} />
+                        <DetailRow label="Compression du moteur" value={vehicle.engineCompression} />
+                        <DetailRow label="Cylindres moteur" value={vehicle.engineCylinders} />
+                        <DetailRow label="Cylindrée du moteur" value={formatNumber(vehicle.engineDisplacement, ' L')} />
+                        <DetailRow label="Induction de carburant" value={vehicle.fuelInduction} />
+                        <DetailRow label="Puissance max" value={formatNumber(vehicle.maxHp, ' hp')} />
+                        <DetailRow label="Couple max" value={formatNumber(vehicle.maxTorque, ' Nm')} />
+                        <DetailRow label="Régime max" value={formatNumber(vehicle.redlineRpm, ' RPM')} />
+                        <DetailRow label="Course du moteur" value={formatNumber(vehicle.engineStroke, ' mm')} />
+                        <DetailRow label="Soupapes moteur" value={vehicle.engineValves} />
                     </Section>
 
                     <Section title="Transmission">
-                        <DetailRow label="Transmission Description" value={vehicle.transmissionDescription} />
-                        <DetailRow label="Transmission Brand" value={vehicle.transmissionBrand} />
-                        <DetailRow label="Transmission Type" value={vehicle.transmissionType} />
-                        <DetailRow label="Transmission Gears" value={vehicle.transmissionGears} />
+                        <DetailRow label="Description de la transmission" value={vehicle.transmissionDescription} />
+                        <DetailRow label="Marque de la transmission" value={vehicle.transmissionBrand} />
+                        <DetailRow label="Type de transmission" value={vehicle.transmissionType} />
+                        <DetailRow label="Nombre de rapports" value={vehicle.transmissionGears} />
                     </Section>
 
-                    <Section title="Wheels & Tires">
-                        <DetailRow label="Drive Type" value={vehicle.driveType} />
-                        <DetailRow label="Brake System" value={vehicle.brakeSystem} />
-                        <DetailRow label="Front Track Width" value={formatNumber(vehicle.frontTrackWidth, ' mm')} />
-                        <DetailRow label="Rear Track Width" value={formatNumber(vehicle.rearTrackWidth, ' mm')} />
-                        <DetailRow label="Wheelbase" value={formatNumber(vehicle.wheelbase, ' mm')} />
-                        <DetailRow label="Front Wheel Diameter" value={formatNumber(vehicle.frontWheelDiameter, '"')} />
-                        <DetailRow label="Rear Wheel Diameter" value={formatNumber(vehicle.rearWheelDiameter, '"')} />
-                        <DetailRow label="Rear Axle Type" value={vehicle.rearAxleType} />
-                        <DetailRow label="Front Tire Type" value={vehicle.frontTireType} />
-                        <DetailRow label="Front Tire PSI" value={formatNumber(vehicle.frontTirePsi, ' PSI')} />
-                        <DetailRow label="Rear Tire Type" value={vehicle.rearTireType} />
-                        <DetailRow label="Rear Tire PSI" value={formatNumber(vehicle.rearTirePsi, ' PSI')} />
+                    <Section title="Roues et Pneus">
+                        <DetailRow label="Type de propulsion" value={vehicle.driveType} />
+                        <DetailRow label="Système de freinage" value={vehicle.brakeSystem} />
+                        <DetailRow label="Voie avant" value={formatNumber(vehicle.frontTrackWidth, ' mm')} />
+                        <DetailRow label="Voie arrière" value={formatNumber(vehicle.rearTrackWidth, ' mm')} />
+                        <DetailRow label="Empattement" value={formatNumber(vehicle.wheelbase, ' mm')} />
+                        <DetailRow label="Diamètre roue avant" value={formatNumber(vehicle.frontWheelDiameter, '"')} />
+                        <DetailRow label="Diamètre roue arrière" value={formatNumber(vehicle.rearWheelDiameter, '"')} />
+                        <DetailRow label="Type d'essieu arrière" value={vehicle.rearAxleType} />
+                        <DetailRow label="Type de pneu avant" value={vehicle.frontTireType} />
+                        <DetailRow label="Pression pneu avant" value={formatNumber(vehicle.frontTirePsi, ' PSI')} />
+                        <DetailRow label="Type de pneu arrière" value={vehicle.rearTireType} />
+                        <DetailRow label="Pression pneu arrière" value={formatNumber(vehicle.rearTirePsi, ' PSI')} />
                     </Section>
                 </div>
             </div>

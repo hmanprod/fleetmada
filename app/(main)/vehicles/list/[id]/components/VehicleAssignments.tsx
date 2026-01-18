@@ -33,7 +33,7 @@ export function VehicleAssignments({ vehicleId, data }: VehicleAssignmentsProps)
         const endDate = end ? new Date(end) : new Date();
         const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return `${diffDays} days`;
+        return `${diffDays} jours`;
     };
 
     return (
@@ -44,14 +44,14 @@ export function VehicleAssignments({ vehicleId, data }: VehicleAssignmentsProps)
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Rechercher"
                         className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008751]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <button className="text-sm text-[#008751] hover:underline flex items-center gap-1">
-                    More Actions <ExternalLink className="w-3 h-3" />
+                    Plus d'actions <ExternalLink className="w-3 h-3" />
                 </button>
                 <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4" /></button>
@@ -66,11 +66,11 @@ export function VehicleAssignments({ vehicleId, data }: VehicleAssignmentsProps)
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start ▼</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Meter</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Meter</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Début ▼</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fin</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durée</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Compteur début</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Compteur fin</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -81,7 +81,7 @@ export function VehicleAssignments({ vehicleId, data }: VehicleAssignmentsProps)
                                         <div className="w-12 h-12 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
                                             <Search className="w-6 h-6" />
                                         </div>
-                                        <p>No results to show.</p>
+                                        <p>Aucun résultat à afficher.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -89,7 +89,7 @@ export function VehicleAssignments({ vehicleId, data }: VehicleAssignmentsProps)
                             filteredData.map((item) => (
                                 <tr key={item.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3 text-sm text-[#008751] font-medium underline cursor-pointer">
-                                        {item.contact || item.operator || 'Unassigned'}
+                                        {item.contact || item.operator || 'Non assigné'}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-900">
                                         {new Date(item.startDate).toLocaleDateString()}

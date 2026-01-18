@@ -48,7 +48,7 @@ export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className
                 {loading ? (
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-gray-300 border-t-[#008751] rounded-full animate-spin"></div>
-                        <span className="text-gray-400">Loading vehicles...</span>
+                        <span className="text-gray-400">Chargement des véhicules...</span>
                     </div>
                 ) : selectedVehicle ? (
                     <div className="flex items-center gap-2 overflow-hidden">
@@ -56,7 +56,7 @@ export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className
                         <span className="truncate text-gray-900">{selectedVehicle.name} {selectedVehicle.vin ? `(${selectedVehicle.vin})` : ''}</span>
                     </div>
                 ) : (
-                    <span className="text-gray-500">Please select</span>
+                    <span className="text-gray-500">Veuillez sélectionner</span>
                 )}
                 <ChevronDown size={16} className={`text-gray-400 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </div>
@@ -70,7 +70,7 @@ export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className
                                 autoFocus
                                 type="text"
                                 className="w-full pl-8 pr-4 py-1.5 text-sm border border-gray-200 rounded focus:border-[#008751] focus:ring-1 focus:ring-[#008751] outline-none"
-                                placeholder="Search vehicle name or VIN..."
+                                placeholder="Rechercher par nom ou VIN..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
@@ -95,7 +95,7 @@ export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className
                             ))
                         ) : (
                             <div className="px-3 py-8 text-center text-sm text-gray-500">
-                                No vehicles found matching "{searchTerm}"
+                                Aucun véhicule trouvé correspondant à "{searchTerm}"
                             </div>
                         )}
                     </div>

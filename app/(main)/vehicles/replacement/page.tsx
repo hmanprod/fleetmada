@@ -29,16 +29,16 @@ export default function ReplacementAnalysisPage() {
     const [disposal, setDisposal] = useState({
         cost: 1000,
         salvageValue: 20,
-        method: 'Double Declining'
+        method: 'Dégressif double'
     });
 
     return (
         <div className="p-6 max-w-[1800px] mx-auto">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Vehicle Replacement Analysis</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Analyse de remplacement des véhicules</h1>
 
             {/* Chart Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <h2 className="text-center font-bold text-gray-900 mb-4">Vehicle Replacement Analysis</h2>
+                <h2 className="text-center font-bold text-gray-900 mb-4">Analyse de remplacement des véhicules</h2>
                 <div className="h-[400px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart
@@ -51,18 +51,18 @@ export default function ReplacementAnalysisPage() {
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{ fill: '#6B7280', fontSize: 12 }}
-                                label={{ value: 'Vehicle Age', position: 'bottom', offset: 0, fill: '#374151', fontWeight: 600 }}
+                                label={{ value: 'Âge du véhicule', position: 'bottom', offset: 0, fill: '#374151', fontWeight: 600 }}
                             />
                             <YAxis
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{ fill: '#6B7280', fontSize: 12 }}
                                 tickFormatter={(value) => `Ar${value.toFixed(2)}/km`}
-                                label={{ value: 'Annual Cost per Kilometer', angle: -90, position: 'insideLeft', fill: '#374151', fontWeight: 600 }}
+                                label={{ value: 'Coût annuel par kilomètre', angle: -90, position: 'insideLeft', fill: '#374151', fontWeight: 600 }}
                                 domain={[0, 1.25]}
                             />
                             <Tooltip
-                                formatter={(value: number) => [`Ar${value.toFixed(2)}/km`, 'Cost']}
+                                formatter={(value: number) => [`Ar${value.toFixed(2)}/km`, 'Coût']}
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                             />
 
@@ -72,13 +72,13 @@ export default function ReplacementAnalysisPage() {
                             <Area type="monotone" dataKey="cost" stackId="3" stroke="none" fill="#34D399" fillOpacity={0.3} />
 
                             {/* Optimal Replacement Line */}
-                            <ReferenceLine x={7} stroke="#D97706" strokeDasharray="3 3" label={{ position: 'top', value: 'Optimal Replacement', fill: '#D97706', fontSize: 12 }} />
+                            <ReferenceLine x={7} stroke="#D97706" strokeDasharray="3 3" label={{ position: 'top', value: 'Remplacement optimal', fill: '#D97706', fontSize: 12 }} />
 
                             {/* Estimated Replacement Line */}
-                            <ReferenceLine x={8} stroke="#9CA3AF" strokeDasharray="3 3" label={{ position: 'right', value: 'Estimated Replacement', angle: -90, fill: '#9CA3AF', fontSize: 12 }} />
+                            <ReferenceLine x={8} stroke="#9CA3AF" strokeDasharray="3 3" label={{ position: 'right', value: 'Remplacement estimé', angle: -90, fill: '#9CA3AF', fontSize: 12 }} />
 
                             {/* Minimum Cost Line */}
-                            <ReferenceLine y={0.95} stroke="#059669" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Minimum Cost of Ownership', fill: '#059669', fontSize: 10 }} />
+                            <ReferenceLine y={0.95} stroke="#059669" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Coût minimum de propriété', fill: '#059669', fontSize: 10 }} />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -89,10 +89,10 @@ export default function ReplacementAnalysisPage() {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-8">
                     {/* Lifecycle Estimates */}
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Lifecycle Estimates</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Estimations du cycle de vie</h3>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Estimated Vehicle Life</label>
+                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Durée de vie estimée</label>
                                 <div className="w-1/2 relative">
                                     <input
                                         type="number"
@@ -100,11 +100,11 @@ export default function ReplacementAnalysisPage() {
                                         value={lifecycle.life}
                                         onChange={(e) => setLifecycle({ ...lifecycle, life: Number(e.target.value) })}
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">months</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">mois</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Estimated Annual Usage</label>
+                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Utilisation annuelle estimée</label>
                                 <div className="w-1/2 relative">
                                     <input
                                         type="number"
@@ -112,11 +112,11 @@ export default function ReplacementAnalysisPage() {
                                         value={lifecycle.usage}
                                         onChange={(e) => setLifecycle({ ...lifecycle, usage: Number(e.target.value) })}
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">kilometers</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">kilomètres</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Estimated Fuel Efficiency</label>
+                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Efficacité énergétique estimée</label>
                                 <div className="w-1/2 relative">
                                     <input
                                         type="number"
@@ -134,7 +134,7 @@ export default function ReplacementAnalysisPage() {
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Acquisition</h3>
                         <div className="flex items-center gap-4">
-                            <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Purchase Price</label>
+                            <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Prix d'achat</label>
                             <div className="w-1/2 relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Ar</span>
                                 <input
@@ -149,11 +149,11 @@ export default function ReplacementAnalysisPage() {
 
                     {/* Disposal */}
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Disposal</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Cession</h3>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
                                 <label className="w-1/2 text-sm font-medium text-gray-700 text-right flex items-center justify-end gap-1">
-                                    Estimated Disposal Cost <HelpCircle size={14} className="text-gray-400" />
+                                    Coût de cession estimé <HelpCircle size={14} className="text-gray-400" />
                                 </label>
                                 <div className="w-1/2 relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Ar</span>
@@ -167,7 +167,7 @@ export default function ReplacementAnalysisPage() {
                             </div>
                             <div className="flex items-center gap-4">
                                 <label className="w-1/2 text-sm font-medium text-gray-700 text-right flex items-center justify-end gap-1">
-                                    Estimated Salvage Value <HelpCircle size={14} className="text-gray-400" />
+                                    Valeur de récupération estimée <HelpCircle size={14} className="text-gray-400" />
                                 </label>
                                 <div className="w-1/2 relative">
                                     <input
@@ -176,31 +176,31 @@ export default function ReplacementAnalysisPage() {
                                         value={disposal.salvageValue}
                                         onChange={(e) => setDisposal({ ...disposal, salvageValue: Number(e.target.value) })}
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">% of purchase price</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">% du prix d'achat</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Method of Depreciation</label>
+                                <label className="w-1/2 text-sm font-medium text-gray-700 text-right">Méthode d'amortissement</label>
                                 <div className="w-1/2 flex items-center gap-4">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="radio"
                                             name="depreciation"
                                             className="text-[#008751] focus:ring-[#008751]"
-                                            checked={disposal.method === 'Double Declining'}
-                                            onChange={() => setDisposal({ ...disposal, method: 'Double Declining' })}
+                                            checked={disposal.method === 'Dégressif double'}
+                                            onChange={() => setDisposal({ ...disposal, method: 'Dégressif double' })}
                                         />
-                                        <span className="text-sm text-gray-700">Double Declining</span>
+                                        <span className="text-sm text-gray-700">Dégressif double</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="radio"
                                             name="depreciation"
                                             className="text-[#008751] focus:ring-[#008751]"
-                                            checked={disposal.method === 'Sum of Years'}
-                                            onChange={() => setDisposal({ ...disposal, method: 'Sum of Years' })}
+                                            checked={disposal.method === 'Somme des années'}
+                                            onChange={() => setDisposal({ ...disposal, method: 'Somme des années' })}
                                         />
-                                        <span className="text-sm text-gray-700">Sum of Years</span>
+                                        <span className="text-sm text-gray-700">Somme des années</span>
                                     </label>
                                 </div>
                             </div>
@@ -213,11 +213,11 @@ export default function ReplacementAnalysisPage() {
                     <div className="grid grid-cols-2 gap-8">
                         {/* Service Cost Estimates */}
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Service Cost Estimates</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">Estimations des coûts de service</h3>
                             <div className="space-y-3">
                                 {[1500, 1500, 1500, 300, 1350, 2500, 2000, 10000].map((cost, idx) => (
                                     <div key={idx} className="flex items-center gap-2">
-                                        <label className="w-12 text-sm font-medium text-gray-700 text-right">Year {idx + 1}</label>
+                                        <label className="w-12 text-sm font-medium text-gray-700 text-right">An {idx + 1}</label>
                                         <div className="flex-1 relative">
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Ar</span>
                                             <input
@@ -233,11 +233,11 @@ export default function ReplacementAnalysisPage() {
 
                         {/* Fuel Cost Estimates */}
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Fuel Cost Estimates</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">Estimations des coûts de carburant</h3>
                             <div className="space-y-3">
                                 {[1.5, 1.6, 1.75, 1.9, 2, 2.1, 2.3, 2.5].map((cost, idx) => (
                                     <div key={idx} className="flex items-center gap-2">
-                                        <label className="w-12 text-sm font-medium text-gray-700 text-right">Year {idx + 1}</label>
+                                        <label className="w-12 text-sm font-medium text-gray-700 text-right">An {idx + 1}</label>
                                         <div className="flex-1 relative">
                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Ar</span>
                                             <input
@@ -246,7 +246,7 @@ export default function ReplacementAnalysisPage() {
                                                 step="0.1"
                                                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm pl-6 pr-10 focus:ring-[#008751] focus:border-[#008751]"
                                             />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">/liters</span>
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">/litres</span>
                                         </div>
                                     </div>
                                 ))}

@@ -37,7 +37,7 @@ export function ArchiveModal({ isOpen, isArchiving, onConfirm, onCancel }: Archi
                         </div>
                     </div>
                     <p className="text-gray-600 text-sm">
-                        Êtes-vous sûr de vouloir archiver ce véhicule ? Le véhicule sera marqué comme archivé 
+                        Êtes-vous sûr de vouloir archiver ce véhicule ? Le véhicule sera marqué comme archivé
                         et ne sera plus visible dans la liste active, mais toutes les données seront conservées.
                     </p>
                 </div>
@@ -81,7 +81,7 @@ export function InspectionFormsModal({ isOpen, onClose }: InspectionFormsModalPr
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">Manage Inspection Forms</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Gérer les formulaires d'inspection</h3>
                     <button
                         onClick={onClose}
                         className="text-gray-400 hover:text-gray-600"
@@ -124,7 +124,7 @@ export function ServiceProgramsModal({ isOpen, onClose }: ServiceProgramsModalPr
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">Manage Service Programs</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Gérer les programmes de service</h3>
                     <button
                         onClick={onClose}
                         className="text-gray-400 hover:text-gray-600"

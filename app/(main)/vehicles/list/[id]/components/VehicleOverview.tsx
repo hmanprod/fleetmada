@@ -26,27 +26,27 @@ export function VehicleOverview({ vehicle, getStatusBadge }: VehicleOverviewProp
     return (
         <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 font-bold text-gray-900">Details</div>
-                <div className="px-6 py-2 border-b border-gray-100 text-sm text-gray-500">All Fields</div>
+                <div className="px-6 py-4 border-b border-gray-200 font-bold text-gray-900">Détails</div>
+                <div className="px-6 py-2 border-b border-gray-100 text-sm text-gray-500">Tous les champs</div>
                 <div className="p-6 space-y-0">
-                    <DetailRow label="Name" value={vehicle.name} />
-                    <DetailRow label="Meter" value={
+                    <DetailRow label="Nom" value={vehicle.name} />
+                    <DetailRow label="Compteur" value={
                         vehicle.meterReading ?
                             `${vehicle.meterReading.toLocaleString()} ${vehicle.primaryMeter || 'mi'}` :
                             vehicle.lastMeterReading ?
                                 `${vehicle.lastMeterReading.toLocaleString()} ${vehicle.lastMeterUnit || 'hr'}` :
                                 '-'
                     } />
-                    <DetailRow label="Status" value={getStatusBadge(vehicle.status)} />
-                    <DetailRow label="Group" value={vehicle.group} />
-                    <DetailRow label="Operator" value={vehicle.operator || 'Unassigned'} />
+                    <DetailRow label="Statut" value={getStatusBadge(vehicle.status)} />
+                    <DetailRow label="Groupe" value={vehicle.group} />
+                    <DetailRow label="Opérateur" value={vehicle.operator || 'Non assigné'} />
                     <DetailRow label="Type" value={vehicle.type} />
-                    <DetailRow label="Fuel Type" value={vehicle.fuelUnit || '-'} />
+                    <DetailRow label="Type de carburant" value={vehicle.fuelUnit || '-'} />
                     <DetailRow label="VIN/SN" value={vehicle.vin} />
-                    <DetailRow label="License Plate" value="-" />
-                    <DetailRow label="Year" value={vehicle.year} />
-                    <DetailRow label="Make" value={vehicle.make} />
-                    <DetailRow label="Model" value={vehicle.model} />
+                    <DetailRow label="Plaque d'immatriculation" value="-" />
+                    <DetailRow label="Année" value={vehicle.year} />
+                    <DetailRow label="Marque" value={vehicle.make} />
+                    <DetailRow label="Modèle" value={vehicle.model} />
                 </div>
             </div>
         </div>

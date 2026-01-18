@@ -24,12 +24,12 @@ interface VehicleFinancialProps {
 export function VehicleFinancial({ vehicle }: VehicleFinancialProps) {
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 font-bold text-gray-900">Purchase & Financial</div>
+            <div className="px-6 py-4 border-b border-gray-200 font-bold text-gray-900">Achat et Finance</div>
             <div className="p-6 grid grid-cols-2 gap-x-8 gap-y-2">
-                <DetailRow label="Vendor" value={vehicle.purchaseVendor} />
-                <DetailRow label="Purchase Date" value={vehicle.purchaseDate} />
-                <DetailRow label="Purchase Price" value={vehicle.purchasePrice ? `Ar ${vehicle.purchasePrice.toLocaleString()}` : '-'} />
-                <DetailRow label="Loan/Lease" value={vehicle.loanLeaseType} />
+                <DetailRow label="Fournisseur" value={vehicle.purchaseVendor} />
+                <DetailRow label="Date d'achat" value={vehicle.purchaseDate} />
+                <DetailRow label="Prix d'achat" value={vehicle.purchasePrice ? `${vehicle.purchasePrice.toLocaleString()} Ar` : '-'} />
+                <DetailRow label="Prêt/Leasing" value={vehicle.loanLeaseType} />
                 <div className="col-span-2">
                     <DetailRow label="Notes" value={vehicle.purchaseNotes} />
                 </div>

@@ -40,6 +40,16 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
         return colors[status] || 'bg-gray-100 text-gray-800';
     };
 
+    const getStatusLabel = (status: string) => {
+        const labels: Record<string, string> = {
+            'Due Soon': 'Échéance proche',
+            'Overdue': 'En retard',
+            'Snoozed': 'Repoussé',
+            'On Track': 'À jour',
+        };
+        return labels[status] || status;
+    };
+
     const getComplianceBadge = (compliance?: string) => {
         if (!compliance) return null;
         const colors: Record<string, string> = {
@@ -47,6 +57,15 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
             'Out of Compliance': 'bg-red-100 text-red-800',
         };
         return colors[compliance] || 'bg-gray-100 text-gray-800';
+    };
+
+    const getComplianceLabel = (compliance?: string) => {
+        if (!compliance) return '';
+        const labels: Record<string, string> = {
+            'In Compliance': 'Conforme',
+            'Out of Compliance': 'Non conforme',
+        };
+        return labels[compliance] || compliance;
     };
 
     return (
@@ -57,7 +76,7 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Rechercher"
                         className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008751]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -68,13 +87,13 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                     value={taskFilter}
                     onChange={(e) => setTaskFilter(e.target.value)}
                 >
-                    <option>Service Task</option>
-                    <option>Oil Change</option>
-                    <option>Tire Rotation</option>
-                    <option>Brake Inspection</option>
+                    <option>Tâche de service</option>
+                    <option>Vidange d'huile</option>
+                    <option>Rotation des pneus</option>
+                    <option>Inspection des freins</option>
                 </select>
                 <button className="text-sm text-[#008751] hover:underline flex items-center gap-1">
-                    More Actions <ExternalLink className="w-3 h-3" />
+                    Plus d'actions <ExternalLink className="w-3 h-3" />
                 </button>
                 <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
                     <button className="p-1 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4" /></button>
@@ -88,14 +107,14 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service Task</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Due ▲</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Incomplete Work Order</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service Program</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Completed</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Compliance</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Watchers</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tâche de service</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prochaine échéance ▲</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ordre de travail incomplet</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Programme de service</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dernière réalisation</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conformité</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Observateurs</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -106,7 +125,7 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                                         <div className="w-12 h-12 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
                                             <Search className="w-6 h-6" />
                                         </div>
-                                        <p>No results to show.</p>
+                                        <p>Aucun résultat à afficher.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -118,12 +137,12 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(item.status)}`}>
-                                            {item.status}
+                                            {getStatusLabel(item.status)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-900">
                                         {item.nextDue ? new Date(item.nextDue).toLocaleDateString() : '—'}
-                                        {item.dueMeter && <span className="block text-xs text-gray-500">{item.dueMeter.toLocaleString()} mi</span>}
+                                        {item.dueMeter && <span className="block text-xs text-gray-500">{item.dueMeter.toLocaleString()} km</span>}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-[#008751]">
                                         {item.incompleteWorkOrder || '—'}
@@ -135,7 +154,7 @@ export function VehicleServiceReminders({ vehicleId, data }: VehicleServiceRemin
                                     <td className="px-4 py-3">
                                         {item.compliance && (
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${getComplianceBadge(item.compliance)}`}>
-                                                {item.compliance}
+                                                {getComplianceLabel(item.compliance)}
                                             </span>
                                         )}
                                     </td>

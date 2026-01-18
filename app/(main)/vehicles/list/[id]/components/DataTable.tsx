@@ -27,7 +27,7 @@ function EmptyState({ title }: EmptyStateProps) {
     return (
         <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
             <Search size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">No {title} found.</p>
+            <p className="text-gray-500">Aucun {title} trouvé.</p>
         </div>
     );
 }
@@ -45,7 +45,7 @@ export function DataTable({
     columns,
     data,
     renderRow,
-    searchPlaceholder = "Search"
+    searchPlaceholder = "Rechercher"
 }: DataTableProps) {
     return (
         <div className="space-y-4">

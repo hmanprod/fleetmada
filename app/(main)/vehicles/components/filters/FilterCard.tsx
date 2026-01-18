@@ -34,19 +34,19 @@ interface FilterCardProps {
 }
 
 const operatorLabels: Partial<Record<FilterOperator, string>> = {
-    is: 'is',
-    is_not: 'is not',
-    is_any_of: 'is any of',
-    is_not_any_of: 'is not any of',
-    is_blank: 'is blank',
-    is_not_blank: 'is not blank',
-    contains: 'contains',
-    does_not_contain: 'does not contain',
-    gt: 'is greater than',
-    lt: 'is less than',
-    gte: 'is greater than or equal to',
-    lte: 'is less than or equal to',
-    between: 'is between',
+    is: 'est',
+    is_not: 'n\'est pas',
+    is_any_of: 'est l\'un de',
+    is_not_any_of: 'n\'est pas l\'un de',
+    is_blank: 'est vide',
+    is_not_blank: 'n\'est pas vide',
+    contains: 'contient',
+    does_not_contain: 'ne contient pas',
+    gt: 'est supérieur à',
+    lt: 'est inférieur à',
+    gte: 'est supérieur ou égal à',
+    lte: 'est inférieur ou égal à',
+    between: 'est entre',
 };
 
 export function FilterCard({ criterion, onRemove, onUpdate, options }: FilterCardProps) {
@@ -109,15 +109,15 @@ export function FilterCard({ criterion, onRemove, onUpdate, options }: FilterCar
                                     value={criterion.value?.from || ''}
                                     onChange={(e) => handleBetweenChange('from', e.target.value)}
                                     className="flex-1 bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#008751] focus:border-[#008751]"
-                                    placeholder="From"
+                                    placeholder="De"
                                 />
-                                <span className="text-gray-400 text-xs">to</span>
+                                <span className="text-gray-400 text-xs">à</span>
                                 <input
                                     type={isDateField ? "date" : "number"}
                                     value={criterion.value?.to || ''}
                                     onChange={(e) => handleBetweenChange('to', e.target.value)}
                                     className="flex-1 bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#008751] focus:border-[#008751]"
-                                    placeholder="To"
+                                    placeholder="À"
                                 />
                             </div>
                         ) : options ? (
@@ -148,7 +148,7 @@ export function FilterCard({ criterion, onRemove, onUpdate, options }: FilterCar
                                         onChange={(e) => handleValueChange(e.target.value)}
                                         className="w-full appearance-none bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#008751] focus:border-[#008751]"
                                     >
-                                        <option value="">Select Option</option>
+                                        <option value="">Sélectionner une option</option>
                                         {options.map((opt) => (
                                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                                         ))}
@@ -161,7 +161,7 @@ export function FilterCard({ criterion, onRemove, onUpdate, options }: FilterCar
                                 type={isDateField ? "date" : (isNumberField ? "number" : "text")}
                                 value={typeof criterion.value === 'string' || typeof criterion.value === 'number' ? criterion.value : ''}
                                 onChange={(e) => handleValueChange(e.target.value)}
-                                placeholder={`Enter ${criterion.label.toLowerCase()}...`}
+                                placeholder="Entrez une valeur..."
                                 className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#008751] focus:border-[#008751]"
                             />
                         )}
