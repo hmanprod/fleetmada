@@ -110,13 +110,13 @@ export function EntitySidebar({
         const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
         if (diffInSeconds < 60) {
-            return 'Just now';
+            return "À l'instant";
         } else if (diffInSeconds < 3600) {
             const minutes = Math.floor(diffInSeconds / 60);
-            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            return `il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
         } else if (diffInSeconds < 86400) {
             const hours = Math.floor(diffInSeconds / 3600);
-            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            return `il y a ${hours} heure${hours > 1 ? 's' : ''}`;
         } else {
             return date.toLocaleDateString();
         }
@@ -239,7 +239,7 @@ export function EntitySidebar({
                     <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold text-gray-900 capitalize">
-                                {activePanel === 'comments' ? 'Comments' :
+                                {activePanel === 'comments' ? 'Commentaires' :
                                     activePanel === 'photos' ? 'Photos' : 'Documents'}
                             </h3>
                             {(commentsLoading || photosLoading || documentsLoading) && (
@@ -275,7 +275,7 @@ export function EntitySidebar({
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search..."
+                                    placeholder="Rechercher..."
                                     className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded text-sm focus:ring-1 focus:ring-[#008751] focus:border-[#008751]"
                                 />
                             </div>
@@ -294,7 +294,7 @@ export function EntitySidebar({
                                     ) : filteredComments.length === 0 ? (
                                         <div className="text-center text-gray-500 py-8">
                                             <MessageSquare size={48} className="mx-auto mb-4 text-gray-300" />
-                                            <p>No comments yet.</p>
+                                            <p>Aucun commentaire pour le moment.</p>
                                         </div>
                                     ) : (
                                         filteredComments.map(comment => (
@@ -322,8 +322,8 @@ export function EntitySidebar({
                                                                 <button onClick={() => {
                                                                     onUpdateComment(comment.id, editCommentText);
                                                                     setEditingComment(null);
-                                                                }} className="px-2 py-1 bg-[#008751] text-white rounded text-xs">Save</button>
-                                                                <button onClick={() => setEditingComment(null)} className="px-2 py-1 bg-gray-300 rounded text-xs">Cancel</button>
+                                                                }} className="px-2 py-1 bg-[#008751] text-white rounded text-xs">Enregistrer</button>
+                                                                <button onClick={() => setEditingComment(null)} className="px-2 py-1 bg-gray-300 rounded text-xs">Annuler</button>
                                                             </div>
                                                         </div>
                                                     ) : (
@@ -365,7 +365,7 @@ export function EntitySidebar({
                                                     type="text"
                                                     value={newComment}
                                                     onChange={(e) => setNewComment(e.target.value)}
-                                                    placeholder="Add a comment..."
+                                                    placeholder="Ajouter un commentaire..."
                                                     className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751]"
                                                 />
                                                 <button type="submit" disabled={!newComment.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#008751] disabled:opacity-50">
@@ -376,7 +376,7 @@ export function EntitySidebar({
                                         {/* File Input */}
                                         <div className="flex justify-between items-center">
                                             <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#008751]">
-                                                <Paperclip size={12} /> Attach
+                                                <Paperclip size={12} /> Joindre
                                             </button>
                                             <input type="file" ref={fileInputRef} className="hidden" multiple onChange={(e) => e.target.files && setSelectedFiles(Array.from(e.target.files))} />
                                         </div>
@@ -413,7 +413,7 @@ export function EntitySidebar({
                                     ) : filteredPhotos.length === 0 ? (
                                         <div className="text-center text-gray-500 py-8">
                                             <Image size={48} className="mx-auto mb-4 text-gray-300" />
-                                            <p>No photos found.</p>
+                                            <p>Aucune photo trouvée.</p>
                                         </div>
                                     ) : (
                                         <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
@@ -443,7 +443,7 @@ export function EntitySidebar({
                                 </div>
                                 <div className="p-4 bg-white border-t border-gray-200">
                                     <button onClick={() => photoInputRef.current?.click()} className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 text-sm hover:border-[#008751] hover:text-[#008751]">
-                                        Upload Photos
+                                        Télécharger des photos
                                     </button>
                                     <input type="file" ref={photoInputRef} className="hidden" accept="image/*" multiple onChange={(e) => e.target.files && onAddPhoto(e.target.files)} />
                                 </div>
@@ -459,7 +459,7 @@ export function EntitySidebar({
                                     ) : filteredDocuments.length === 0 ? (
                                         <div className="text-center text-gray-500 py-8">
                                             <FileText size={48} className="mx-auto mb-4 text-gray-300" />
-                                            <p>No documents found.</p>
+                                            <p>Aucun document trouvé.</p>
                                         </div>
                                     ) : (
                                         filteredDocuments.map(doc => (
@@ -479,7 +479,7 @@ export function EntitySidebar({
                                 </div>
                                 <div className="p-4 bg-white border-t border-gray-200">
                                     <button onClick={() => docInputRef.current?.click()} className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 text-sm hover:border-[#008751] hover:text-[#008751]">
-                                        Upload Documents
+                                        Télécharger des documents
                                     </button>
                                     <input type="file" ref={docInputRef} className="hidden" multiple onChange={(e) => e.target.files && onAddDocument(e.target.files)} />
                                 </div>
@@ -499,7 +499,7 @@ export function EntitySidebar({
                 <button
                     onClick={() => onPanelChange(activePanel === 'comments' ? null : 'comments')}
                     className={`p-2 rounded-lg shadow-sm border transition-all relative ${activePanel === 'comments' ? 'bg-[#008751] text-white border-[#008751]' : 'bg-white text-gray-500 border-gray-200 hover:text-[#008751]'}`}
-                    title="Comments"
+                    title="Commentaires"
                 >
                     <MessageSquare size={20} />
                     {comments.length > 0 && (

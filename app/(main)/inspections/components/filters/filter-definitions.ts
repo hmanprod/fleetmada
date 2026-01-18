@@ -1,4 +1,4 @@
-export type FilterCategory = 'INSPECTION' | 'TEMPLATE';
+export type FilterCategory = 'INSPECTION' | 'MODÈLE';
 
 export interface FilterOption {
     value: string;
@@ -17,55 +17,55 @@ export interface FilterField {
 }
 
 export const ALL_FILTER_FIELDS: FilterField[] = [
-    // INSPECTION CATEGORY
+    // CATÉGORIE INSPECTION
     {
         id: 'status',
-        label: 'Status',
+        label: 'Statut',
         type: 'enum',
         category: 'INSPECTION',
         options: [
-            { value: 'DRAFT', label: 'Draft' },
-            { value: 'SCHEDULED', label: 'Scheduled' },
-            { value: 'IN_PROGRESS', label: 'In Progress' },
-            { value: 'COMPLETED', label: 'Completed' },
-            { value: 'CANCELLED', label: 'Cancelled' },
+            { value: 'DRAFT', label: 'Brouillon' },
+            { value: 'SCHEDULED', label: 'Planifié' },
+            { value: 'IN_PROGRESS', label: 'En cours' },
+            { value: 'COMPLETED', label: 'Terminé' },
+            { value: 'CANCELLED', label: 'Annulé' },
         ]
     },
     {
         id: 'complianceStatus',
-        label: 'Compliance Status',
+        label: 'État de conformité',
         type: 'enum',
         category: 'INSPECTION',
         options: [
-            { value: 'COMPLIANT', label: 'Compliant' },
-            { value: 'NON_COMPLIANT', label: 'Non-Compliant' },
-            { value: 'PENDING_REVIEW', label: 'Pending Review' },
+            { value: 'COMPLIANT', label: 'Conforme' },
+            { value: 'NON_COMPLIANT', label: 'Non conforme' },
+            { value: 'PENDING_REVIEW', label: 'En attente de révision' },
         ]
     },
-    { id: 'scheduledDate', label: 'Scheduled Date', type: 'date', category: 'INSPECTION' },
-    { id: 'startedAt', label: 'Started Date', type: 'date', category: 'INSPECTION' },
-    { id: 'completedAt', label: 'Completed Date', type: 'date', category: 'INSPECTION' },
-    { id: 'inspectorName', label: 'Inspector Name', type: 'text', category: 'INSPECTION' },
+    { id: 'scheduledDate', label: 'Date planifiée', type: 'date', category: 'INSPECTION' },
+    { id: 'startedAt', label: 'Date de début', type: 'date', category: 'INSPECTION' },
+    { id: 'completedAt', label: 'Date de fin', type: 'date', category: 'INSPECTION' },
+    { id: 'inspectorName', label: 'Nom de l\'inspecteur', type: 'text', category: 'INSPECTION' },
     { id: 'overallScore', label: 'Score', type: 'number', category: 'INSPECTION' },
-    { id: 'title', label: 'Title', type: 'text', category: 'INSPECTION' },
-    { id: 'location', label: 'Location', type: 'text', category: 'INSPECTION' },
+    { id: 'title', label: 'Titre', type: 'text', category: 'INSPECTION' },
+    { id: 'location', label: 'Emplacement', type: 'text', category: 'INSPECTION' },
 
-    // TEMPLATE CATEGORY
-    { id: 'name', label: 'Template Name', type: 'text', category: 'TEMPLATE' },
-    { id: 'category', label: 'Category', type: 'text', category: 'TEMPLATE' },
+    // CATÉGORIE MODÈLE
+    { id: 'name', label: 'Nom du modèle', type: 'text', category: 'MODÈLE' },
+    { id: 'category', label: 'Catégorie', type: 'text', category: 'MODÈLE' },
     {
         id: 'isActive',
-        label: 'Active Status',
+        label: 'État actif',
         type: 'boolean',
-        category: 'TEMPLATE',
+        category: 'MODÈLE',
         options: [
-            { value: 'true', label: 'Active' },
-            { value: 'false', label: 'Inactive' }
+            { value: 'true', label: 'Actif' },
+            { value: 'false', label: 'Inactif' }
         ]
     },
-    { id: 'description', label: 'Description', type: 'text', category: 'TEMPLATE' },
+    { id: 'description', label: 'Description', type: 'text', category: 'MODÈLE' },
 ];
 
 export const INSPECTION_HISTORY_FIELDS = ALL_FILTER_FIELDS.filter(f => f.category === 'INSPECTION');
 export const INSPECTION_SCHEDULE_FIELDS = ALL_FILTER_FIELDS.filter(f => f.category === 'INSPECTION' && f.id !== 'completedAt' && f.id !== 'startedAt' && f.id !== 'overallScore' && f.id !== 'complianceStatus');
-export const TEMPLATE_FIELDS = ALL_FILTER_FIELDS.filter(f => f.category === 'TEMPLATE');
+export const TEMPLATE_FIELDS = ALL_FILTER_FIELDS.filter(f => f.category === 'MODÈLE');

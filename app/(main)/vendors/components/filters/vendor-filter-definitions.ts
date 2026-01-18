@@ -5,32 +5,27 @@ export const VENDOR_FILTER_FIELDS: FilterField[] = [
         id: 'classification',
         label: 'Classification',
         type: 'enum',
-        // Using 'ISSUE' or 'INSPECTION' as category doesn't matter much for internal logic unless it's strictly typed 
-        // to specific values. Let's assume generic string or reuse one.
-        // Checking usage in FiltersSidebar might be good, but assuming 'any' cast like in Issues works.
-        category: 'VENDOR' as any,
+        category: 'FOURNISSEUR' as any,
         options: [
-            { value: 'Fuel', label: 'Fuel' },
-            { value: 'Service', label: 'Service' },
-            { value: 'Parts', label: 'Parts' },
-            { value: 'Insurance', label: 'Insurance' },
-            { value: 'Registration', label: 'Registration' },
-            { value: 'Charging', label: 'Charging' },
-            { value: 'Tools', label: 'Tools' },
+            { value: 'Fuel', label: 'Carburant' },
+            { value: 'Service', label: 'Entretien' },
+            { value: 'Parts', label: 'Pièces' },
+            { value: 'Insurance', label: 'Assurance' },
+            { value: 'Registration', label: 'Immatriculation' },
+            { value: 'Charging', label: 'Recharge' },
+            { value: 'Tools', label: 'Outils' },
         ]
     },
     {
         id: 'label',
-        label: 'Label',
+        label: 'Étiquette',
         type: 'multiselect',
-        category: 'VENDOR' as any,
+        category: 'FOURNISSEUR' as any,
         options: [
-            { value: 'Sample', label: 'Sample' },
-            { value: 'Preferred', label: 'Preferred' },
-            { value: 'Emergency', label: 'Emergency' },
+            { value: 'Sample', label: 'Exemple' },
+            { value: 'Preferred', label: 'Préféré' },
+            { value: 'Emergency', label: 'Urgence' },
         ]
     },
-    // Adding search as a filter field too if desired, though normally handled by main search bar.
-    // Issues has 'summary' mapped to search.
-    { id: 'search', label: 'Search', type: 'text', category: 'VENDOR' as any },
+    { id: 'search', label: 'Recherche', type: 'text', category: 'FOURNISSEUR' as any },
 ];
