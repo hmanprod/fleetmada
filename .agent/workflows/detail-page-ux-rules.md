@@ -289,10 +289,16 @@ Cette structure s'applique à :
 - `/issues/[id]` - Détail d'un problème
 - `/service/history/[id]` - Détail d'une entrée de maintenance
 - `/service/work-orders/[id]` - Détail d'un ordre de travail
+- `/service/programs/[id]` - Détail d'un programme d'entretien
 - `/fuel/history/[id]` - Détail d'une entrée carburant
+- `/fuel/charging/[id]` - Détail d'une recharge électrique
 - `/reminders/service/[id]` - Détail d'un rappel de service
 - `/reminders/vehicle-renewals/[id]` - Détail d'un renouvellement
 - `/inspections/history/[id]` - Détail d'une inspection
 - `/parts/[id]` - Détail d'une pièce
 - `/contacts/[id]` - Détail d'un contact
-- `/vehicles/[id]` - Détail d'un véhicule
+- `/vehicles/list/[id]` - Détail d'un véhicule
+- `/vehicles/expense/[id]` - Détail d'une dépense
+- `/documents/[id]` - Détail d'un document
+- `/vendors/[id]` - Détail d'un fournisseur
+- `/places/[id]` - Détail d'un lieu

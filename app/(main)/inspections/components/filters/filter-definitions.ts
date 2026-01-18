@@ -1,4 +1,4 @@
-export type FilterCategory = 'INSPECTION' | 'MODÈLE';
+export type FilterCategory = 'INSPECTION' | 'MODÈLE' | 'Statut' | 'Véhicule' | 'Assignation' | 'Dates' | 'Général';
 
 export interface FilterOption {
     value: string;

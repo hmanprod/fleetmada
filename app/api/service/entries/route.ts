@@ -108,7 +108,34 @@ export async function GET(request: NextRequest) {
       if (endDate) where.date.lte = new Date(endDate)
     }
 
-    const [entries, total] = await Promise.all([
+    const search = searchParams.get('search')
+    if (search) {
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+        {
+          vehicle: {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { make: { contains: search, mode: 'insensitive' } },
+              { model: { contains: search, mode: 'insensitive' } },
+              { licensePlate: { contains: search, mode: 'insensitive' } }
+            ]
+          }
+        },
+        {
+          tasks: {
+            some: {
+              serviceTask: {
+                name: { contains: search, mode: 'insensitive' }
+              }
+            }
+          }
+        }
+      ]
+    }
+
+    const [entries, total, statusCounts] = await Promise.all([
       prisma.serviceEntry.findMany({
         where,
         include: {
@@ -137,8 +164,25 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit
       }),
-      prisma.serviceEntry.count({ where })
+      prisma.serviceEntry.count({ where }),
+      prisma.serviceEntry.groupBy({
+        by: ['status'],
+        where: { userId, isWorkOrder: isWorkOrder === 'true' },
+        _count: { _all: true }
+      })
     ])
+
+    const counts = statusCounts.reduce((acc: any, curr: any) => {
+      acc[curr.status] = curr._count._all
+      return acc
+    }, {
+      SCHEDULED: 0,
+      IN_PROGRESS: 0,
+      COMPLETED: 0,
+      CANCELLED: 0,
+      ALL: 0
+    })
+    counts.ALL = statusCounts.reduce((a, b) => a + b._count._all, 0)
 
     logAction('GET Service Entries - Success', userId, {
       userId, total, page, totalPages: Math.ceil(total / limit)
@@ -148,6 +192,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         entries,
+        statusCounts: counts,
         pagination: {
           page,
           limit,

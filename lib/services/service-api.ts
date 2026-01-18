@@ -16,6 +16,7 @@ export interface PaginatedResponse<T> {
     programs?: T[]
     reminders?: T[]
     entries?: T[]
+    statusCounts?: Record<string, number>
     pagination: {
       page: number
       limit: number
@@ -229,6 +230,7 @@ export interface ServiceEntriesQuery {
   isWorkOrder?: boolean
   startDate?: string
   endDate?: string
+  search?: string
 }
 
 export interface ServiceTasksQuery {
@@ -275,6 +277,8 @@ export interface CreateServiceEntryData {
   notes?: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   assignedTo?: string
+  assignedToContactId?: string
+  vendorId?: string
   isWorkOrder?: boolean
   reasonForRepairCode?: string
   tasks?: string[] | Array<{ serviceTaskId: string; cost?: number; notes?: string }>

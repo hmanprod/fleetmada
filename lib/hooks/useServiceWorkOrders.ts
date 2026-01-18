@@ -58,6 +58,7 @@ export interface UseServiceWorkOrdersReturn {
   }) => Promise<ServiceEntry | null>
   cancelWorkOrder: (id: string, reason?: string) => Promise<ServiceEntry | null>
   refresh: () => void
+  statusCounts: Record<string, number> | null
   // Statistiques
   stats: WorkOrderStats
   // Actions en lot
@@ -80,6 +81,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
     costMin,
     costMax,
     dateRange,
+    search,
     enabled = true,
     ...otherOptions
   } = options
@@ -88,6 +90,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<UseServiceWorkOrdersReturn['pagination']>(null)
+  const [statusCounts, setStatusCounts] = useState<Record<string, number> | null>(null)
 
   const fetchWorkOrders = useCallback(async (query: WorkOrderFilters = {}) => {
     if (!enabled) return
@@ -104,17 +107,19 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
         isWorkOrder: true,
         startDate,
         endDate,
+        search,
         ...query
       })
 
       setWorkOrders(response.data.entries || [])
       setPagination(response.data.pagination)
+      setStatusCounts(response.data.statusCounts || null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la récupération des Demandes d’entretien')
     } finally {
       setLoading(false)
     }
-  }, [enabled, page, limit, status, vehicleId, startDate, endDate])
+  }, [enabled, page, limit, status, vehicleId, startDate, endDate, search])
 
   const createWorkOrder = useCallback(async (data: CreateServiceEntryData): Promise<ServiceEntry | null> => {
     setLoading(true)
@@ -127,7 +132,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
 
       // Ajouter le nouvel ordre de travail à la liste
       setWorkOrders(prev => [newWorkOrder, ...prev])
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -175,7 +180,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
 
       // Supprimer l'ordre de travail de la liste
       setWorkOrders(prev => prev.filter(wo => wo.id !== id))
-      
+
       // Mettre à jour la pagination
       if (pagination) {
         setPagination(prev => prev ? {
@@ -196,7 +201,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
 
   const approveWorkOrder = useCallback(async (id: string): Promise<ServiceEntry | null> => {
     try {
-      const response = await serviceAPI.updateServiceEntry(id, { 
+      const response = await serviceAPI.updateServiceEntry(id, {
         status: 'SCHEDULED',
         notes: `Approuvé le ${new Date().toLocaleDateString('fr-FR')}`
       } as any)
@@ -324,16 +329,16 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
   // Calcul des statistiques
   const stats: WorkOrderStats = {
     totalCost: workOrders.reduce((sum, wo) => sum + (wo.totalCost || 0), 0),
-    avgCost: workOrders.length > 0 
-      ? workOrders.reduce((sum, wo) => sum + (wo.totalCost || 0), 0) / workOrders.length 
+    avgCost: workOrders.length > 0
+      ? workOrders.reduce((sum, wo) => sum + (wo.totalCost || 0), 0) / workOrders.length
       : 0,
     completedCount: workOrders.filter(wo => wo.status === 'COMPLETED').length,
     inProgressCount: workOrders.filter(wo => wo.status === 'IN_PROGRESS').length,
     scheduledCount: workOrders.filter(wo => wo.status === 'SCHEDULED').length,
-    overdueCount: workOrders.filter(wo => 
-      wo.status !== 'COMPLETED' && 
-      wo.status !== 'CANCELLED' && 
-      wo.date && 
+    overdueCount: workOrders.filter(wo =>
+      wo.status !== 'COMPLETED' &&
+      wo.status !== 'CANCELLED' &&
+      wo.date &&
       new Date(wo.date) < new Date()
     ).length,
     avgCompletionTime: 0, // À calculer avec les données de completion
@@ -343,7 +348,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
       return acc
     }, {} as Record<string, number>),
     costByVendor: workOrders.reduce((acc, wo) => {
-      const vendor = wo.vendor || 'Non défini'
+      const vendor = typeof wo.vendor === 'object' && wo.vendor !== null ? wo.vendor.name : (wo.vendor || 'Non défini')
       acc[vendor] = (acc[vendor] || 0) + (wo.totalCost || 0)
       return acc
     }, {} as Record<string, number>)
@@ -367,6 +372,7 @@ export function useServiceWorkOrders(options: UseServiceWorkOrdersOptions = {}):
     completeWorkOrder,
     cancelWorkOrder,
     refresh,
+    statusCounts,
     stats,
     approveMultiple,
     assignMultiple,
