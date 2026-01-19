@@ -104,7 +104,7 @@ La page est divisée en **2 zones principales** :
 | Entité | Champs recommandés |
 |--------|-------------------|
 | **Issue** | ID, Statut, Résumé, Priorité, Véhicule, Date signalement, Signalé par, Assigné à, Source |
-| **Service Entry** | ID, Statut, Véhicule, Date, Compteur, Vendeur, Coût total, Tâches |
+| **Service Entry** | ID, Statut, Véhicule, Date, Compteur, Fournisseur, Coût total, Tâches |
 | **Reminder** | ID, Type, Véhicule, Échéance, Seuil, Assigné à |
 | **Vehicle Renewal** | ID, Type, Véhicule, Date expiration, Coût, Statut |
 

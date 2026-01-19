@@ -181,7 +181,7 @@ export default function ExpenseDetailPage({ params }: { params: { id: string } }
                                 </div>
 
                                 <div className="grid grid-cols-[200px_1fr] border-b border-gray-100 pb-3">
-                                    <div className="text-sm text-gray-500">Vendeur</div>
+                                    <div className="text-sm text-gray-500"></div>
                                     <div className="text-sm text-gray-900">{entry.vendor || '—'}</div>
                                 </div>
 

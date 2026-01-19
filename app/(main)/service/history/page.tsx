@@ -11,6 +11,7 @@ import { useToast, ToastContainer } from '@/components/NotificationToast';
 import { FiltersSidebar } from '../../inspections/components/filters/FiltersSidebar';
 import { FilterCriterion } from '../../inspections/components/filters/FilterCard';
 import { SERVICE_ENTRY_FILTER_FIELDS } from './components/filters/service-entry-filter-definitions';
+import { VehicleSelect } from '../../vehicles/components/VehicleSelect';
 
 export default function ServiceHistoryPage() {
   const router = useRouter();
@@ -32,7 +33,8 @@ export default function ServiceHistoryPage() {
   const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
 
   // Fetch vehicles for filter dropdown
-  const { vehicles } = useVehicles();
+  const vehicleQuery = useMemo(() => ({ limit: 500, page: 1, sortBy: 'name', sortOrder: 'asc' }), []);
+  const { vehicles, loading: vehiclesLoading, error: vehiclesError } = useVehicles({ query: vehicleQuery as any });
 
   // Fetch contacts/vendors for filter dropdown
   const { contacts } = useContacts({ limit: 1000 });
@@ -325,16 +327,16 @@ export default function ServiceHistoryPage() {
           />
         </div>
 
-        <select
-          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
-          value={filters.vehicleId || ''}
-          onChange={(e) => handleFilterChange({ vehicleId: e.target.value || undefined })}
-        >
-          <option value="">Véhicule: Tous</option>
-          {vehicles.map(v => (
-            <option key={v.id} value={v.id}>{v.name} - {v.make} {v.model}</option>
-          ))}
-        </select>
+        <div className="min-w-[200px]">
+          <VehicleSelect
+            vehicles={vehicles as any[]}
+            selectedVehicleId={filters.vehicleId}
+            onSelect={(id) => handleFilterChange({ vehicleId: id || undefined })}
+            loading={vehiclesLoading}
+            error={vehiclesError}
+            className="w-full"
+          />
+        </div>
 
         <button
           onClick={() => setIsFiltersOpen(true)}

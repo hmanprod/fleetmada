@@ -160,7 +160,7 @@ export default function VehicleExpensePage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                         type="text"
-                        placeholder="Rechercher des dépenses, véhicules, vendeurs..."
+                        placeholder="Rechercher des dépenses, véhicules, s..."
                         className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -187,7 +187,7 @@ export default function VehicleExpensePage() {
                             <th className="p-4">Véhicule</th>
                             <th className="p-4">Date</th>
                             <th className="p-4">Type</th>
-                            <th className="p-4">Vendeur</th>
+                            <th className="p-4"></th>
                             <th className="p-4">Source</th>
                             <th className="p-4 text-right">Montant</th>
                             <th className="p-4">Pièces jointes</th>

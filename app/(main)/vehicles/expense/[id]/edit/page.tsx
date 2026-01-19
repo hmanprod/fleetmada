@@ -310,7 +310,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
                     </div>
 
                     <div className="relative" ref={vendorDropdownRef}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Vendeur</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1"></label>
                         <div className="relative">
                             <div
                                 className={`w-full p-2 border rounded text-sm bg-white cursor-pointer flex items-center justify-between transition-all ${isVendorDropdownOpen ? 'ring-1 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
@@ -328,7 +328,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
                                             <span className="ml-2 text-xs text-gray-400">(Hérité/Manuel)</span>
                                         </div>
                                     ) : (
-                                        <span className="text-gray-500">{vendorsLoading ? 'Chargement...' : 'Sélectionner un vendeur...'}</span>
+                                        <span className="text-gray-500">{vendorsLoading ? 'Chargement...' : 'Sélectionner un ...'}</span>
                                     )}
                                 </div>
                                 <MoreHorizontal size={16} className="text-gray-400 rotate-90" />
@@ -342,7 +342,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
                                             <input
                                                 autoFocus
                                                 type="text"
-                                                placeholder="Rechercher un vendeur..."
+                                                placeholder="Rechercher un ..."
                                                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
                                                 value={vendorSearch}
                                                 onChange={(e) => setVendorSearch(e.target.value)}
@@ -371,7 +371,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
                                             ))
                                         ) : (
                                             <div className="px-4 py-4 text-center">
-                                                <div className="text-xs text-gray-500 italic mb-2">Aucun vendeur trouvé</div>
+                                                <div className="text-xs text-gray-500 italic mb-2">Aucun  trouvé</div>
                                             </div>
                                         )}
                                     </div>

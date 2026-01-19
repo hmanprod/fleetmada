@@ -55,21 +55,26 @@ export function ContactSelect({
                 className="flex items-center justify-between w-full border border-gray-300 rounded px-3 py-2.5 text-sm cursor-pointer bg-white hover:border-gray-400 focus-within:ring-1 focus-within:ring-[#008751] focus-within:border-[#008751]"
             >
                 {loading ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-1 items-center gap-2">
                         <div className="w-4 h-4 border-2 border-gray-300 border-t-[#008751] rounded-full animate-spin"></div>
                         <span className="text-gray-400 text-xs">Chargement...</span>
                     </div>
-                ) : selectedContact ? (
-                    <div className="flex items-center gap-2 overflow-hidden">
-                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500 shrink-0">
-                            {selectedContact.firstName.charAt(0)}{selectedContact.lastName.charAt(0)}
-                        </div>
-                        <span className="truncate text-gray-900 font-medium">
-                            {selectedContact.firstName} {selectedContact.lastName}
-                        </span>
-                    </div>
                 ) : (
-                    <span className="text-gray-500">{placeholder}</span>
+                    <div className="flex items-center gap-2 overflow-hidden flex-1">
+                        <Search size={18} className="text-gray-400 shrink-0" />
+                        {selectedContact ? (
+                            <div className="flex items-center gap-2 overflow-hidden">
+                                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500 shrink-0">
+                                    {selectedContact.firstName.charAt(0)}{selectedContact.lastName.charAt(0)}
+                                </div>
+                                <span className="truncate text-gray-900 font-medium">
+                                    {selectedContact.firstName} {selectedContact.lastName}
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="text-gray-400 font-medium">{placeholder}</span>
+                        )}
+                    </div>
                 )}
                 <ChevronDown size={16} className={`text-gray-400 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </div>

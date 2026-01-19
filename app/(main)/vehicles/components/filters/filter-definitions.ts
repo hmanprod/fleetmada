@@ -95,7 +95,7 @@ export const ALL_FILTER_FIELDS: FilterField[] = [
     // EXPENSE CATEGORY
     { id: 'date', label: 'Date de la dépense', type: 'date', category: 'DÉPENSE' },
     { id: 'type', label: 'Type de dépense', type: 'text', category: 'DÉPENSE' },
-    { id: 'vendor', label: 'Vendeur', type: 'text', category: 'DÉPENSE' },
+    { id: 'vendor', label: '', type: 'text', category: 'DÉPENSE' },
     { id: 'amount', label: 'Montant', type: 'number', category: 'DÉPENSE' },
     { id: 'source', label: 'Source', type: 'text', category: 'DÉPENSE' },
 ];

@@ -50,7 +50,7 @@ Le formulaire doit être organisé en **Cartes (Cards)** thématiques pour évit
 ### Entités Liées (Sélection)
 | Règle | Description |
 |-------|-------------|
-| **Outil de recherche** | Utiliser impérativement des composants de type **Searchable Select** (Combobox) pour les véhicules, contacts, vendeurs, ou tâches. |
+| **Outil de recherche** | Utiliser impérativement des composants de type **Searchable Select** (Combobox) pour les véhicules, contacts, vendeurs, fournisseurs, ou tâches. |
 | **Composants dédiés** | Utiliser `VehicleSelect`, `ContactSelect`, `ServiceTaskSelect` etc. |
 | **Affichage** | Afficher les informations clés dans le sélecteur (ex: Nom du véhicule + VIN). |
 

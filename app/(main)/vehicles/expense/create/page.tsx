@@ -8,6 +8,8 @@ import { useVehicles } from '@/lib/hooks/useVehicles';
 import { useVendors } from '@/lib/hooks/useVendors';
 import { vehiclesAPI } from '@/lib/services/vehicles-api';
 import { useToast, ToastContainer } from '@/components/NotificationToast';
+import { VendorSelect } from '@/app/(main)/vendors/components/VendorSelect';
+import { VehicleSelect } from '@/app/(main)/vehicles/components/VehicleSelect';
 
 export default function CreateExpensePage() {
     const router = useRouter();
@@ -34,43 +36,11 @@ export default function CreateExpensePage() {
     const [vehicleSearch, setVehicleSearch] = useState('');
     const vehicleDropdownRef = React.useRef<HTMLDivElement>(null);
 
-    const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
-    const [vendorSearch, setVendorSearch] = useState('');
-    const vendorDropdownRef = React.useRef<HTMLDivElement>(null);
-
     const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
     const [selectedDocs, setSelectedDocs] = useState<File[]>([]);
     const photoInputRef = React.useRef<HTMLInputElement>(null);
     const docInputRef = React.useRef<HTMLInputElement>(null);
 
-    // Click outside handler for dropdowns
-    React.useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target as Node)) {
-                setIsVehicleDropdownOpen(false);
-            }
-            if (vendorDropdownRef.current && !vendorDropdownRef.current.contains(event.target as Node)) {
-                setIsVendorDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const filteredVehicles = vehicles.filter(vehicle => {
-        const searchLower = vehicleSearch.toLowerCase();
-        return vehicle.name.toLowerCase().includes(searchLower) ||
-            (vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchLower)) ||
-            (vehicle.vin && vehicle.vin.toLowerCase().includes(searchLower));
-    });
-
-    const filteredVendors = vendors.filter(vendor => {
-        const searchLower = vendorSearch.toLowerCase();
-        return vendor.name.toLowerCase().includes(searchLower) ||
-            (vendor.contactEmail && vendor.contactEmail.toLowerCase().includes(searchLower));
-    });
-
-    const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId);
     const selectedVendor = vendors.find(v => v.id === formData.vendorId);
 
     const validateForm = () => {
@@ -180,7 +150,6 @@ export default function CreateExpensePage() {
                 type: ''
             });
             setVehicleSearch('');
-            setVendorSearch('');
             setSelectedPhotos([]);
             setSelectedDocs([]);
         } catch (err) {
@@ -227,70 +196,14 @@ export default function CreateExpensePage() {
                     <h2 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-2">Détails</h2>
 
                     <div className="space-y-4 max-w-3xl">
-                        <div className="relative" ref={vehicleDropdownRef}>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule <span className="text-red-500">*</span></label>
-
-                            <div className="relative">
-                                <div
-                                    className={`w-full p-2 border rounded text-sm bg-white cursor-pointer flex items-center justify-between transition-all ${isVehicleDropdownOpen ? 'ring-1 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
-                                    onClick={() => !vehiclesLoading && setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <Car size={16} className="text-gray-400" />
-                                        {selectedVehicle ? (
-                                            <div>
-                                                <span className="font-medium text-gray-900">{selectedVehicle.name}</span>
-                                                <span className="ml-2 text-xs text-gray-500">{selectedVehicle.licensePlate || selectedVehicle.vin}</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-500">{vehiclesLoading ? 'Chargement...' : 'Sélectionner un véhicule...'}</span>
-                                        )}
-                                    </div>
-                                    <MoreHorizontal size={16} className="text-gray-400 rotate-90" />
-                                </div>
-
-                                {isVehicleDropdownOpen && (
-                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
-                                        <div className="p-2 border-b border-gray-100 bg-gray-50">
-                                            <div className="relative">
-                                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    placeholder="Rechercher un véhicule..."
-                                                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
-                                                    value={vehicleSearch}
-                                                    onChange={(e) => setVehicleSearch(e.target.value)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="max-h-60 overflow-y-auto">
-                                            {filteredVehicles.length > 0 ? (
-                                                filteredVehicles.map(v => (
-                                                    <div
-                                                        key={v.id}
-                                                        className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between group ${formData.vehicleId === v.id ? 'bg-green-50' : ''}`}
-                                                        onClick={() => {
-                                                            setFormData({ ...formData, vehicleId: v.id });
-                                                            setIsVehicleDropdownOpen(false);
-                                                            setVehicleSearch('');
-                                                        }}
-                                                    >
-                                                        <div>
-                                                            <div className="text-sm font-medium text-gray-900 group-hover:text-[#008751]">{v.name}</div>
-                                                            <div className="text-xs text-gray-500">{v.licensePlate || 'Sans plaque'} • {v.type || 'Standard'}</div>
-                                                        </div>
-                                                        {formData.vehicleId === v.id && <div className="text-[#008751]"><CheckCircle size={14} /></div>}
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="px-4 py-4 text-center text-xs text-gray-500 italic">Aucun véhicule trouvé</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            <VehicleSelect
+                                vehicles={vehicles as any[]}
+                                selectedVehicleId={formData.vehicleId}
+                                onSelect={(id) => setFormData({ ...formData, vehicleId: id })}
+                                loading={vehiclesLoading}
+                            />
                         </div>
 
                         <div>
@@ -312,70 +225,14 @@ export default function CreateExpensePage() {
                             </select>
                         </div>
 
-                        <div className="relative" ref={vendorDropdownRef}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Vendeur</label>
-                            <div className="relative">
-                                <div
-                                    className={`w-full p-2 border rounded text-sm bg-white cursor-pointer flex items-center justify-between transition-all ${isVendorDropdownOpen ? 'ring-1 ring-[#008751] border-[#008751]' : 'border-gray-300 hover:border-gray-400'}`}
-                                    onClick={() => !vendorsLoading && setIsVendorDropdownOpen(!isVendorDropdownOpen)}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">V</div>
-                                        {selectedVendor ? (
-                                            <div>
-                                                <span className="font-medium text-gray-900">{selectedVendor.name}</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-500">{vendorsLoading ? 'Chargement...' : 'Sélectionner un vendeur...'}</span>
-                                        )}
-                                    </div>
-                                    <MoreHorizontal size={16} className="text-gray-400 rotate-90" />
-                                </div>
-
-                                {isVendorDropdownOpen && (
-                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
-                                        <div className="p-2 border-b border-gray-100 bg-gray-50">
-                                            <div className="relative">
-                                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    placeholder="Rechercher un vendeur..."
-                                                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#008751]"
-                                                    value={vendorSearch}
-                                                    onChange={(e) => setVendorSearch(e.target.value)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="max-h-60 overflow-y-auto">
-                                            {filteredVendors.length > 0 ? (
-                                                filteredVendors.map(v => (
-                                                    <div
-                                                        key={v.id}
-                                                        className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between group ${formData.vendorId === v.id ? 'bg-green-50' : ''}`}
-                                                        onClick={() => {
-                                                            setFormData({ ...formData, vendorId: v.id, vendor: v.name });
-                                                            setIsVendorDropdownOpen(false);
-                                                            setVendorSearch('');
-                                                        }}
-                                                    >
-                                                        <div>
-                                                            <div className="text-sm font-medium text-gray-900 group-hover:text-[#008751]">{v.name}</div>
-                                                            <div className="text-xs text-gray-500">{v.classification?.join(', ') || 'No Classification'}</div>
-                                                        </div>
-                                                        {formData.vendorId === v.id && <div className="text-[#008751]"><CheckCircle size={14} /></div>}
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="px-4 py-4 text-center">
-                                                    <div className="text-xs text-gray-500 italic mb-2">Aucun vendeur trouvé</div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
+                            <VendorSelect
+                                vendors={vendors}
+                                selectedVendorId={formData.vendorId}
+                                onSelect={(id) => setFormData({ ...formData, vendorId: id })}
+                                loading={vendorsLoading}
+                            />
                         </div>
 
                         <div>

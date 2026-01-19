@@ -14,6 +14,7 @@ import { useToast, ToastContainer } from '@/components/NotificationToast'; // Ad
 import type { Vehicle } from '../../../vehicles/types';
 import type { Issue } from '@/lib/services/issues-api';
 import { ServiceTaskSelect } from '../../components/ServiceTaskSelect';
+import { VendorSelect } from '@/app/(main)/vendors/components/VendorSelect';
 
 export default function ServiceEntryCreatePage() {
   const router = useRouter();
@@ -388,20 +389,13 @@ export default function ServiceEntryCreatePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Vendor</label>
-                <div className="relative">
-                  <select
-                    value={formData.vendorId}
-                    onChange={(e) => handleInputChange('vendorId', e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] appearance-none"
-                  >
-                    <option value="">Please select</option>
-                    {vendors.map(v => (
-                      <option key={v.id} value={v.id}>{v.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                </div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Fournisseur</label>
+                <VendorSelect
+                  vendors={vendors}
+                  selectedVendorId={formData.vendorId}
+                  onSelect={(id) => handleInputChange('vendorId', id)}
+                  loading={vendorsLoading}
+                />
               </div>
 
               <div>

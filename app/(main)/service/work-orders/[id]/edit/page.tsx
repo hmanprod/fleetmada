@@ -3,9 +3,15 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Upload, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useVendors } from '@/lib/hooks/useVendors';
+import { useContacts } from '@/lib/hooks/useContacts';
+import { VendorSelect } from '@/app/(main)/vendors/components/VendorSelect';
+import { ContactSelect } from '@/app/(main)/contacts/components/ContactSelect';
 
 export default function WorkOrderEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { vendors, loading: vendorsLoading } = useVendors({ filters: { limit: 1000 } });
+    const { contacts, loading: contactsLoading } = useContacts({ limit: 1000 });
     const [formData, setFormData] = useState({
         vehicle: 'MV110TRNS',
         status: 'Open',
@@ -21,9 +27,9 @@ export default function WorkOrderEditPage({ params }: { params: { id: string } }
         expectedCompletionTime: '2:48pm',
         actualCompletionDate: '12/14/2025',
         actualCompletionTime: '2:48pm',
-        assignedTo: '',
-        labels: '',
-        vendor: '',
+        assignedToContactId: '',
+        labels: [] as string[],
+        vendorId: '',
         invoiceNumber: '',
         poNumber: '',
         sendScheduledStartReminder: false,
@@ -39,7 +45,7 @@ export default function WorkOrderEditPage({ params }: { params: { id: string } }
         router.push(`/service/work-orders/${params.id}`);
     };
 
-    const handleInputChange = (field: string, value: string | boolean) => {
+    const handleInputChange = (field: string, value: any) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -144,24 +150,22 @@ export default function WorkOrderEditPage({ params }: { params: { id: string } }
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                            <select
-                                value={formData.assignedTo}
-                                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-                                className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
-                            >
-                                <option value="">Please select</option>
-                            </select>
+                            <ContactSelect
+                                contacts={contacts}
+                                selectedContactId={formData.assignedToContactId}
+                                onSelect={(id) => handleInputChange('assignedToContactId', id)}
+                                loading={contactsLoading}
+                            />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-                            <select
-                                value={formData.vendor}
-                                onChange={(e) => handleInputChange('vendor', e.target.value)}
-                                className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
-                            >
-                                <option value="">Please select</option>
-                            </select>
+                            <VendorSelect
+                                vendors={vendors}
+                                selectedVendorId={formData.vendorId}
+                                onSelect={(id) => handleInputChange('vendorId', id)}
+                                loading={vendorsLoading}
+                            />
                         </div>
                     </div>
                 </div>

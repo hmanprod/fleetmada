@@ -26,7 +26,7 @@ export default function WorkOrdersPage() {
   const [activeCriteria, setActiveCriteria] = useState<FilterCriterion[]>([]);
 
   // Hooks for data
-  const { vehicles } = useVehicles({ query: { limit: 1000, page: 1, sortBy: 'name', sortOrder: 'asc' } });
+  const { vehicles, error: vehiclesError } = useVehicles({ query: { limit: '500', page: '1', sortBy: 'name', sortOrder: 'asc' } as any });
   const { contacts } = useContacts({ limit: 1000 });
 
   // Current filters from URL
@@ -191,13 +191,13 @@ export default function WorkOrdersPage() {
       <div className="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
         <h1 className="text-2xl font-bold text-gray-900">Ordres de travail</h1>
         <div className="flex items-center gap-3">
-          <button
+          {/* <button
             onClick={() => exportWorkOrders()}
             className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
             title="Exporter"
           >
             <Download size={20} />
-          </button>
+          </button> */}
           <button
             onClick={handleAddWorkOrder}
             className="flex items-center gap-2 bg-[#008751] hover:bg-[#007043] text-white px-4 py-2 rounded-md font-bold transition-colors"
@@ -296,6 +296,7 @@ export default function WorkOrdersPage() {
             selectedVehicleId={searchParams.get('vehicleId') || undefined}
             onSelect={(id) => updateURL({ vehicleId: id })}
             loading={loading && vehicles.length === 0}
+            error={vehiclesError}
             className="!py-0"
           />
         </div>

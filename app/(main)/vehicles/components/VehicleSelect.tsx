@@ -8,9 +8,10 @@ interface VehicleSelectProps {
     onSelect: (vehicleId: string) => void;
     className?: string;
     loading?: boolean;
+    error?: string | null;
 }
 
-export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className, loading }: VehicleSelectProps) {
+export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className, loading, error }: VehicleSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -78,7 +79,15 @@ export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className
                         </div>
                     </div>
                     <div className="overflow-y-auto">
-                        {filteredVehicles.length > 0 ? (
+                        {error ? (
+                            <div className="px-3 py-8 text-center text-sm text-red-500 italic">
+                                {error}
+                            </div>
+                        ) : vehicles.length === 0 ? (
+                            <div className="px-3 py-8 text-center text-sm text-gray-500 italic">
+                                Aucun véhicule disponible
+                            </div>
+                        ) : filteredVehicles.length > 0 ? (
                             filteredVehicles.map(vehicle => (
                                 <div
                                     key={vehicle.id}
@@ -89,13 +98,17 @@ export function VehicleSelect({ vehicles, selectedVehicleId, onSelect, className
                                     }}
                                     className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-50 flex flex-col gap-0.5 border-b border-gray-50 last:border-0 ${selectedVehicleId === vehicle.id ? 'bg-green-50' : ''}`}
                                 >
-                                    <span className="font-medium text-gray-900">{vehicle.name}</span>
-                                    {vehicle.vin && <span className="text-[11px] text-gray-500 font-mono tracking-tight">{vehicle.vin}</span>}
+                                    <span className="font-medium text-gray-900">{vehicle.name || 'Sans nom'}</span>
+                                    {(vehicle.vin || (vehicle as any).licensePlate) && (
+                                        <span className="text-[11px] text-gray-500 font-mono tracking-tight">
+                                            {vehicle.vin || (vehicle as any).licensePlate}
+                                        </span>
+                                    )}
                                 </div>
                             ))
                         ) : (
                             <div className="px-3 py-8 text-center text-sm text-gray-500">
-                                Aucun véhicule trouvé correspondant à "{searchTerm}"
+                                Aucun véhicule trouvé pour "{searchTerm}"
                             </div>
                         )}
                     </div>

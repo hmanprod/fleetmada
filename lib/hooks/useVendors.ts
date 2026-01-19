@@ -55,7 +55,7 @@ export const useVendors = (options: UseVendorsOptions = {}): UseVendorsReturn =>
       setPagination(response.data.pagination)
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des vendeurs'
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des s'
       setError(errorMessage)
       console.error('Erreur useVendors:', err)
     } finally {

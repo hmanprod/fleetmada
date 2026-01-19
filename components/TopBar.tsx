@@ -28,9 +28,9 @@ const TopBar: React.FC = () => {
           >
             <Menu size={20} />
           </button>
-          <h1 className="text-xl font-semibold text-gray-900">
+          {/* <h1 className="text-xl font-semibold text-gray-900">
             Bonjour, {user.firstName} !
-          </h1>
+          </h1> */}
         </div>
 
         <div className="flex items-center space-x-4">
@@ -42,7 +42,7 @@ const TopBar: React.FC = () => {
               <div className="w-8 h-8 bg-[#008751] rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-white" />
               </div>
-              <span className="hidden md:block">
+              <span className="block">
                 {user.firstName} {user.lastName}
               </span>
               <ChevronDown className="h-4 w-4 text-gray-400" />
