@@ -15,7 +15,8 @@ interface TokenPayload {
 
 // Schéma de validation Zod pour la mise à jour du profil
 const updateProfileSchema = z.object({
-  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
+  firstName: z.string().min(1, 'Le prénom doit contenir au moins 1 caractère').optional(),
+  lastName: z.string().optional(),
   avatar: z.string().url('URL d\'avatar invalide').optional().or(z.literal('')),
   password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères').optional(),
   currentPassword: z.string().min(1, 'Le mot de passe actuel est requis pour changer le mot de passe').optional()
@@ -31,7 +32,8 @@ const updateProfileSchema = z.object({
 })
 
 interface UpdateProfileRequest {
-  name?: string
+  firstName?: string
+  lastName?: string
   avatar?: string
   password?: string
   currentPassword?: string
@@ -40,7 +42,8 @@ interface UpdateProfileRequest {
 // Interface pour l'utilisateur réponse (sans mot de passe)
 interface UserResponse {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
   avatar?: string | null
   companyId?: string | null
@@ -55,9 +58,14 @@ const logAction = (action: string, userId: string, details: any) => {
 
 // Fonction pour préparer la réponse utilisateur (sans mot de passe)
 const prepareUserResponse = (user: any): UserResponse => {
+  const nameParts = (user.name || '').split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
   return {
     id: user.id,
-    name: user.name,
+    firstName,
+    lastName,
     email: user.email,
     avatar: user.avatar,
     companyId: user.companyId,
@@ -267,7 +275,13 @@ export async function PUT(request: NextRequest) {
     const dataToUpdate: any = {}
 
     // Champs optionnels
-    if (updateData.name !== undefined) dataToUpdate.name = updateData.name.trim()
+    if (updateData.firstName !== undefined || updateData.lastName !== undefined) {
+      const currentNameParts = (currentUser.name || '').split(' ');
+      const newFirstName = updateData.firstName !== undefined ? updateData.firstName.trim() : currentNameParts[0] || '';
+      const newLastName = updateData.lastName !== undefined ? updateData.lastName.trim() : currentNameParts.slice(1).join(' ') || '';
+      dataToUpdate.name = `${newFirstName} ${newLastName}`.trim();
+    }
+
     if (updateData.avatar !== undefined) dataToUpdate.avatar = updateData.avatar?.trim() || null
 
     // Gestion du changement de mot de passe

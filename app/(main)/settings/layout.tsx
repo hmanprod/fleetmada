@@ -49,7 +49,7 @@ export default function SettingsLayout({
 
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Paramètres</h1>
 
-          <div className="relative">
+          {/* <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
             <input
               type="text"
@@ -57,14 +57,14 @@ export default function SettingsLayout({
               className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751] bg-white"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs border border-gray-300 rounded px-1">/</div>
-          </div>
+          </div> */}
         </div>
 
         <div className="px-2 pb-8">
           <SectionHeader icon={User} title="Hery RABOTOVAO" />
           <button className="w-full text-left px-3 py-1 text-xs text-red-600 hover:underline mb-2 pl-8">Se déconnecter</button>
-          <MenuItem label="Profil utilisateur" href="/settings/profile" />
-          <MenuItem label="Identifiant & Mot de passe" href="/settings/login" />
+          <MenuItem label="Profil utilisateur" href="/settings/user-profile" />
+          <MenuItem label="Identifiant & Mot de passe" href="/settings/login-password" />
 
           <SectionHeader icon={Building2} title="ONNO" />
           <MenuItem label="Paramètres généraux" href="/settings/general" />

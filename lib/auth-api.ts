@@ -32,7 +32,8 @@ class AuthAPI {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
     });
-    return this.handleResponse(response);
+    const data = await this.handleResponse<any>(response);
+    return { token: data.token, user: data.user };
   }
 
   async register(data: RegisterData): Promise<{ token: string; user: User }> {
@@ -41,7 +42,8 @@ class AuthAPI {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    return this.handleResponse(response);
+    const result = await this.handleResponse<any>(response);
+    return { token: result.token, user: result.user };
   }
 
   async logout(): Promise<void> {
@@ -59,7 +61,8 @@ class AuthAPI {
       method: 'GET',
       headers: this.getAuthHeaders()
     });
-    return this.handleResponse(response);
+    const data = await this.handleResponse<{ success: boolean; user: User }>(response);
+    return data.user;
   }
 
   async updateProfile(data: Partial<User>): Promise<User> {
@@ -68,7 +71,8 @@ class AuthAPI {
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data)
     });
-    return this.handleResponse(response);
+    const result = await this.handleResponse<{ success: boolean, user: User }>(response);
+    return result.user;
   }
 
   async completeOnboarding(data: OnboardingData): Promise<void> {

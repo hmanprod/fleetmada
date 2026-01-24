@@ -148,9 +148,14 @@ export async function POST(request: NextRequest) {
       const authToken = generateLoginToken(newUser.id, newUser.email)
 
       // Préparer la réponse (sans mot de passe)
+      const nameParts = (newUser.name || '').split(' ')
+      const firstNameRes = nameParts[0] || ''
+      const lastNameRes = nameParts.slice(1).join(' ') || ''
+
       const userResponse = {
         id: newUser.id,
-        name: newUser.name,
+        firstName: firstNameRes,
+        lastName: lastNameRes,
         email: newUser.email,
         avatar: newUser.avatar,
         // companyId omitted to force onboarding flow

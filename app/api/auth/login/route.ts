@@ -100,9 +100,14 @@ export async function POST(request: NextRequest) {
     const token = generateLoginToken(user.id, user.email)
 
     // Préparation de la réponse utilisateur (sans mot de passe)
+    const nameParts = (user.name || '').split(' ')
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || ''
+
     const userResponse = {
       id: user.id,
-      name: user.name,
+      firstName,
+      lastName,
       email: user.email,
       avatar: user.avatar,
       companyId: user.companyId,
