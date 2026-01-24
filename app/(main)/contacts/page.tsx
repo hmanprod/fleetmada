@@ -78,13 +78,11 @@ export default function ContactsPage() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // filter change handled by effect
   };
 
   const handleFilterChange = (newFilters: Partial<ContactFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
 
-    // Clean up undefined values
     Object.keys(updatedFilters).forEach(key => {
       // @ts-ignore
       if (updatedFilters[key] === undefined) {
@@ -96,7 +94,6 @@ export default function ContactsPage() {
     setFilters(updatedFilters);
     fetchContacts(updatedFilters);
 
-    // Update URL
     const params = new URLSearchParams();
     const relevantKeys: (keyof ContactFilters)[] = ['status', 'search', 'group', 'classification'];
     relevantKeys.forEach(key => {
@@ -112,7 +109,6 @@ export default function ContactsPage() {
     setActiveCriteria(criteria);
     setIsFiltersOpen(false);
 
-    // Start with clean state but keep search if not overridden by filter
     const newFilters: Partial<ContactFilters> = {
       search: searchQuery || undefined,
       status: undefined,
@@ -123,7 +119,6 @@ export default function ContactsPage() {
     criteria.forEach(c => {
       const value = Array.isArray(c.value) ? c.value[0] : c.value;
 
-      // Map filter fields to API filter keys
       if (c.field === 'group') {
         newFilters.group = value;
       } else if (c.field === 'status') {
@@ -133,10 +128,8 @@ export default function ContactsPage() {
         // @ts-ignore
         newFilters.classification = value;
       }
-      // Add other mapping logic if needed
     });
 
-    // If a tab is active (e.g. "Technician"), ensure it's respected unless overridden
     if (activeTab !== 'All' && !newFilters.classification) {
       // @ts-ignore
       newFilters.classification = activeTab === 'Operator' ? 'Operator' :
@@ -161,7 +154,6 @@ export default function ContactsPage() {
   };
 
   const currentStatus = filters.status || '';
-  const currentGroup = filters.group || '';
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -178,14 +170,10 @@ export default function ContactsPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
-        return 'Active';
-      case 'INACTIVE':
-        return 'Inactive';
-      case 'ARCHIVED':
-        return 'Archived';
-      default:
-        return status;
+      case 'ACTIVE': return 'Actif';
+      case 'INACTIVE': return 'Inactif';
+      case 'ARCHIVED': return 'Archivé';
+      default: return status;
     }
   };
 
@@ -211,30 +199,30 @@ export default function ContactsPage() {
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
+      {/* ZONE 1: HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-gray-900" data-testid="contacts-title">Contacts</h1>
-          {/* <button className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2">Learn</button> */}
         </div>
         <div className="flex gap-2">
-          <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button>
           <button
             onClick={() => handleAdd(router)}
-            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
             data-testid="add-contact-button"
           >
-            <Plus size={20} /> Add Contact
+            <Plus size={20} /> Nouveau contact
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      {/* ZONE 2: NAVIGATION TABS */}
+      <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm text-gray-500">
         {[
-          { id: 'All', label: 'All', value: undefined },
-          { id: 'Operator', label: 'Operator', value: 'Operator' },
-          { id: 'Technician', label: 'Technician', value: 'Technician' },
-          { id: 'Manager', label: 'Manager', value: 'Manager' },
-          { id: 'Employee', label: 'Employee', value: 'Employee' }
+          { id: 'All', label: 'Tous', value: undefined },
+          { id: 'Operator', label: 'Opérateurs', value: 'Operator' },
+          { id: 'Technician', label: 'Techniciens', value: 'Technician' },
+          { id: 'Manager', label: 'Gestionnaires', value: 'Manager' },
+          { id: 'Employee', label: 'Employés', value: 'Employee' }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -242,9 +230,9 @@ export default function ContactsPage() {
               setActiveTab(tab.id);
               handleFilterChange({ classification: tab.value as any });
             }}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id || (tab.id === 'All' && !filters.classification) || filters.classification === tab.value
-              ? 'border-[#008751] text-[#008751]'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+            className={`pb-3 border-b-2 transition-colors ${activeTab === tab.id || (tab.id === 'All' && !filters.classification) || filters.classification === tab.value
+              ? 'border-[#008751] text-[#008751] font-bold'
+              : 'border-transparent hover:text-gray-700 font-medium'
               }`}
           >
             {tab.label}
@@ -252,16 +240,18 @@ export default function ContactsPage() {
         ))}
       </div>
 
+
+      {/* ZONE 3: FILTERS BAR */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-4 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
+        <div className="flex flex-wrap gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search contacts..."
+              placeholder="Rechercher des contacts..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-[#008751] focus:border-[#008751] text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751] outline-none"
               data-testid="search-input"
             />
           </div>
@@ -269,30 +259,19 @@ export default function ContactsPage() {
           <select
             value={currentStatus}
             onChange={(e) => handleFilterChange({ status: (e.target.value as any) || undefined })}
-            className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
+            className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none min-w-[150px]"
           >
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="ARCHIVED">Archived</option>
-          </select>
-
-          <select
-            value={currentGroup}
-            onChange={(e) => handleFilterChange({ group: e.target.value || undefined })}
-            className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
-          >
-            <option value="">All Groups</option>
-            {groups.map(group => (
-              <option key={group.id} value={group.id}>{group.name}</option>
-            ))}
+            <option value="">Tous les statuts</option>
+            <option value="ACTIVE">Actif</option>
+            <option value="INACTIVE">Inactif</option>
+            <option value="ARCHIVED">Archivé</option>
           </select>
 
           <button
             onClick={() => setIsFiltersOpen(true)}
-            className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
           >
-            <Filter size={14} /> Filters
+            <Filter size={14} /> Filtres
             {activeCriteria.length > 0 && (
               <span className="bg-[#008751] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
                 {activeCriteria.length}
@@ -303,41 +282,68 @@ export default function ContactsPage() {
           {(filters.status || filters.group || filters.classification || filters.search || activeCriteria.length > 0) && (
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-4"
+              className="text-sm font-medium text-[#008751] hover:underline"
             >
-              Clear
+              Effacer
             </button>
           )}
-        </div>
 
-        {loading && contacts.length > 0 && (
-          <div className="text-sm text-[#008751] animate-pulse">Loading updated results...</div>
-        )}
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-            <span className="text-red-700">{error}</span>
+          <div className="flex-1 text-right text-sm text-gray-500">
+            {pagination ? `${(filters.page! - 1) * filters.limit! + 1} - ${Math.min(filters.page! * filters.limit!, pagination.total)} sur ${pagination.total}` : '0'}
+          </div>
+          <div className="flex gap-1">
             <button
-              onClick={refetch}
-              className="ml-auto text-red-600 hover:text-red-800"
+              onClick={() => fetchContacts({ ...filters, page: (filters.page || 1) - 1 })}
+              disabled={!pagination?.hasPrev}
+              className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
-              Try Again
+              <ChevronRight size={16} className="rotate-180" />
+            </button>
+            <button
+              onClick={() => fetchContacts({ ...filters, page: (filters.page || 1) + 1 })}
+              disabled={!pagination?.hasNext}
+              className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              <ChevronRight size={16} />
             </button>
           </div>
-        )}
+        </div>
       </div>
 
+      {/* ZONE 4: DASHBOARD STATISTIQUES */}
+      <div className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Total Contacts</div>
+            <div className="text-2xl font-bold text-gray-900">{pagination?.total || 0}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Actifs</div>
+            <div className="text-2xl font-bold text-green-600">{contacts.filter(c => c.status === 'ACTIVE').length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Techniciens</div>
+            <div className="text-2xl font-bold text-blue-600">{contacts.filter(c => c.classifications.includes('Technician')).length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Employés</div>
+            <div className="text-2xl font-bold text-purple-600">{contacts.filter(c => c.classifications.includes('Employee')).length}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ZONE 5: TABLEAU DE DONNÉES */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Classification</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignments</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Groupe</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Classification</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Assignations</th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider"></th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -372,11 +378,6 @@ export default function ContactsPage() {
                           {classification}
                         </span>
                       ))}
-                      {contact.classifications.length > 2 && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{contact.classifications.length - 2}
-                        </span>
-                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -402,67 +403,31 @@ export default function ContactsPage() {
         </div>
 
         {contacts.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <Users size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No contacts found</h3>
-            <p className="text-gray-500 mb-4">
-              {searchQuery ? 'Try adjusting your search criteria' : 'Get started by adding your first contact'}
-            </p>
-            <button
-              onClick={() => handleAdd(router)}
-              className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 mx-auto"
-            >
-              <Plus size={20} /> Add Contact
-            </button>
+          <div className="text-center py-12 text-gray-500 bg-white">
+            Pas de contacts trouvés.
           </div>
         )}
 
         {pagination && pagination.totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => fetchContacts({ ...filters, page: pagination.page - 1 })}
-                disabled={!pagination.hasPrev}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => fetchContacts({ ...filters, page: pagination.page + 1 })}
-                disabled={!pagination.hasNext}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Next
-              </button>
+          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 text-sm text-gray-700">
+            <div>
+              Affichage de <span className="font-medium">{(filters.page! - 1) * filters.limit! + 1}</span> à <span className="font-medium">{Math.min(filters.page! * filters.limit!, pagination.total)}</span> sur <span className="font-medium">{pagination.total}</span> résultats
             </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
-                  <span className="font-medium">
-                    {Math.min(pagination.page * pagination.limit, pagination.total)}
-                  </span>{' '}
-                  of <span className="font-medium">{pagination.total}</span> results
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                  <button
-                    onClick={() => fetchContacts({ ...filters, page: pagination.page - 1 })}
-                    disabled={!pagination.hasPrev}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => fetchContacts({ ...filters, page: pagination.page + 1 })}
-                    disabled={!pagination.hasNext}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </nav>
-              </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => fetchContacts({ ...filters, page: (filters.page || 1) - 1 })}
+                disabled={!pagination.hasPrev}
+                className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                <ChevronRight size={16} className="rotate-180" />
+              </button>
+              <button
+                onClick={() => fetchContacts({ ...filters, page: (filters.page || 1) + 1 })}
+                disabled={!pagination.hasNext}
+                className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         )}

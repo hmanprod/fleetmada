@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, VehicleStatus, IssueStatus, Priority, ServiceStatus, ReminderStatus, ContactStatus, PlaceType, RenewalType, RenewalStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 dotenv.config();
@@ -8,9 +8,10 @@ dotenv.config({ path: '.env.local' });
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('🌱 Starting Development Seeding (Mock data)...');
+    console.log('🌱 Starting Development Seeding (Comprehensive Mock data)...');
 
-    // Check if setup was run
+    // 1. Initial Checks
+    console.log('🔍 Checking for essential setup data...');
     const fleetMadagascar = await prisma.company.findFirst({
         where: { name: 'FleetMadagascar SARL' }
     });
@@ -29,89 +30,38 @@ async function main() {
 
     const userPassword = await bcrypt.hash('userpassword123', 10);
 
-    // Additional Companies
-    console.log('🏢 Creating additional companies...');
-    const transportIavola = await prisma.company.upsert({
-        where: { name: 'Transport Iavola' },
+    // 2. Places
+    console.log('📍 Seeding Places...');
+    const mainOffice = await prisma.place.upsert({
+        where: { id: 'place-main-office' },
         update: {},
         create: {
-            name: 'Transport Iavola',
-            address: 'Zone Industrielle Ivato, Antananarivo 105, Madagascar',
-            phone: '+261 20 24 567 89',
-            website: 'https://transport-iavola.mg',
-            description: 'Société de transport et logistique',
-            taxId: 'MGA-987654321',
-            employees: 78,
-            fleetSize: 52,
-        },
-    });
-
-    const taxiBe = await prisma.company.upsert({
-        where: { name: 'Taxi Be Express' },
-        update: {},
-        create: {
-            name: 'Taxi Be Express',
-            address: 'Avenue de l\'Europe, Analakely, Antananarivo 101, Madagascar',
-            phone: '+261 20 22 987 65',
-            description: 'Service de taxi urbain moderne',
-            taxId: 'MGA-456789123',
-            employees: 156,
-            fleetSize: 89,
-        },
-    });
-
-    // Additional Users
-    console.log('👥 Creating additional users...');
-    const fleetManager = await prisma.user.upsert({
-        where: { email: 'marie.ratsimba@fleetmadagascar.mg' },
-        update: {},
-        create: {
-            name: 'Marie Ratsimba',
-            email: 'marie.ratsimba@fleetmadagascar.mg',
-            password: userPassword,
+            id: 'place-main-office',
+            name: 'Siège Social Antananarivo',
+            address: 'Lot II M 89 Bis Antsahavola, Antananarivo 101',
+            placeType: PlaceType.OFFICE,
             companyId: fleetMadagascar.id,
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-        },
+            latitude: -18.9100,
+            longitude: 47.5200,
+        }
     });
 
-    const driver1 = await prisma.user.upsert({
-        where: { email: 'paul.andriamanantsoa@fleetmadagascar.mg' },
+    const garageCentrale = await prisma.place.upsert({
+        where: { id: 'place-garage-central' },
         update: {},
         create: {
-            name: 'Paul Andriamanantsoa',
-            email: 'paul.andriamanantsoa@fleetmadagascar.mg',
-            password: userPassword,
+            id: 'place-garage-central',
+            name: 'Garage Central FleetMada',
+            address: 'Zone Industrielle Ivato, Antananarivo 105',
+            placeType: PlaceType.SERVICE_CENTER,
             companyId: fleetMadagascar.id,
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-        },
+            latitude: -18.8000,
+            longitude: 47.4800,
+        }
     });
 
-    const transportManager = await prisma.user.upsert({
-        where: { email: 'sophie@transport-iavola.mg' },
-        update: {},
-        create: {
-            name: 'Sophie Razafindrakoto',
-            email: 'sophie@transport-iavola.mg',
-            password: userPassword,
-            companyId: transportIavola.id,
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-        },
-    });
-
-    const taxiDriver = await prisma.user.upsert({
-        where: { email: 'alain@taxibe.mg' },
-        update: {},
-        create: {
-            name: 'Alain Ratsahotra',
-            email: 'alain@taxibe.mg',
-            password: userPassword,
-            companyId: taxiBe.id,
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-        },
-    });
-
-    // Create Vehicles
-    console.log('🚗 Creating vehicles...');
+    // 3. Vehicles
+    console.log('🚗 Seeding Vehicles...');
     const vehicle1 = await prisma.vehicle.upsert({
         where: { vin: 'JTFB22H10A1234567' },
         update: {},
@@ -122,13 +72,14 @@ async function main() {
             year: 2022,
             make: 'Toyota',
             model: 'Hilux',
-            status: 'ACTIVE',
+            status: VehicleStatus.ACTIVE,
             meterReading: 45670.5,
             userId: adminUser.id,
             fuelQuality: 'Diesel',
             fuelTankCapacity: 80,
             purchaseDate: new Date('2022-03-15'),
             purchasePrice: 145000000,
+            licensePlate: '5678-TAB',
         },
     });
 
@@ -142,35 +93,36 @@ async function main() {
             year: 2021,
             make: 'Nissan',
             model: 'Pathfinder',
-            status: 'ACTIVE',
+            status: VehicleStatus.ACTIVE,
             meterReading: 32840.2,
-            userId: fleetManager.id,
+            userId: adminUser.id,
             fuelQuality: 'Essence 95',
             fuelTankCapacity: 73,
+            licensePlate: '8912-TBC',
         },
     });
 
-    const vehicle3 = await prisma.vehicle.upsert({
-        where: { vin: 'MMCELK1A0JH123456' },
+    const evVehicle = await prisma.vehicle.upsert({
+        where: { vin: 'EV-TESLA-MODEL-3-2023' },
         update: {},
         create: {
-            name: 'Mitsubishi L200 - FM-003-CC',
-            vin: 'MMCELK1A0JH123456',
-            type: 'Pickup',
+            name: 'Tesla Model 3 - FM-EV01',
+            vin: 'EV-TESLA-MODEL-3-2023',
+            type: 'Berline Électrique',
             year: 2023,
-            make: 'Mitsubishi',
-            model: 'L200',
-            status: 'ACTIVE',
-            meterReading: 12340.8,
-            userId: driver1.id,
-        },
+            make: 'Tesla',
+            model: 'Model 3',
+            status: VehicleStatus.ACTIVE,
+            meterReading: 1200.0,
+            userId: adminUser.id,
+            fuelQuality: 'Electric',
+            licensePlate: '1234-TBD',
+        }
     });
 
-    const vehicles = [vehicle1, vehicle2, vehicle3];
-
-    // Vendores, Contacts, etc...
-    console.log('🏪 Creating vendors...');
-    const vendor = await prisma.vendor.upsert({
+    // 4. Vendors
+    console.log('🏪 Seeding Vendors...');
+    const vendorToyota = await prisma.vendor.upsert({
         where: { name: 'Toyota Madagascar' },
         update: {},
         create: {
@@ -178,6 +130,7 @@ async function main() {
             phone: '+261 20 22 456 78',
             address: 'Lot 45A Antsahavola, Antananarivo',
             contactName: 'Rakoto Ratsimba',
+            classification: ['Service', 'Parts']
         },
     });
 
@@ -186,148 +139,277 @@ async function main() {
         update: {},
         create: {
             name: 'Total Antsahavola',
-            address: 'Antsahavola',
+            address: 'Antsahavola, Antananarivo',
+            classification: ['Fuel']
         }
     });
 
-    // Fuel Entries
-    console.log('⛽ Creating fuel entries...');
-    // Only create if we don't have one for this vehicle on this date to avoid duplicates on re-run
-    const existingFuelEntry = await prisma.fuelEntry.findFirst({
-        where: {
-            vehicleId: vehicles[0].id,
-            date: new Date('2024-12-10T08:30:00'),
-        }
-    });
-
-    if (!existingFuelEntry) {
-        await prisma.fuelEntry.create({
-            data: {
-                vehicleId: vehicles[0].id,
-                userId: adminUser.id,
-                date: new Date('2024-12-10T08:30:00'),
-                vendorName: 'Total Antsahavola',
-                vendorId: vendorTotal.id,
-                usage: 12.5,
-                volume: 50.0,
-                cost: 150000.0,
-                mpg: 8.2,
-            },
-        });
-    }
-
-    // Assignations
-    console.log('👤 Creating assignments...');
-    const existingAssignment = await prisma.vehicleAssignment.findFirst({
-        where: {
-            vehicleId: vehicles[0].id,
-            operator: 'Paul Andriamanantsoa',
-            status: 'ACTIVE'
-        }
-    });
-
-    if (!existingAssignment) {
-        await prisma.vehicleAssignment.create({
-            data: {
-                vehicleId: vehicles[0].id,
-                operator: 'Paul Andriamanantsoa',
-                startDate: new Date('2024-01-01'),
-                status: 'ACTIVE',
-            },
-        });
-    }
-
-    // Groups
-    console.log('👥 Creating groups...');
+    // 5. Contacts
+    console.log('📇 Seeding Contacts...');
     const groupOps = await prisma.group.upsert({
         where: { name: 'Opérations' },
         update: {},
         create: { name: 'Opérations', color: '#008751' }
     });
 
-    const groupSales = await prisma.group.upsert({
-        where: { name: 'Ventes' },
-        update: {},
-        create: { name: 'Ventes', color: '#2563eb' }
-    });
-
-    const groupTech = await prisma.group.upsert({
-        where: { name: 'Technique' },
-        update: {},
-        create: { name: 'Technique', color: '#dc2626' }
-    });
-
-    // Contacts with roles
-    console.log('📇 Creating contacts with roles...');
-
-    await prisma.contact.upsert({
-        where: { email: 'jean.dupont@example.com' },
+    const contactDriver = await prisma.contact.upsert({
+        where: { email: 'paul.driver@fleetmada.mg' },
         update: {},
         create: {
-            firstName: 'Jean',
-            lastName: 'Dupont',
-            email: 'jean.dupont@example.com',
+            firstName: 'Paul',
+            lastName: 'Andriamanantsoa',
+            email: 'paul.driver@fleetmada.mg',
             phone: '+261 34 00 000 01',
             groupId: groupOps.id,
-            userType: 'Driver',
             classifications: ['Operator', 'Employee'],
-            status: 'ACTIVE',
+            status: ContactStatus.ACTIVE,
             jobTitle: 'Chauffeur Senior',
-            licenseNumber: 'T-12345',
-            licenseClass: ['B', 'C']
+            placeId: mainOffice.id
         }
     });
 
-    await prisma.contact.upsert({
-        where: { email: 'marie.curie@example.com' },
+    // 6. Issues
+    console.log('⚠️ Seeding Issues...');
+    await prisma.issue.create({
+        data: {
+            summary: 'Bruit suspect au freinage',
+            status: IssueStatus.OPEN,
+            priority: Priority.HIGH,
+            reportedDate: new Date(),
+            vehicleId: vehicle1.id,
+            userId: adminUser.id,
+            assignedTo: [contactDriver.id],
+            labels: ['Freinage', 'Sécurité']
+        }
+    });
+
+    await prisma.issue.create({
+        data: {
+            summary: 'Climatisation inefficace',
+            status: IssueStatus.IN_PROGRESS,
+            priority: Priority.MEDIUM,
+            reportedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            vehicleId: vehicle2.id,
+            userId: adminUser.id,
+            labels: ['Confort']
+        }
+    });
+
+    // 7. Fuel & Charging Entries
+    console.log('⛽ Seeding Fuel & Charging Entries...');
+    await prisma.fuelEntry.create({
+        data: {
+            vehicleId: vehicle1.id,
+            userId: adminUser.id,
+            date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+            vendorId: vendorTotal.id,
+            volume: 45.0,
+            cost: 180000,
+            usage: 500,
+            mpg: 10.5,
+        }
+    });
+
+    await prisma.chargingEntry.create({
+        data: {
+            vehicleId: evVehicle.id,
+            userId: adminUser.id,
+            date: new Date(),
+            location: 'Station Ivato',
+            energyKwh: 65.5,
+            cost: 45000,
+            durationMin: 120
+        }
+    });
+
+    // 8. Service Tasks & Entries (History)
+    console.log('🛠️ Seeding Service History & Work Orders...');
+    const vidangeTask = await prisma.serviceTask.findFirst({ where: { name: { contains: 'Vidange' } } });
+    const inspectionTask = await prisma.serviceTask.findFirst({ where: { name: { contains: 'Inspection' } } });
+
+    // Completed Service Entry (History)
+    await prisma.serviceEntry.create({
+        data: {
+            vehicleId: vehicle1.id,
+            userId: adminUser.id,
+            date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            status: ServiceStatus.COMPLETED,
+            totalCost: 250000,
+            meter: 42000,
+            vendorId: vendorToyota.id,
+            notes: 'Vidange standard des 40 000 km effectuée sans problème.',
+            isWorkOrder: false,
+            tasks: {
+                create: [
+                    { serviceTaskId: vidangeTask?.id || 'manual-task-1', cost: 150000, notes: 'Filtre à huile inclus' }
+                ]
+            }
+        }
+    });
+
+    // Active Work Order
+    await prisma.serviceEntry.create({
+        data: {
+            vehicleId: vehicle2.id,
+            userId: adminUser.id,
+            date: new Date(),
+            status: ServiceStatus.IN_PROGRESS,
+            totalCost: 0,
+            priority: Priority.HIGH,
+            isWorkOrder: true,
+            assignedToContactId: contactDriver.id,
+            scheduledStartDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            notes: 'Réparation de la clim et inspection générale.',
+            tasks: {
+                create: [
+                    { serviceTaskId: inspectionTask?.id || 'manual-task-2', cost: 50000 }
+                ]
+            }
+        }
+    });
+
+    // 9. Service Programs
+    console.log('📅 Seeding Service Programs...');
+    await prisma.serviceProgram.upsert({
+        where: { id: 'prog-basic-maintenance' },
         update: {},
         create: {
-            firstName: 'Marie',
-            lastName: 'Curie',
-            email: 'marie.curie@example.com',
-            phone: '+261 33 11 111 02',
-            groupId: groupTech.id,
-            userType: 'Technician',
-            classifications: ['Technician', 'Employee'],
-            status: 'ACTIVE',
-            jobTitle: 'Mécanicienne Principale'
+            id: 'prog-basic-maintenance',
+            name: 'Entretien de base Hilux',
+            description: 'Plan d\'entretien standard pour Toyota Hilux tous les 10 000 km',
+            frequency: '10000km',
+            active: true,
+            vehicles: {
+                create: [
+                    { vehicleId: vehicle1.id }
+                ]
+            },
+            tasks: {
+                create: [
+                    { serviceTaskId: vidangeTask?.id || 'manual-task-1', estimatedCost: 150000 }
+                ]
+            }
         }
     });
 
-    await prisma.contact.upsert({
-        where: { email: 'pierre.martin@example.com' },
-        update: {},
-        create: {
-            firstName: 'Pierre',
-            lastName: 'Martin',
-            email: 'pierre.martin@example.com',
-            phone: '+261 32 22 222 03',
-            groupId: groupSales.id,
-            userType: 'Manager',
-            classifications: ['Manager', 'Employee'],
-            status: 'ACTIVE',
-            jobTitle: 'Responsable Commercial'
+    // 10. Service Reminders & Renewals
+    console.log('⏰ Seeding Reminders & Renewals...');
+    await prisma.serviceReminder.create({
+        data: {
+            vehicleId: vehicle1.id,
+            serviceTaskId: vidangeTask?.id,
+            status: ReminderStatus.ACTIVE,
+            nextDue: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+            nextDueMeter: 55000,
+            lastServiceDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            type: 'both'
         }
     });
 
-    // Add extra contacts for variety
-    await prisma.contact.upsert({
-        where: { email: 'luc.razon@example.com' },
-        update: {},
-        create: {
-            firstName: 'Luc',
-            lastName: 'Razon',
-            email: 'luc.razon@example.com',
-            phone: '+261 34 55 555 05',
-            groupId: groupOps.id,
-            userType: 'Driver',
-            classifications: ['Operator', 'Employee'],
-            status: 'ACTIVE',
-            jobTitle: 'Chauffeur Livreur'
+    await prisma.vehicleRenewal.create({
+        data: {
+            vehicleId: vehicle1.id,
+            type: RenewalType.INSURANCE,
+            dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+            cost: 1200000,
+            status: RenewalStatus.DUE,
+            provider: 'Toyota Madagascar'
         }
     });
 
-    console.log('✅ Development Seeding completed successfully!');
+    // 11. Parts & Inventory
+    console.log('📦 Seeding Parts & Inventory...');
+    const devParts = [
+        {
+            number: 'OIL-FL-800',
+            description: 'Filtre à huile Premium Toyota',
+            category: 'Filtration',
+            manufacturer: 'Toyota Parts',
+            cost: 45000,
+            quantity: 25,
+            minimumStock: 5
+        },
+        {
+            number: 'BRK-PAD-101',
+            description: 'Plaquettes de frein avant Hilux',
+            category: 'Freinage',
+            manufacturer: 'Brembo',
+            cost: 185000,
+            quantity: 10,
+            minimumStock: 4
+        },
+        {
+            number: 'BELT-ALT-202',
+            description: 'Courroie d\'alternateur renforcée',
+            category: 'Courroies',
+            manufacturer: 'Gates',
+            cost: 75000,
+            quantity: 5,
+            minimumStock: 2
+        },
+        {
+            number: 'BATT-12V-70',
+            description: 'Batterie 12V 70Ah sans entretien',
+            category: 'Électricité',
+            manufacturer: 'Varta',
+            cost: 550000,
+            quantity: 4,
+            minimumStock: 2
+        },
+        {
+            number: 'TIRE-ALL-TR',
+            description: 'Pneu Tout Terrain 265/65R17',
+            category: 'Pneus',
+            manufacturer: 'BFGoodrich',
+            cost: 850000,
+            quantity: 8,
+            minimumStock: 4
+        }
+    ];
+
+    for (const part of devParts) {
+        await prisma.part.upsert({
+            where: { number: part.number },
+            update: {},
+            create: part
+        });
+    }
+
+    // 12. Expenses
+    console.log('💰 Seeding Expenses...');
+    await prisma.expenseEntry.create({
+        data: {
+            vehicleId: vehicle1.id,
+            date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+            type: 'Parking',
+            vendorId: vendorToyota.id,
+            source: 'Recu Manuel',
+            amount: 5000,
+            currency: 'MGA',
+            notes: 'Parking à Ivato'
+        }
+    });
+
+    // 13. Inspections
+    console.log('📋 Seeding Inspections...');
+    const standardTemplate = await prisma.inspectionTemplate.findFirst({ where: { name: { contains: 'standard' } } });
+    if (standardTemplate) {
+        await prisma.inspection.create({
+            data: {
+                vehicleId: vehicle1.id,
+                inspectionTemplateId: standardTemplate.id,
+                userId: adminUser.id,
+                title: 'Inspection Standard Toyota Hilux',
+                scheduledDate: new Date(),
+                status: 'COMPLETED',
+                complianceStatus: 'COMPLIANT',
+                overallScore: 100,
+                inspectorName: 'Jean Rakoto',
+            }
+        });
+    }
+
+    console.log('✅ Development Seeding completed successfully and comprehensively!');
 }
 
 main()

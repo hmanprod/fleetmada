@@ -95,7 +95,7 @@ export async function GET(
       }
 
       // Récupérer les transactions du vendor
-      const [serviceEntries, fuelEntries, expenseEntries] = await Promise.all([
+      const [serviceEntries, fuelEntries, expenseEntries, chargingEntries] = await Promise.all([
         prisma.serviceEntry.findMany({
           where: { vendorId: vendor.id },
           include: {
@@ -140,6 +140,21 @@ export async function GET(
           },
           orderBy: { date: 'desc' },
           take: 10
+        }),
+        prisma.chargingEntry.findMany({
+          where: { vendorId: vendor.id },
+          include: {
+            vehicle: {
+              select: {
+                id: true,
+                name: true,
+                vin: true,
+                type: true
+              }
+            }
+          },
+          orderBy: { date: 'desc' },
+          take: 10
         })
       ])
 
@@ -147,16 +162,19 @@ export async function GET(
       const totalServices = serviceEntries.length
       const totalFuelEntries = fuelEntries.length
       const totalExpenses = expenseEntries.length
-      
+      const totalChargingEntries = chargingEntries.length
+
       const totalServiceCost = serviceEntries.reduce((sum, entry) => sum + entry.totalCost, 0)
       const totalFuelCost = fuelEntries.reduce((sum, entry) => sum + entry.cost, 0)
       const totalExpenseAmount = expenseEntries.reduce((sum, entry) => sum + entry.amount, 0)
+      const totalChargingCost = chargingEntries.reduce((sum, entry) => sum + entry.cost, 0)
 
       logAction('GET Vendor by ID - Success', userId, {
         vendorId,
         totalServices,
         totalFuelEntries,
-        totalExpenses
+        totalExpenses,
+        totalChargingEntries
       })
 
       return NextResponse.json({
@@ -166,16 +184,19 @@ export async function GET(
           transactions: {
             serviceEntries: serviceEntries.slice(0, 5),
             fuelEntries: fuelEntries.slice(0, 5),
-            expenseEntries: expenseEntries.slice(0, 5)
+            expenseEntries: expenseEntries.slice(0, 5),
+            chargingEntries: chargingEntries.slice(0, 5)
           },
           stats: {
             totalServices,
             totalFuelEntries,
             totalExpenses,
+            totalChargingEntries,
             totalServiceCost: Math.round(totalServiceCost * 100) / 100,
             totalFuelCost: Math.round(totalFuelCost * 100) / 100,
             totalExpenseAmount: Math.round(totalExpenseAmount * 100) / 100,
-            totalValue: Math.round((totalServiceCost + totalFuelCost + totalExpenseAmount) * 100) / 100
+            totalChargingCost: Math.round(totalChargingCost * 100) / 100,
+            totalValue: Math.round((totalServiceCost + totalFuelCost + totalExpenseAmount + totalChargingCost) * 100) / 100
           }
         }
       })
@@ -381,9 +402,9 @@ export async function DELETE(
           expenseCount
         })
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Impossible de supprimer ce vendor car il est référencé dans ${totalReferences} transaction(s)` 
+          {
+            success: false,
+            error: `Impossible de supprimer ce vendor car il est référencé dans ${totalReferences} transaction(s)`
           },
           { status: 400 }
         )

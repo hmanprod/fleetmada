@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const MAPQUEST_API_KEY = process.env.MAPQUEST_API_KEY || 'YOUR_MAPQUEST_API_KEY';
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 
 // Validation schema pour géocodage
 const geocodeSchema = z.object({
@@ -13,37 +13,32 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { address } = geocodeSchema.parse(body);
-    
-    // Utilisation de l'API MapQuest pour le géocodage
-    const mapquestUrl = `https://www.mapquestapi.com/geocoding/v1/address?key=${MAPQUEST_API_KEY}&location=${encodeURIComponent(address)}`;
-    
-    const response = await fetch(mapquestUrl);
-    
-    if (!response.ok) {
-      throw new Error(`MapQuest API error: ${response.status}`);
-    }
-    
+
+    const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`;
+
+    const response = await fetch(googleUrl);
     const data = await response.json();
-    
-    if (data.results && data.results.length > 0 && data.results[0].locations && data.results[0].locations.length > 0) {
-      const location = data.results[0].locations[0];
-      
+
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      const result = data.results[0];
+      const location = result.geometry.location;
+
       const geocodeResult = {
-        latitude: location.latLng.lat,
-        longitude: location.latLng.lng,
-        formattedAddress: location.displayName || address,
-        placeId: location.placeId || null,
-        provider: 'MapQuest'
+        latitude: location.lat,
+        longitude: location.lng,
+        formattedAddress: result.formatted_address,
+        placeId: result.place_id,
+        provider: 'Google'
       };
-      
+
       return NextResponse.json(geocodeResult);
     } else {
       return NextResponse.json(
-        { error: 'Address not found' },
-        { status: 404 }
+        { error: data.error_message || `Google Maps error: ${data.status}` },
+        { status: data.status === 'ZERO_RESULTS' ? 404 : 500 }
       );
     }
-    
+
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -51,7 +46,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     console.error('Geocoding error:', error);
     return NextResponse.json(
       { error: 'Failed to geocode address' },
@@ -65,44 +60,39 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const address = searchParams.get('address');
-    
+
     if (!address) {
       return NextResponse.json(
         { error: 'Address parameter is required' },
         { status: 400 }
       );
     }
-    
-    // Utilisation de l'API MapQuest pour le géocodage
-    const mapquestUrl = `https://www.mapquestapi.com/geocoding/v1/address?key=${MAPQUEST_API_KEY}&location=${encodeURIComponent(address)}`;
-    
-    const response = await fetch(mapquestUrl);
-    
-    if (!response.ok) {
-      throw new Error(`MapQuest API error: ${response.status}`);
-    }
-    
+
+    const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`;
+
+    const response = await fetch(googleUrl);
     const data = await response.json();
-    
-    if (data.results && data.results.length > 0 && data.results[0].locations && data.results[0].locations.length > 0) {
-      const location = data.results[0].locations[0];
-      
+
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      const result = data.results[0];
+      const location = result.geometry.location;
+
       const geocodeResult = {
-        latitude: location.latLng.lat,
-        longitude: location.latLng.lng,
-        formattedAddress: location.displayName || address,
-        placeId: location.placeId || null,
-        provider: 'MapQuest'
+        latitude: location.lat,
+        longitude: location.lng,
+        formattedAddress: result.formatted_address,
+        placeId: result.place_id,
+        provider: 'Google'
       };
-      
+
       return NextResponse.json(geocodeResult);
     } else {
       return NextResponse.json(
-        { error: 'Address not found' },
-        { status: 404 }
+        { error: data.error_message || `Google Maps error: ${data.status}` },
+        { status: data.status === 'ZERO_RESULTS' ? 404 : 500 }
       );
     }
-    
+
   } catch (error) {
     console.error('Geocoding error:', error);
     return NextResponse.json(

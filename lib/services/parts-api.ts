@@ -111,6 +111,27 @@ export interface StockMovement {
   createdAt: string
 }
 
+export interface Manufacturer {
+  id: string
+  name: string
+  description?: string
+  website?: string
+  createdAt: string
+}
+
+export interface PartLocation {
+  id: string
+  partId: string
+  placeId: string
+  placeName?: string
+  aisle?: string
+  row?: string
+  bin?: string
+  quantity: number
+  createdAt: string
+  updatedAt: string
+}
+
 class PartsAPI {
   private baseURL = '/api/parts'
 
@@ -267,6 +288,56 @@ class PartsAPI {
       method: 'POST',
       headers: headers as Record<string, string>,
       body: formData
+    })
+  }
+
+  // Gestion des fabricants
+  async getManufacturers(): Promise<{ success: boolean; data: Manufacturer[] }> {
+    return this.request<{ success: boolean; data: Manufacturer[] }>('/manufacturers')
+  }
+
+  async createManufacturer(data: { name: string; description?: string; website?: string }): Promise<{ success: boolean; data: Manufacturer; message: string }> {
+    return this.request<{ success: boolean; data: Manufacturer; message: string }>('/manufacturers', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async updateManufacturer(id: string, data: { name?: string; description?: string; website?: string }): Promise<{ success: boolean; data: Manufacturer; message: string }> {
+    return this.request<{ success: boolean; data: Manufacturer; message: string }>(`/manufacturers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deleteManufacturer(id: string): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(`/manufacturers/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  // Gestion des emplacements (liés aux Places)
+  async getPartLocations(partId: string): Promise<{ success: boolean; data: PartLocation[] }> {
+    return this.request<{ success: boolean; data: PartLocation[] }>(`/${partId}/locations`)
+  }
+
+  async addPartLocation(partId: string, data: { placeId: string; aisle?: string; row?: string; bin?: string; quantity: number }): Promise<{ success: boolean; data: PartLocation; message: string }> {
+    return this.request<{ success: boolean; data: PartLocation; message: string }>(`/${partId}/locations`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async updatePartLocation(partId: string, locationId: string, data: { aisle?: string; row?: string; bin?: string; quantity?: number }): Promise<{ success: boolean; data: PartLocation; message: string }> {
+    return this.request<{ success: boolean; data: PartLocation; message: string }>(`/${partId}/locations/${locationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deletePartLocation(partId: string, locationId: string): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(`/${partId}/locations/${locationId}`, {
+      method: 'DELETE'
     })
   }
 

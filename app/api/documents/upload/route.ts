@@ -165,8 +165,6 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
         checksum,
         isPublic: metadata.isPublic,
         version: 1,
-        // Default values for required fields
-        fileSize: file.size, // This was duplicated in the original code, but ensuring type correctness
       }
     });
     console.log(`[Documents Upload] Document created with ID: ${document.id}`);

@@ -71,7 +71,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
         { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement', view: ViewState.REPLACEMENT_ANALYSIS },
       ]
     },
-    // { id: 'tools', label: 'Outils', icon: Wrench, href: '/tools', view: undefined },
     {
       id: 'inspections',
       label: 'Inspections',
@@ -93,7 +92,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       subItems: [
         { id: 'service-reminders', label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS },
         { id: 'vehicle-renewals', label: 'Renouvellements véhicules', href: '/reminders/vehicle-renewals', view: ViewState.VEHICLE_RENEWALS },
-        // { id: 'contact-renewals', label: 'Renouvellements contacts', href: '/reminders/contact', view: ViewState.CONTACT_RENEWALS },
       ]
     },
     {
@@ -121,9 +119,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       ]
     },
     { id: 'parts', label: 'Pièces', icon: Box, href: '/parts', view: ViewState.PARTS_LIST },
-    { id: 'places', label: 'Lieux', icon: MapPin, href: '/places', view: ViewState.PLACES_LIST },
-    { id: 'documents', label: 'Documents', icon: FileText, href: '/documents', view: ViewState.DOCUMENTS_LIST },
-    // { id: 'integrations', label: 'Intégrations', icon: Grid, href: '/integrations', view: undefined },
+    // { id: 'places', label: 'Sites opérationnels', icon: MapPin, href: '/places', view: ViewState.PLACES_LIST },
+    // { id: 'documents', label: 'Documents', icon: FileText, href: '/documents', view: ViewState.DOCUMENTS_LIST },
     // { id: 'reports', label: 'Rapports', icon: BarChart3, href: '/reports', view: ViewState.REPORTS_LIST },
   ];
 

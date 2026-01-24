@@ -38,12 +38,19 @@ export const config = {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  
-  logAuthAttempt('Request received', { 
-    method: request.method, 
+
+  logAuthAttempt('Request received', {
+    method: request.method,
     pathname,
     userAgent: request.headers.get('user-agent')?.substring(0, 100) || 'Unknown'
   })
+
+  // Interdire l'accès aux routes de documents et rapports pour tout le monde
+  const FORBIDDEN_ROUTES = ['/documents', '/reports']
+  if (FORBIDDEN_ROUTES.some(route => pathname.startsWith(route))) {
+    logAuthAttempt('Access to forbidden route blocked', { pathname })
+    return NextResponse.redirect(new URL('/', request.url))
+  }
 
   // Autoriser l'accès aux routes non-API et aux ressources statiques
   if (!pathname.startsWith('/api/')) {
@@ -63,7 +70,7 @@ export async function middleware(request: NextRequest) {
 
     // Extraction du token depuis le header Authorization
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       logAuthAttempt('Missing authorization header', { pathname })
       return NextResponse.json(
@@ -75,8 +82,8 @@ export async function middleware(request: NextRequest) {
     // Vérification du format Bearer token
     const parts = authHeader.split(' ')
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAuthAttempt('Invalid authorization header format', { 
-        pathname, 
+      logAuthAttempt('Invalid authorization header format', {
+        pathname,
         authHeader: authHeader.substring(0, 20) + '...'
       })
       return NextResponse.json(
@@ -89,7 +96,7 @@ export async function middleware(request: NextRequest) {
 
     // Vérification basique du format du token (en Edge Runtime, pas de crypto)
     if (!token || token.length < 10) {
-      logAuthAttempt('Invalid token format', { 
+      logAuthAttempt('Invalid token format', {
         pathname,
         tokenLength: token?.length || 0
       })
@@ -108,11 +115,11 @@ export async function middleware(request: NextRequest) {
         },
         body: JSON.stringify({ token }),
       })
-      
+
       if (response.ok) {
         const result = await response.json()
         if (result.isBlacklisted) {
-          logAuthAttempt('Token is blacklisted', { 
+          logAuthAttempt('Token is blacklisted', {
             pathname,
             tokenType: authHeader.substring(0, 20) + '...'
           })
@@ -127,7 +134,7 @@ export async function middleware(request: NextRequest) {
       // En cas d'erreur, on continue mais on log l'erreur
     }
 
-    logAuthAttempt('Basic token validation passed', { 
+    logAuthAttempt('Basic token validation passed', {
       pathname,
       tokenType: authHeader.substring(0, 20) + '...'
     })

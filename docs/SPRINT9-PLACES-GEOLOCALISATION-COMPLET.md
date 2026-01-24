@@ -5,7 +5,7 @@
 
 ## 📋 RÉSUMÉ EXÉCUTIF
 
-Le module Places de FleetMada a été entièrement implémenté avec succès, fournissant un système complet de géolocalisation pour la gestion des lieux d'importance pour la flotte. Toutes les fonctionnalités demandées ont été développées et testées.
+Le module Places de FleetMada a été entièrement implémenté avec succès, fournissant un système complet de géolocalisation pour la gestion des sites opérationnels d'importance pour la flotte. Toutes les fonctionnalités demandées ont été développées et testées.
 
 ### ✅ Objectifs Atteints
 
@@ -71,7 +71,7 @@ enum PlaceType {
 - `GET /api/places/reverse-geocode?lat=...&lng=...` - Géocodage inverse via URL
 
 #### Recherche Géographique
-- `GET /api/places/nearby?lat=...&lng=...&radius=...` - Lieux proches
+- `GET /api/places/nearby?lat=...&lng=...&radius=...` - Sites opérationnels proches
 - `POST /api/places/nearby` - Recherche de proximité avancée
 
 ### 3. Services Frontend
@@ -139,7 +139,7 @@ export class PlacesApiService {
 - Géocodage automatique d'adresse
 - Sélection manuelle de coordonnées
 - Aperçu carte interactive
-- Types de lieux prédéfinis
+- Types de sites opérationnels prédéfinis
 - Configuration géofence
 
 **Workflow :**
@@ -241,13 +241,13 @@ API_BASE_URL=http://localhost:3000/api
 - **Alertes configurables** : Système d'alertes pour entrées/sorties
 - **Historique événements** : Tracking des entrées/sorties
 
-### 4. Types de Lieux
+### 4. Types de Sites opérationnels
 - **FUEL_STATION** - Stations-service (badge vert)
 - **SERVICE_CENTER** - Centres de service (badge bleu)
 - **OFFICE** - Bureaux (badge violet)
 - **CLIENT_SITE** - Sites clients (badge orange)
 - **HOME** - Domiciles (badge rose)
-- **GENERAL** - Lieux généraux (badge gris)
+- **GENERAL** - Sites opérationnels généraux (badge gris)
 
 ## 🔗 INTÉGRATIONS CROSS-MODULES
 
@@ -257,7 +257,7 @@ API_BASE_URL=http://localhost:3000/api
 - Alertes proximité faibles batteries
 
 ### 2. Module Service
-- Lieux d'intervention géolocalisés
+- Sites opérationnels d'intervention géolocalisés
 - Optimisation des tournées
 - Zones de service prédéfinies
 
@@ -321,7 +321,7 @@ API_BASE_URL=http://localhost:3000/api
 5. Configurer géofence (optionnel)
 6. Sauvegarder
 
-#### Rechercher des Lieux
+#### Rechercher des Sites opérationnels
 1. Utiliser la barre de recherche
 2. Appliquer filtres par type
 3. Utiliser recherche par proximité
@@ -398,7 +398,7 @@ curl "http://localhost:3000/api/places/geocode?address=Paris"
 - ✅ **Documentation technique** complète
 
 ### Impact Business
-- **Géolocalisation unifiée** de tous les lieux importants
+- **Géolocalisation unifiée** de tous les sites opérationnels importants
 - **Optimisation des tournées** et réduction des coûts
 - **Amélioration de la sécurité** avec géofencing
 - **Expérience utilisateur** améliorée avec cartes interactives

@@ -83,6 +83,9 @@ export async function GET(request: NextRequest) {
     })
 
     try {
+      // Récupérer les catégories définies dans le système
+      const definedCategories = await prisma.partCategory.findMany()
+
       // Récupérer toutes les pièces avec leurs utilisations
       const parts = await prisma.part.findMany({
         include: {
@@ -100,11 +103,35 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      // Grouper les pièces par catégorie
-      const categoryData = parts.reduce((acc, part) => {
+      // Initialiser les données par catégorie avec les catégories définies
+      const categoryData = definedCategories.reduce((acc, cat) => {
+        acc[cat.name] = {
+          id: cat.id,
+          name: cat.name,
+          description: cat.description,
+          parts: [],
+          totalParts: 0,
+          totalQuantity: 0,
+          totalStockValue: 0,
+          totalUsageCount: 0,
+          totalUsageValue: 0,
+          lowStockCount: 0,
+          outOfStockCount: 0,
+          averageCost: 0,
+          mostUsedPart: null,
+          highestValuePart: null,
+          manufacturers: new Set(),
+          lastActivity: null
+        }
+        return acc
+      }, {} as Record<string, any>)
+
+      // Grouper les pièces par catégorie (inclure celles non définies explicitement)
+      parts.reduce((acc, part) => {
         const category = part.category || 'Non classé'
         if (!acc[category]) {
           acc[category] = {
+            id: category,
             name: category,
             parts: [],
             totalParts: 0,
@@ -123,7 +150,7 @@ export async function GET(request: NextRequest) {
         }
 
         const categoryInfo = acc[category]
-        
+
         // Ajouter la pièce aux statistiques de catégorie
         categoryInfo.parts.push(part)
         categoryInfo.totalParts++
@@ -141,7 +168,7 @@ export async function GET(request: NextRequest) {
         // Statistiques d'utilisation
         const usageCount = part.serviceEntries.length
         const usageValue = part.serviceEntries.reduce((sum, sep) => sum + sep.totalCost, 0)
-        
+
         categoryInfo.totalUsageCount += usageCount
         categoryInfo.totalUsageValue += usageValue
 
@@ -170,31 +197,31 @@ export async function GET(request: NextRequest) {
         }
 
         // Trouver la dernière activité
-        const lastUsage = part.serviceEntries.length > 0 ? 
-          part.serviceEntries.sort((a, b) => 
+        const lastUsage = part.serviceEntries.length > 0 ?
+          part.serviceEntries.sort((a, b) =>
             new Date(b.serviceEntry.date).getTime() - new Date(a.serviceEntry.date).getTime()
           )[0].serviceEntry.date : null
-        
-        if (!categoryInfo.lastActivity || 
-            (lastUsage && new Date(lastUsage) > new Date(categoryInfo.lastActivity))) {
+
+        if (!categoryInfo.lastActivity ||
+          (lastUsage && new Date(lastUsage) > new Date(categoryInfo.lastActivity))) {
           categoryInfo.lastActivity = lastUsage
         }
 
         return acc
-      }, {} as Record<string, any>)
+      }, categoryData)
 
       // Finaliser les calculs pour chaque catégorie
       const categories = Object.values(categoryData).map((category: any) => {
         // Calculer le coût moyen
-        category.averageCost = category.totalParts > 0 ? 
+        category.averageCost = category.totalParts > 0 ?
           category.totalStockValue / category.totalQuantity : 0
 
         // Calculer le taux d'utilisation
-        category.utilizationRate = category.totalQuantity > 0 ? 
+        category.utilizationRate = category.totalQuantity > 0 ?
           (category.totalUsageCount / category.totalQuantity) * 100 : 0
 
         // Calculer le taux de rotation du stock
-        category.stockTurnoverRate = category.totalQuantity > 0 ? 
+        category.stockTurnoverRate = category.totalQuantity > 0 ?
           category.totalUsageCount / category.totalQuantity : 0
 
         // Convertir les manufacturers en array
@@ -203,8 +230,8 @@ export async function GET(request: NextRequest) {
         // Statut de la catégorie
         const stockHealthScore = ((category.totalParts - category.lowStockCount - category.outOfStockCount) / category.totalParts) * 100
         category.healthScore = isNaN(stockHealthScore) ? 0 : stockHealthScore
-        category.status = category.healthScore >= 80 ? 'HEALTHY' : 
-                         category.healthScore >= 60 ? 'WARNING' : 'CRITICAL'
+        category.status = category.healthScore >= 80 ? 'HEALTHY' :
+          category.healthScore >= 60 ? 'WARNING' : 'CRITICAL'
 
         return category
       })
@@ -284,7 +311,9 @@ export async function GET(request: NextRequest) {
         data: {
           overview: globalStats,
           categories: includeStats ? categories : categories.map(cat => ({
+            id: cat.id || cat.name,
             name: cat.name,
+            description: cat.description,
             totalParts: cat.totalParts,
             totalStockValue: cat.totalStockValue,
             status: cat.status,
@@ -295,21 +324,21 @@ export async function GET(request: NextRequest) {
           healthDistribution,
           chartData,
           insights: {
-            mostDiverseCategory: categories.reduce((prev, current) => 
+            mostDiverseCategory: categories.length > 0 ? categories.reduce((prev, current) =>
               prev.manufacturers.length > current.manufacturers.length ? prev : current
-            ).name,
-            highestValueCategory: categories.reduce((prev, current) => 
+            ).name : 'N/A',
+            highestValueCategory: categories.length > 0 ? categories.reduce((prev, current) =>
               prev.totalStockValue > current.totalStockValue ? prev : current
-            ).name,
-            mostActiveCategory: categories.reduce((prev, current) => 
+            ).name : 'N/A',
+            mostActiveCategory: categories.length > 0 ? categories.reduce((prev, current) =>
               prev.totalUsageValue > current.totalUsageValue ? prev : current
-            ).name,
+            ).name : 'N/A',
             recommendations: [
-              ...(globalStats.criticalCategories > 0 ? 
+              ...(globalStats.criticalCategories > 0 ?
                 [`${globalStats.criticalCategories} catégories nécessitent une attention immédiate`] : []),
-              ...(globalStats.warningCategories > 0 ? 
+              ...(globalStats.warningCategories > 0 ?
                 [`${globalStats.warningCategories} catégories à surveiller`] : []),
-              ...(globalStats.healthyCategories / globalStats.totalCategories < 0.5 ? 
+              ...(globalStats.healthyCategories / globalStats.totalCategories < 0.5 ?
                 [`Moins de 50% des catégories sont en bonne santé`] : [])
             ]
           }
@@ -338,5 +367,41 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'Erreur serveur interne' },
       { status: 500 }
     )
+  }
+}
+
+// POST /api/parts/categories - Nouvelle catégorie
+export async function POST(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 })
+    }
+
+    const token = authHeader.split(' ')[1]
+    const tokenPayload = validateToken(token)
+    if (!tokenPayload) {
+      return NextResponse.json({ success: false, error: 'Token invalide' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { name, description } = body
+
+    if (!name) {
+      return NextResponse.json({ success: false, error: 'Le nom est requis' }, { status: 400 })
+    }
+
+    const category = await prisma.partCategory.create({
+      data: { name, description }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: category,
+      message: 'Catégorie créée avec succès'
+    })
+  } catch (error) {
+    console.error('[Categories API] POST Error:', error)
+    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 })
   }
 }

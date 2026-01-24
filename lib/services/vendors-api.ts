@@ -4,9 +4,9 @@ import { authenticatedFetch } from '@/lib/hooks/useAuthToken';
 // Utilitaire pour récupérer le token d'authentification
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  
-  const storedToken = localStorage.getItem('authToken') || 
-                     document.cookie.match(/authToken=([^;]*)/)?.[1];
+
+  const storedToken = localStorage.getItem('authToken') ||
+    document.cookie.match(/authToken=([^;]*)/)?.[1];
   return storedToken || null;
 }
 
@@ -49,14 +49,17 @@ export interface VendorDetailResponse {
       serviceEntries: any[];
       fuelEntries: any[];
       expenseEntries: any[];
+      chargingEntries: any[];
     };
     stats: {
       totalServices: number;
       totalFuelEntries: number;
       totalExpenses: number;
+      totalChargingEntries: number;
       totalServiceCost: number;
       totalFuelCost: number;
       totalExpenseAmount: number;
+      totalChargingCost: number;
       totalValue: number;
     };
   };
@@ -74,7 +77,7 @@ export interface CreateVendorRequest {
   classification?: string[];
 }
 
-export interface UpdateVendorRequest extends Partial<CreateVendorRequest> {}
+export interface UpdateVendorRequest extends Partial<CreateVendorRequest> { }
 
 export interface VendorFilters {
   page?: number;
@@ -87,7 +90,7 @@ export interface VendorFilters {
 class VendorsAPI {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant');
     }
@@ -111,7 +114,7 @@ class VendorsAPI {
 
   async getVendors(filters: VendorFilters = {}): Promise<VendorListResponse> {
     const params = new URLSearchParams();
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, value.toString());
@@ -169,7 +172,7 @@ class VendorsAPI {
 
   async exportVendors(): Promise<Blob> {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant');
     }
@@ -189,7 +192,7 @@ class VendorsAPI {
 
   async importVendors(file: File): Promise<{ success: boolean; message: string; results?: any }> {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Token d\'authentification manquant');
     }

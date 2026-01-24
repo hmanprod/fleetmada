@@ -34,6 +34,8 @@ export interface UsePartsReturn {
   searchParts: (query: string) => Promise<Part[]>
   getStats: () => Promise<any>
   getLowStock: () => Promise<Part[]>
+  getManufacturers: () => Promise<any[]>
+  getCategories: () => Promise<any[]>
 }
 
 export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
@@ -102,8 +104,10 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
 
       return newPart
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la création de la pièce')
-      return null
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création de la pièce'
+      setError(errorMessage)
+      // Propager l'erreur pour que l'appelant puisse la gérer
+      throw new Error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -213,6 +217,32 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
     }
   }, [])
 
+  const getManufacturers = useCallback(async (): Promise<any[]> => {
+    try {
+      const response = await partsAPI.getManufacturers()
+      return response.data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la récupération des fabricants')
+      return []
+    }
+  }, [])
+
+  const getCategories = useCallback(async (): Promise<any[]> => {
+    try {
+      const response = await partsAPI.getCategories()
+      // Handle the complex response structure or direct array
+      if (response.success && response.data) {
+        return Array.isArray(response.data)
+          ? response.data
+          : (response.data as any).categories || []
+      }
+      return []
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la récupération des catégories')
+      return []
+    }
+  }, [])
+
   // Calculs dérivés
   const lowStockParts = parts.filter(part => part.lowStockAlert)
   const totalValue = parts.reduce((sum, part) => sum + (part.cost || 0) * (part.quantity || 0), 0)
@@ -236,6 +266,8 @@ export function useParts(options: UsePartsOptions = {}): UsePartsReturn {
     totalValue,
     searchParts,
     getStats,
-    getLowStock
+    getLowStock,
+    getManufacturers,
+    getCategories
   }
 }

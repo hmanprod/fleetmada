@@ -100,7 +100,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const body = await request.json()
     const assignData = IssueAssignSchema.parse(body)
 
-    logAction('POST Issue Assign', userId, { 
+    logAction('POST Issue Assign', userId, {
       issueId,
       assignedTo: assignData.assignedTo
     })
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           id: issueId
         },
         data: {
-          assignedTo: assignData.assignedTo,
+          assignedTo: [assignData.assignedTo],
           updatedAt: new Date(),
           // Si le problème était OPEN et qu'on l'assigne, on peut changer le statut à IN_PROGRESS
           status: existingIssue.status === 'OPEN' ? 'IN_PROGRESS' : existingIssue.status
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         }
       })
 
-      logAction('POST Issue Assign - Success', userId, { 
+      logAction('POST Issue Assign - Success', userId, {
         issueId,
         assignedTo: assignData.assignedTo,
         assignedUser: assignedUser ? assignedUser.name : 'Unknown user',
@@ -188,8 +188,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         {
           success: true,
           data: updatedIssue,
-          message: assignedUser 
-            ? `Problème assigné à ${assignedUser.name}` 
+          message: assignedUser
+            ? `Problème assigné à ${assignedUser.name}`
             : `Problème assigné à ${assignData.assignedTo}`
         },
         { status: 200 }
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   } catch (error) {
     const userId = request.headers.get('x-user-id') || 'unknown'
-    
+
     // Gestion des erreurs de validation
     if (error instanceof Error && error.name === 'ZodError') {
       logAction('POST Issue Assign - Validation error', userId, {

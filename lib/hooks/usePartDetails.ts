@@ -56,7 +56,9 @@ export function usePartDetails(partId: string, options: UsePartDetailsOptions = 
       // Récupérer l'historique du stock si demandé
       if (includeHistory) {
         const historyResponse = await partsAPI.getStockHistory(partId)
-        setStockHistory(historyResponse.data)
+        // L'API retourne { data: { movements: [...] } }, pas directement un tableau
+        const historyData = historyResponse.data as any
+        setStockHistory(Array.isArray(historyData) ? historyData : (historyData?.movements || []))
       }
 
     } catch (err) {
@@ -106,7 +108,9 @@ export function usePartDetails(partId: string, options: UsePartDetailsOptions = 
       // Actualiser l'historique du stock
       if (includeHistory) {
         const historyResponse = await partsAPI.getStockHistory(partId)
-        setStockHistory(historyResponse.data)
+        // L'API retourne { data: { movements: [...] } }, pas directement un tableau
+        const historyData = historyResponse.data as any
+        setStockHistory(Array.isArray(historyData) ? historyData : (historyData?.movements || []))
       }
 
       return updatedPart
@@ -140,7 +144,9 @@ export function usePartDetails(partId: string, options: UsePartDetailsOptions = 
 
     try {
       const response = await partsAPI.getStockHistory(partId)
-      const history = response.data
+      // L'API retourne { data: { movements: [...] } }, pas directement un tableau
+      const historyData = response.data as any
+      const history = Array.isArray(historyData) ? historyData : (historyData?.movements || [])
       setStockHistory(history)
       return history
     } catch (err) {

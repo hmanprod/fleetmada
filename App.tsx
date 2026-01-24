@@ -86,7 +86,7 @@ const PartList = ({ onAdd }: { onAdd: () => void }) => <div className="p-6"><h2>
 const PartCreate = ({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) => <div className="p-6"><h2>Créer une pièce</h2></div>;
 const DocumentList = ({ onUpload }: { onUpload: () => void }) => <div className="p-6"><h2>Liste des documents</h2></div>;
 const DocumentUpload = ({ onCancel }: { onCancel: () => void }) => <div className="p-6"><h2>Télécharger un document</h2></div>;
-const PlaceList = ({ onAdd }: { onAdd: () => void }) => <div className="p-6"><h2>Liste des lieux</h2></div>;
+const PlaceList = ({ onAdd }: { onAdd: () => void }) => <div className="p-6"><h2>Liste des sites opérationnels</h2></div>;
 const PlaceCreate = ({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) => <div className="p-6"><h2>Créer un lieu</h2></div>;
 const ReportList = ({ onSelect }: { onSelect: (report: Report) => void }) => <div className="p-6"><h2>Liste des rapports</h2></div>;
 const ReportDetail = ({ report, onBack }: { report: Report | null; onBack: () => void }) => <div className="p-6"><h2>Détail du rapport</h2></div>;
@@ -145,7 +145,7 @@ const App: React.FC = () => {
     switch (currentView) {
       case ViewState.LOGIN:
         return <Login onLogin={() => setCurrentView(ViewState.DASHBOARD)} onNavigateToRegister={() => setCurrentView(ViewState.REGISTER)} />;
-      
+
       case ViewState.REGISTER:
         return <Register onRegister={() => setCurrentView(ViewState.ONBOARDING)} onNavigateToLogin={() => setCurrentView(ViewState.LOGIN)} />;
 
@@ -154,13 +154,13 @@ const App: React.FC = () => {
 
       case ViewState.ADD_VEHICLE:
         return <VehicleCreate onComplete={() => setCurrentView(ViewState.VEHICLES_LIST)} onCancel={() => setCurrentView(ViewState.DASHBOARD)} />;
-      
+
       case ViewState.INSPECTION_BUILDER:
         return <InspectionCreate onBack={() => setCurrentView(ViewState.INSPECTIONS_LIST)} />;
-        
+
       case ViewState.DASHBOARD:
         return <Dashboard onChangeView={setCurrentView} />;
-        
+
       case ViewState.VEHICLES_LIST:
         return <VehicleList onAdd={() => setCurrentView(ViewState.ADD_VEHICLE)} />;
 
@@ -222,11 +222,11 @@ const App: React.FC = () => {
         return <ContactCreate onCancel={() => setCurrentView(ViewState.CONTACTS_LIST)} onSave={() => setCurrentView(ViewState.CONTACTS_LIST)} />;
 
       case ViewState.CONTACT_DETAILS:
-        return <ContactDetail 
-          contact={selectedContact} 
-          onBack={() => setCurrentView(ViewState.CONTACTS_LIST)} 
+        return <ContactDetail
+          contact={selectedContact}
+          onBack={() => setCurrentView(ViewState.CONTACTS_LIST)}
           onEdit={() => {
-             setCurrentView(ViewState.ADD_CONTACT); 
+            setCurrentView(ViewState.ADD_CONTACT);
           }}
         />;
 
@@ -296,9 +296,9 @@ const App: React.FC = () => {
 
   if (isSettingsView) {
     return (
-      <SettingsLayout 
-        currentView={currentView} 
-        onChangeView={setCurrentView} 
+      <SettingsLayout
+        currentView={currentView}
+        onChangeView={setCurrentView}
         onBackToApp={() => setCurrentView(ViewState.DASHBOARD)}
       >
         {currentView === ViewState.SETTINGS_GENERAL && <SettingsGeneral />}
@@ -310,10 +310,10 @@ const App: React.FC = () => {
 
   // Views that take up the full screen (no sidebar/topbar)
   const isFullScreen = [
-    ViewState.LOGIN, 
-    ViewState.REGISTER, 
-    ViewState.ONBOARDING, 
-    ViewState.ADD_VEHICLE, 
+    ViewState.LOGIN,
+    ViewState.REGISTER,
+    ViewState.ONBOARDING,
+    ViewState.ADD_VEHICLE,
     ViewState.INSPECTION_BUILDER,
     ViewState.ADD_ISSUE,
     ViewState.ISSUE_DETAILS,
@@ -336,27 +336,27 @@ const App: React.FC = () => {
   const isUploadModal = currentView === ViewState.UPLOAD_DOCUMENT;
 
   if (isFullScreen && !isUploadModal) {
-      return (
-         <div className="bg-gray-50 min-h-screen text-slate-800 font-sans">
-            {renderContent()}
-         </div>
-      )
+    return (
+      <div className="bg-gray-50 min-h-screen text-slate-800 font-sans">
+        {renderContent()}
+      </div>
+    )
   }
 
   return (
     <div className="flex h-screen bg-[#f9fafb] font-sans text-slate-800">
       <Sidebar currentView={isUploadModal ? ViewState.DOCUMENTS_LIST : currentView} setView={setCurrentView} />
-      
+
       <div className="flex-1 flex flex-col ml-64 min-w-0 relative">
         <TopBar />
         <main className="flex-1 overflow-y-auto">
-          {isUploadModal ? <DocumentList onUpload={() => {}} /> : renderContent()}
+          {isUploadModal ? <DocumentList onUpload={() => { }} /> : renderContent()}
         </main>
-        
+
         {isUploadModal && (
-            <div className="fixed inset-0 z-50">
-                <DocumentUpload onCancel={() => setCurrentView(ViewState.DOCUMENTS_LIST)} />
-            </div>
+          <div className="fixed inset-0 z-50">
+            <DocumentUpload onCancel={() => setCurrentView(ViewState.DOCUMENTS_LIST)} />
+          </div>
         )}
       </div>
     </div>

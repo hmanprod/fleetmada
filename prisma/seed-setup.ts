@@ -115,10 +115,13 @@ async function main() {
     await prisma.contact.deleteMany();
     await prisma.vendor.deleteMany();
     await prisma.part.deleteMany();
+    await prisma.programTask.deleteMany();
     await prisma.serviceTask.deleteMany();
     await prisma.serviceProgram.deleteMany();
     await prisma.place.deleteMany();
     await prisma.photo.deleteMany();
+    await prisma.partCategory.deleteMany();
+    await prisma.partManufacturer.deleteMany();
     await prisma.user.deleteMany();
     await prisma.company.deleteMany();
 
@@ -236,6 +239,80 @@ async function main() {
     for (const task of serviceTasks) {
         await prisma.serviceTask.create({
             data: task
+        });
+    }
+
+    // Seed Manufacturers
+    console.log('🏭 Seeding Manufacturers...');
+    const manufacturers = [
+        { name: 'Bosch', description: 'Leader mondial des technologies et services', website: 'https://www.bosch.com' },
+        { name: 'Continental', description: 'Fabricant de pneus et pièces automobiles', website: 'https://www.continental.com' },
+        { name: 'Brembo', description: 'Systèmes de freinage haute performance', website: 'https://www.brembo.com' },
+        { name: 'Michelin', description: 'Leader mondial du pneumatique', website: 'https://www.michelin.com' },
+        { name: 'TotalEnergies', description: 'Lubrifiants et fluides automobiles', website: 'https://www.totalenergies.com' },
+        { name: 'Mann-Filter', description: 'Experts en filtration automobile', website: 'https://www.mann-filter.com' },
+        { name: 'Monroe', description: 'Spécialiste de la suspension et direction', website: 'https://www.monroe.com' },
+        { name: 'Osram', description: 'Solutions d\'éclairage automobile', website: 'https://www.osram.com' },
+        { name: 'Valeo', description: 'Équipementier automobile mondial', website: 'https://www.valeo.com' },
+        { name: 'NGK', description: 'Spécialiste mondial des bougies d\'allumage', website: 'https://www.ngk.com' },
+        { name: 'SKF', description: 'Fournisseur mondial de roulements et joints', website: 'https://www.skf.com' },
+        { name: 'Denso', description: 'Systèmes thermiques et électriques', website: 'https://www.denso.com' },
+        { name: 'Magneti Marelli', description: 'Systèmes et composants high-tech', website: 'https://www.magnetimarelli.com' },
+        { name: 'Luk', description: 'Experts en systèmes de transmission et embrayage', website: 'https://www.schaeffler.com' },
+    ];
+
+    for (const manufacturer of manufacturers) {
+        await prisma.partManufacturer.create({
+            data: manufacturer
+        });
+    }
+
+    // Seed Categories
+    console.log('📦 Seeding Part Categories...');
+    const categoriesToSeed = [
+        { name: 'Courroies', description: 'Courroies de moteur et accessoires' },
+        { name: 'Freinage', description: 'Systèmes de freinage' },
+        { name: 'Électricité', description: 'Batteries, alternateurs et composants électriques' },
+        { name: 'Filtration', description: 'Filtres à huile, air, carburant et habitacle' },
+        { name: 'Fluides', description: 'Huiles, liquides de frein et refroidissement' },
+        { name: 'Suspension', description: 'Amortisseurs et composants de suspension' },
+        { name: 'Pneus', description: 'Pneumatiques et accessoires' },
+        { name: 'Divers', description: 'Accessoires divers' },
+        { name: 'Transmission', description: 'Embrayage et boîtes de vitesses' },
+        { name: 'Refroidissement', description: 'Radiateurs et pompes à eau' },
+        { name: 'Allumage', description: 'Bougies et bobines' },
+        { name: 'Moyeux', description: 'Roulements et moyeux' },
+        { name: 'Visibilité', description: 'Essuie-glaces et rétroviseurs' },
+    ];
+
+    for (const cat of categoriesToSeed) {
+        await prisma.partCategory.create({
+            data: cat
+        });
+    }
+
+    // Seed Parts
+    console.log('📦 Seeding Parts...');
+    const partsList = [
+        { number: 'BELT-001', description: 'Courroie de distribution', category: 'Courroies', manufacturer: 'Continental', cost: 120000, quantity: 10, minimumStock: 2 },
+        { number: 'BRAKE-001', description: 'Plaquettes de frein avant', category: 'Freinage', manufacturer: 'Brembo', cost: 85000, quantity: 15, minimumStock: 5 },
+        { number: 'ELEC-001', description: 'Batterie 12V 70Ah', category: 'Électricité', manufacturer: 'Bosch', cost: 450000, quantity: 8, minimumStock: 2 },
+        { number: 'FILT-001', description: 'Filtre à huile Premium', category: 'Filtration', manufacturer: 'Mann-Filter', cost: 35000, quantity: 50, minimumStock: 10 },
+        { number: 'FLUID-001', description: 'Huile moteur 5W30 (5L)', category: 'Fluides', manufacturer: 'TotalEnergies', cost: 150000, quantity: 20, minimumStock: 5 },
+        { number: 'SUSP-001', description: 'Amortisseur avant', category: 'Suspension', manufacturer: 'Monroe', cost: 280000, quantity: 6, minimumStock: 2 },
+        { number: 'TIRE-001', description: 'Pneu 205/55 R16', category: 'Pneus', manufacturer: 'Michelin', cost: 320000, quantity: 12, minimumStock: 4 },
+        { number: 'MISC-001', description: 'Ampoule H7 55W', category: 'Divers', manufacturer: 'Osram', cost: 15000, quantity: 30, minimumStock: 10 },
+        { number: 'CLUTCH-001', description: 'Kit d\'embrayage', category: 'Transmission', manufacturer: 'Luk', cost: 1250000, quantity: 3, minimumStock: 1 },
+        { number: 'COOL-001', description: 'Radiateur moteur', category: 'Refroidissement', manufacturer: 'Valeo', cost: 480000, quantity: 4, minimumStock: 1 },
+        { number: 'IGN-001', description: 'Bougie d\'allumage Platinum', category: 'Allumage', manufacturer: 'NGK', cost: 45000, quantity: 40, minimumStock: 10 },
+        { number: 'BEAR-001', description: 'Roulement de roue', category: 'Moyeux', manufacturer: 'SKF', cost: 165000, quantity: 12, minimumStock: 4 },
+        { number: 'WIPER-001', description: 'Balai d\'essuie-glace', category: 'Visibilité', manufacturer: 'Denso', cost: 55000, quantity: 25, minimumStock: 5 },
+        { number: 'ALT-001', description: 'Alternateur 120A', category: 'Électricité', manufacturer: 'Magneti Marelli', cost: 850000, quantity: 2, minimumStock: 1 },
+    ];
+
+    for (const part of partsList) {
+        await prisma.part.create({
+            data: part
         });
     }
 

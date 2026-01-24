@@ -1,205 +1,288 @@
 'use client';
 
-import React, { useState } from 'react';
-import { MoreHorizontal, Info, MapPin, Plus, Minus, Keyboard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Save, MapPin, Loader2, Info, Search, Check, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePlace, useUpdatePlace, useDeletePlace, useGeocode } from '@/lib/hooks/usePlaces';
+import { PlaceType } from '@/types/geolocation';
 
 export default function PlaceEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { place, loading: fetchLoading, error: fetchError } = usePlace(params.id);
+    const { updatePlace, loading: updateLoading } = useUpdatePlace();
+    const { deletePlace, loading: deleteLoading } = useDeletePlace();
+    const { geocodeAddress, loading: geocodeLoading } = useGeocode();
+
     const [formData, setFormData] = useState({
-        name: 'Home',
+        name: '',
         description: '',
-        address: '2GH9+QG9, Lalana Dok. Ravoahangy Andrianavalona',
-        latitude: '-18.91984564014815',
-        longitude: '47.51924940718334',
-        geofenceRadius: '100 meters'
+        address: '',
+        latitude: '',
+        longitude: '',
+        geofenceRadius: '500',
+        placeType: PlaceType.GENERAL,
+        isActive: true
     });
 
+    const [autoGeocode, setAutoGeocode] = useState(true);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Synchronisation du formulaire avec les données reçues
+    useEffect(() => {
+        if (place) {
+            setFormData({
+                name: place.name || '',
+                description: place.description || '',
+                address: place.address || '',
+                latitude: place.latitude?.toString() || '',
+                longitude: place.longitude?.toString() || '',
+                geofenceRadius: place.geofenceRadius?.toString() || '500',
+                placeType: (place.placeType as PlaceType) || PlaceType.GENERAL,
+                isActive: place.isActive ?? true
+            });
+        }
+    }, [place]);
+
     const handleBack = () => {
-        router.push(`/places/${params.id}`);
+        router.push(`/settings/parts/locations`);
     };
 
-    const handleSave = () => {
-        console.log('Saving place:', formData);
-        // TODO: Implement save logic
-        router.back();
+    const handleInputChange = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (validationErrors.length > 0) setValidationErrors([]);
     };
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+    const validateForm = () => {
+        const errors: string[] = [];
+        if (!formData.name.trim()) errors.push('Le nom est requis');
+        if (!formData.latitude || !formData.longitude) {
+            if (!autoGeocode) errors.push('Les coordonnées sont requises');
+            else if (!formData.address.trim()) errors.push('L\'adresse est requise pour le géocodage');
+        }
+        setValidationErrors(errors);
+        return errors.length === 0;
     };
+
+    const handleGeocodeAddress = async () => {
+        if (!formData.address.trim()) return;
+        try {
+            const result = await geocodeAddress(formData.address);
+            if (result) {
+                setFormData(prev => ({
+                    ...prev,
+                    latitude: (result as any).latitude.toString(),
+                    longitude: (result as any).longitude.toString(),
+                    address: (result as any).formattedAddress
+                }));
+            }
+        } catch (err) {
+            console.error('Erreur géocodage:', err);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!validateForm()) return;
+        try {
+            await updatePlace(params.id, {
+                name: formData.name,
+                description: formData.description,
+                address: formData.address,
+                latitude: parseFloat(formData.latitude),
+                longitude: parseFloat(formData.longitude),
+                geofenceRadius: parseFloat(formData.geofenceRadius),
+                placeType: formData.placeType,
+                isActive: formData.isActive
+            });
+            setShowSuccess(true);
+            setTimeout(() => router.push(`/places/${params.id}`), 1000);
+        } catch (err) {
+            console.error('Erreur MAJ:', err);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deletePlace(params.id);
+            router.push('/places');
+        } catch (err) {
+            console.error('Erreur suppression:', err);
+        }
+    };
+
+    if (fetchLoading) return (
+        <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-[#008751]" size={48} /></div>
+    );
+
+    const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+    const mapUrl = formData.latitude && formData.longitude
+        ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsKey}&q=${formData.latitude},${formData.longitude}&zoom=15`
+        : null;
 
     return (
         <div className="bg-gray-50 min-h-screen">
-            <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="hover:underline cursor-pointer" onClick={() => router.push('/places')}>Places</span>
-                    <span>›</span>
-                    <span className="hover:underline cursor-pointer" onClick={handleBack}>Home</span>
+            {/* ZONE 1: HEADER */}
+            <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-20 flex justify-between items-center shadow-sm">
+                <div className="flex items-center gap-4">
+                    <button onClick={handleBack} className="text-gray-400 hover:text-[#008751] transition-colors flex items-center gap-1">
+                        <ArrowLeft size={18} /> Retour
+                    </button>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate max-w-[300px]">Modifier: {place?.name}</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleBack} className="text-[#008751] font-medium hover:underline mr-4">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Place</button>
+                    <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl font-bold transition-all flex items-center gap-2"
+                    >
+                        <Trash2 size={18} /> Supprimer
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={updateLoading || showSuccess}
+                        className={`px-6 py-2 ${showSuccess ? 'bg-green-600' : 'bg-[#008751] hover:bg-[#007043]'} text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2`}
+                    >
+                        {updateLoading ? <Loader2 className="animate-spin" size={18} /> : showSuccess ? <Check size={18} /> : <Save size={18} />}
+                        {showSuccess ? 'Modifié !' : 'Enregistrer'}
+                    </button>
                 </div>
             </div>
 
-            <div className="px-8 py-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Place</h1>
-
-                <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Form Section */}
+            <div className="max-w-[1600px] mx-auto py-8 px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Form Component */}
                     <div className="space-y-6">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="space-y-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-8">
+                            <section className="space-y-6">
+                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Info size={16} /> Informations de base
+                                </h3>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-900 mb-1">Name <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={formData.name}
-                                            onChange={(e) => handleInputChange('name', e.target.value)}
-                                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                        />
-                                        <div className="absolute right-3 top-3 bg-red-500 p-0.5 rounded text-white"><MoreHorizontal size={12} /></div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-900 mb-1">Description</label>
-                                    <textarea
-                                        rows={4}
-                                        value={formData.description}
-                                        onChange={(e) => handleInputChange('description', e.target.value)}
-                                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                    ></textarea>
-                                </div>
-                            </div>
-
-                            <hr className="my-6 border-gray-200" />
-
-                            <div className="space-y-6">
-                                <div>
-                                    <h3 className="text-sm font-bold text-gray-900 mb-1">Adding a Location</h3>
-                                    <p className="text-xs text-gray-500 mb-4">Use the address search below, or input the latitude and longitude of the location. You can also draw a geofence directly on the map after address or coordinates are input.</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-900 mb-1">Address <span className="text-red-500">*</span></label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Nom du lieu *</label>
                                     <input
                                         type="text"
-                                        value={formData.address}
-                                        onChange={(e) => handleInputChange('address', e.target.value)}
-                                        className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                        value={formData.name}
+                                        onChange={(e) => handleInputChange('name', e.target.value)}
+                                        className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all font-bold text-gray-900"
                                     />
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-900 mb-1">Latitude <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            value={formData.latitude}
-                                            onChange={(e) => handleInputChange('latitude', e.target.value)}
-                                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                        />
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Type</label>
+                                        <select
+                                            value={formData.placeType}
+                                            onChange={(e) => handleInputChange('placeType', e.target.value)}
+                                            className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#008751]/20 font-medium"
+                                        >
+                                            <option value={PlaceType.OFFICE}>Bureau</option>
+                                            <option value={PlaceType.FUEL_STATION}>Station-service</option>
+                                            <option value={PlaceType.SERVICE_CENTER}>Centre d'entretien</option>
+                                            <option value={PlaceType.CLIENT_SITE}>Site client</option>
+                                            <option value={PlaceType.HOME}>Domicile</option>
+                                            <option value={PlaceType.GENERAL}>Général</option>
+                                        </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-900 mb-1">Longitude <span className="text-red-500">*</span></label>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Rayon (m)</label>
                                         <input
-                                            type="text"
-                                            value={formData.longitude}
-                                            onChange={(e) => handleInputChange('longitude', e.target.value)}
-                                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr className="my-6 border-gray-200" />
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-900 mb-1">Geofence Radius <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
+                                            type="number"
                                             value={formData.geofenceRadius}
                                             onChange={(e) => handleInputChange('geofenceRadius', e.target.value)}
-                                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
+                                            className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#008751]/20 font-medium"
                                         />
-                                        <div className="absolute right-3 top-3 text-gray-400">
-                                            <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0L0 5H10L5 0ZM5 16L10 11H0L5 16Z" /></svg>
-                                        </div>
                                     </div>
-                                    <p className="mt-2 text-xs text-gray-500">The geofence radius is used to determine the location entries that are associated to this place. You can use this geofence to send an alert when a location entry is here.</p>
                                 </div>
-                            </div>
+                            </section>
+
+                            <section className="space-y-6 pt-6 border-t border-gray-50">
+                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                    <MapPin size={16} /> Localisation dynamique
+                                </h3>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Adresse Google Maps</label>
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                            <input
+                                                type="text"
+                                                value={formData.address}
+                                                onChange={(e) => handleInputChange('address', e.target.value)}
+                                                className="w-full pl-10 p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 outline-none transition-all font-medium"
+                                                placeholder="Saisissez l'adresse complète..."
+                                            />
+                                        </div>
+                                        <button onClick={handleGeocodeAddress} disabled={geocodeLoading} className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-md hover:bg-blue-700 transition-colors disabled:opacity-50">
+                                            {geocodeLoading ? <Loader2 className="animate-spin" size={18} /> : 'Vérifier'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Latitude</label>
+                                        <input type="number" step="any" value={formData.latitude} onChange={(e) => handleInputChange('latitude', e.target.value)} className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Longitude</label>
+                                        <input type="number" step="any" value={formData.longitude} onChange={(e) => handleInputChange('longitude', e.target.value)} className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-mono" />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                                    <div className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors ${formData.isActive ? 'bg-[#008751]' : 'bg-gray-300'}`}
+                                        onClick={() => handleInputChange('isActive', !formData.isActive)}>
+                                        <div className={`bg-white w-3 h-3 rounded-full shadow-sm transform transition-transform ${formData.isActive ? 'translate-x-5' : ''}`}></div>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-700">Lieu actif</span>
+                                </div>
+                            </section>
                         </div>
                     </div>
 
-                    {/* Map Section */}
-                    <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded p-4 flex items-center gap-3 text-blue-800 text-sm">
-                            <Info size={20} className="text-blue-500" />
-                            You can draw a geofence directly on the map by clicking the circle or polygon icon.
-                        </div>
-
-                        <div className="bg-white border border-gray-300 rounded-lg shadow-sm h-[600px] relative overflow-hidden">
-                            {/* Map Placeholder */}
-                            <div className="absolute inset-0 bg-gray-100">
-                                <img
-                                    src="https://static.mapquest.com/staticmap?key=G&center=-18.91368,47.53613&zoom=15&size=800,600&type=map&imagetype=png"
-                                    alt="Map"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-
-                            {/* Map Controls Mockup */}
-                            <div className="absolute top-2 left-2 bg-white border border-gray-300 rounded shadow-sm flex">
-                                <button className="p-2 hover:bg-gray-50 border-r border-gray-300"><span className="block w-4 h-4 border-2 border-gray-600 rounded-full"></span></button>
-                                <button className="p-2 hover:bg-gray-50 border-r border-gray-300"><span className="block w-4 h-4 bg-gray-400 rounded-full"></span></button>
-                                <button className="p-2 hover:bg-gray-50"><span className="block w-4 h-4 transform rotate-45 border-2 border-gray-600"></span></button>
-                            </div>
-
-                            <div className="absolute top-2 right-2 bg-white border border-gray-300 rounded shadow-sm">
-                                <button className="p-2 hover:bg-gray-50">
-                                    <img src="https://maps.gstatic.com/mapfiles/api-3/images/pegman_dock_2x.png" className="w-5 h-8 object-contain opacity-70" alt="Street View" />
-                                </button>
-                            </div>
-
-                            {/* Geofence Visualization */}
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                <div className="w-48 h-48 bg-blue-500/20 rounded-full border-2 border-blue-500 flex items-center justify-center">
-                                    <MapPin size={48} className="text-red-600 fill-red-600 drop-shadow-lg pb-4" />
+                    {/* Preview Component */}
+                    <div className="space-y-6">
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl h-[700px] relative overflow-hidden group">
+                            {mapUrl ? (
+                                <iframe
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    src={mapUrl}
+                                    title="Google Maps Preview"
+                                ></iframe>
+                            ) : (
+                                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-center p-12">
+                                    <div className="space-y-4">
+                                        <MapPin size={40} className="text-gray-300 mx-auto" />
+                                        <p className="text-gray-400 font-bold">Aucune coordonnée</p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            {/* Zoom Controls */}
-                            <div className="absolute bottom-8 right-2 bg-white border border-gray-300 rounded shadow-sm flex flex-col">
-                                <button className="p-2 hover:bg-gray-50 border-b border-gray-300"><Plus size={16} /></button>
-                                <button className="p-2 hover:bg-gray-50"><Minus size={16} /></button>
-                            </div>
-
-                            <div className="absolute bottom-1 right-1 bg-white/80 text-[10px] px-1 text-gray-600 flex gap-1">
-                                <span>Keyboard shortcuts</span>
-                                <span>Map data ©2025</span>
-                                <span>Terms</span>
-                            </div>
-                            <div className="absolute bottom-1 left-1">
-                                <span className="text-blue-500 font-bold text-lg tracking-tighter">Google</span>
+                            )}
+                            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/20">
+                                <p className="text-[10px] font-bold text-[#008751] uppercase tracking-wider">Aperçu en temps réel</p>
+                                <p className="text-xs font-bold text-gray-900 tracking-tight">Vérifiez les modifications sur la carte</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="px-8 py-6 flex justify-end gap-3 bg-white border-t border-gray-200 sticky bottom-0">
-                <button onClick={handleBack} className="text-[#008751] font-medium hover:underline mr-4">Cancel</button>
-                <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Place</button>
-            </div>
+            {/* Modal Confirmation Suppression */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900 text-center mb-2">Confirmer la suppression ?</h3>
+                        <p className="text-sm text-gray-500 text-center mb-8">Cette action est irréversible. L'historique associé à ce lieu pourrait être désynchronisé.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => setShowDeleteConfirm(false)} className="py-3 bg-gray-50 text-gray-700 font-bold rounded-2xl hover:bg-gray-100 transition-colors">Annuler</button>
+                            <button onClick={handleDelete} disabled={deleteLoading} className="py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50">
+                                {deleteLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : 'Supprimer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

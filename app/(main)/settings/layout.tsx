@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ArrowLeft, Search, HelpCircle, Building2, User, Users, Grid, Settings as SettingsIcon, LayoutDashboard, Car, ClipboardCheck, AlertTriangle, Clock, Hammer, Box, Fuel, BarChart3, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Search, HelpCircle, Building2, User, Users, Grid, Settings as SettingsIcon, LayoutDashboard, Car, ClipboardCheck, AlertTriangle, Clock, Hammer, Box, Fuel, BarChart3, ExternalLink, Package } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -17,8 +17,8 @@ export default function SettingsLayout({
     <button
       onClick={() => href && router.push(href)}
       className={`w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors mb-0.5 ${href && pathname === href
-          ? 'bg-[#e6f4ea] text-[#008751] font-semibold'
-          : 'text-gray-700 hover:bg-gray-100'
+        ? 'bg-[#e6f4ea] text-[#008751] font-semibold'
+        : 'text-gray-700 hover:bg-gray-100'
         }`}
     >
       <div className="flex items-center gap-2">
@@ -76,6 +76,11 @@ export default function SettingsLayout({
             <ExternalLink size={12} className="text-gray-400" />
           </div>
           <MenuItem label="Gérer les groupes" href="/settings/groups" />
+
+          <SectionHeader icon={Package} title="Pièces" />
+          <MenuItem label="Catégories de pièces" href="/settings/parts/categories" />
+          <MenuItem label="Fabricants de pièces" href="/settings/parts/manufacturers" />
+          <MenuItem label="Emplacements de stockage" href="/settings/parts/locations" />
         </div>
       </div>
 

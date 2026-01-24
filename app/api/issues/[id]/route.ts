@@ -15,7 +15,10 @@ interface TokenPayload {
 // Schémas de validation
 const IssueUpdateSchema = z.object({
   summary: z.string().min(1, 'Le résumé est requis').optional(),
+  description: z.string().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
+  reportedDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   labels: z.array(z.string()).optional(),
   assignedTo: z.array(z.string()).optional()
 })

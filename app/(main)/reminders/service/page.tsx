@@ -169,79 +169,54 @@ export default function ServiceRemindersPage() {
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto relative">
-      <FiltersSidebar
-        isOpen={isFiltersOpen}
-        onClose={() => setIsFiltersOpen(false)}
-        onApply={handleApplyFilters}
-        initialFilters={activeCriteria}
-        availableFields={populatedFilterFields as any}
-      />
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
-
+      {/* ZONE 1: HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Service Reminders</h1>
-          {/* <button
-            onClick={handleLearnMore}
-            className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2"
-          >
-            Learn
-          </button>
-          <button
-            onClick={handleEnableForecasting}
-            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm font-medium"
-          >
-            <Zap size={14} className="text-[#008751] fill-[#008751]" /> Enable Forecasting
-          </button> */}
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Rappels de service</h1>
         </div>
         <div className="flex gap-2">
-          {/* <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button> */}
           <button
             onClick={handleAddServiceReminder}
             data-testid="add-service-reminder"
-            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
           >
-            <Plus size={20} /> Add Service Reminder
+            <Plus size={20} /> Nouveau rappel
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      {/* ZONE 2: NAVIGATION TABS */}
+      <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
         <button
           onClick={() => setActiveTab('all')}
           data-testid="tab-all"
-          className={`px-4 py-2 text-sm font-medium border-b-2 ${activeTab === 'all'
-            ? 'border-[#008751] text-[#008751]'
-            : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
+          className={`pb-3 border-b-2 transition-colors ${activeTab === 'all' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          All
+          Tous
         </button>
         <button
           onClick={() => setActiveTab('due-soon')}
           data-testid="tab-due-soon"
-          className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'due-soon' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
-            }`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'due-soon' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <div className="w-2 h-2 rounded-full bg-orange-400"></div> Due Soon
+          <div className="w-2 h-2 rounded-full bg-orange-400"></div> Bientôt dû
         </button>
         <button
           onClick={() => setActiveTab('overdue')}
           data-testid="tab-overdue"
-          className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'overdue' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
-            }`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'overdue' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <div className="w-2 h-2 rounded-full bg-red-500"></div> Overdue
+          <div className="w-2 h-2 rounded-full bg-red-500"></div> En retard
         </button>
         <button
           onClick={() => setActiveTab('snoozed')}
           data-testid="tab-snoozed"
-          className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'snoozed' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
-            }`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'snoozed' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <div className="w-2 h-2 rounded-full bg-gray-400"></div> Snoozed
+          <div className="w-2 h-2 rounded-full bg-gray-400"></div> Reportés
         </button>
       </div>
+
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -249,16 +224,17 @@ export default function ServiceRemindersPage() {
         </div>
       )}
 
+      {/* ZONE 3: FILTERS BAR */}
       <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Rechercher..."
             data-testid="search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751] outline-none"
           />
         </div>
 
@@ -266,7 +242,7 @@ export default function ServiceRemindersPage() {
           onClick={() => setIsFiltersOpen(true)}
           className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
         >
-          <Filter size={14} /> Filters
+          <Filter size={14} /> Filtres
           {activeCriteria.length > 0 && (
             <span className="bg-[#008751] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
               {activeCriteria.length}
@@ -277,25 +253,25 @@ export default function ServiceRemindersPage() {
         {(searchTerm || activeCriteria.length > 0 || activeTab !== 'all') && (
           <button
             onClick={clearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            className="text-sm text-[#008751] hover:underline font-medium"
           >
-            <X size={14} /> Clear all
+            Effacer
           </button>
         )}
 
         <div className="flex-1 text-right text-sm text-gray-500" data-testid="pagination-info">
-          {pagination && reminders.length > 0 ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total}` : '0 results'}
+          {pagination && reminders.length > 0 ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total}` : '0 résultats'}
         </div>
         <div className="flex gap-1">
           <button
-            className="p-1 border border-gray-300 rounded text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             disabled={!pagination?.hasPrev}
             onClick={() => setPage(prev => Math.max(1, prev - 1))}
           >
             <ChevronRight size={16} className="rotate-180" />
           </button>
           <button
-            className="p-1 border border-gray-300 rounded text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             disabled={!pagination?.hasNext}
             onClick={() => setPage(prev => prev + 1)}
           >
@@ -304,28 +280,31 @@ export default function ServiceRemindersPage() {
         </div>
       </div>
 
-      <div className="bg-white mb-6 p-4 rounded-lg border border-gray-200 grid grid-cols-4 gap-4 text-center divide-x divide-gray-200">
-        <div>
-          <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Overdue Vehicles</div>
-          <div className="text-2xl font-bold text-red-600">{reminders.filter(r => r.isOverdue).length}</div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Due Soon Vehicles</div>
-          <div className="text-2xl font-bold text-orange-500">{reminders.filter(r => r.priority === 'SOON' && !r.isOverdue).length}</div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Snoozed Vehicles</div>
-          <div className="text-2xl font-bold text-gray-900">{reminders.filter(r => r.status === 'DISMISSED').length}</div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Average Compliance</div>
-          <div className="text-2xl font-bold text-[#008751]">
-            {reminders.length > 0 ? Math.round(reminders.reduce((sum, r) => sum + r.compliance, 0) / reminders.length) : 0}%
-            <span className="text-xs text-gray-500 font-normal"> on-time</span>
+      {/* ZONE 4: DASHBOARD STATISTIQUES */}
+      <div className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Véhicules en retard</div>
+            <div className="text-2xl font-bold text-red-600">{reminders.filter(r => r.isOverdue).length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Bientôt dus</div>
+            <div className="text-2xl font-bold text-orange-500">{reminders.filter(r => r.priority === 'SOON' && !r.isOverdue).length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Véhicules reportés</div>
+            <div className="text-2xl font-bold text-gray-900">{reminders.filter(r => r.status === 'DISMISSED').length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Conformité moyenne</div>
+            <div className="text-2xl font-bold text-[#008751]">
+              {reminders.length > 0 ? Math.round(reminders.reduce((sum, r) => sum + r.compliance, 0) / reminders.length) : 0}%
+            </div>
           </div>
         </div>
       </div>
 
+      {/* ZONE 5: TABLEAU DE DONNÉES */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden min-h-[400px]">
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -345,13 +324,13 @@ export default function ServiceRemindersPage() {
                       className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
                     />
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Task</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Due</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incomplete Work Order</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Completed</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VÉHICULE</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TÂCHE D'ENTRETIEN</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUT</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PROCHAINE ÉCHÉANCE</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ORDRE DE TRAVAIL</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DERNIÈRE RÉALISATION</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CONFORMITÉ</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -394,9 +373,9 @@ export default function ServiceRemindersPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`flex items-center gap-1.5 text-sm font-medium ${getStatusColor(reminder.status, reminder.isOverdue)}`}>
                         <div className={`w-2 h-2 rounded-full ${getStatusDot(reminder.status, reminder.isOverdue)}`}></div>
-                        {reminder.status === 'OVERDUE' ? 'Overdue' :
-                          reminder.status === 'ACTIVE' ? 'Active' :
-                            reminder.status === 'DISMISSED' ? 'Snoozed' :
+                        {reminder.isOverdue ? 'En retard' :
+                          reminder.status === 'ACTIVE' ? 'Actif' :
+                            reminder.status === 'DISMISSED' ? 'Reporté' :
                               reminder.status}
                       </span>
                     </td>

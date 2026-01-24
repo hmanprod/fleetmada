@@ -1,15 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, MoreHorizontal, Edit, Package, Archive, RefreshCw, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Edit, Package, Archive, RefreshCw, AlertTriangle, TrendingUp, TrendingDown, Trash2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePartDetails } from '@/lib/hooks/usePartDetails';
+import { useParts } from '@/lib/hooks/useParts';
 
 export default function PartDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { part, loading, error, stockHistory, refresh, adjustStock, isLowStock, isOutOfStock, stockPercentage } = usePartDetails(params.id);
     const [showStockAdjustment, setShowStockAdjustment] = useState(false);
     const [adjustmentData, setAdjustmentData] = useState({ quantity: 0, reason: '', type: 'add' as 'add' | 'remove' | 'set' });
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     const handleBack = () => {
         router.push('/parts');
@@ -17,6 +21,23 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
 
     const handleEdit = () => {
         router.push(`/parts/${params.id}/edit`);
+    };
+
+    const { deletePart } = useParts({ enabled: false });
+
+    const handleDelete = async () => {
+        setDeleteLoading(true);
+        try {
+            const success = await deletePart(params.id);
+            if (success) {
+                router.push('/parts?deleted=true');
+            }
+        } catch (err) {
+            console.error('Erreur lors de la suppression:', err);
+        } finally {
+            setDeleteLoading(false);
+            setShowDeleteConfirm(false);
+        }
     };
 
     const handleStockAdjustment = async () => {
@@ -86,10 +107,34 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <button className="p-2 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50"><MoreHorizontal size={20} /></button>
+                <div className="flex gap-2 relative">
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowMoreMenu(!showMoreMenu)}
+                            className={`p-2 border rounded transition-all ${showMoreMenu ? 'bg-gray-100 border-gray-400 text-gray-900' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                        >
+                            <MoreHorizontal size={20} />
+                        </button>
+
+                        {showMoreMenu && (
+                            <>
+                                <div className="fixed inset-0 z-30" onClick={() => setShowMoreMenu(false)}></div>
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <button
+                                        onClick={() => {
+                                            setShowMoreMenu(false);
+                                            setShowDeleteConfirm(true);
+                                        }}
+                                        className="w-full px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                    >
+                                        <Trash2 size={16} /> Supprimer la pièce
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                     <button onClick={handleEdit} data-testid="edit-part-button" className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded flex items-center gap-2 text-sm shadow-sm">
-                        <Edit size={16} /> Edit
+                        <Edit size={16} /> Modifier
                     </button>
                 </div>
             </div>
@@ -368,6 +413,25 @@ export default function PartDetailPage({ params }: { params: { id: string } }) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal Confirmation Suppression */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-200">
+                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 text-center mb-1">Confirmer la suppression ?</h3>
+                        <p className="text-sm text-gray-500 text-center mb-6">Cette action est irréversible. Toutes les données liées à cette pièce seront supprimées.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => setShowDeleteConfirm(false)} className="py-2.5 bg-gray-50 text-gray-700 font-bold rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">Annuler</button>
+                            <button onClick={handleDelete} disabled={deleteLoading} className="py-2.5 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all shadow-lg shadow-red-100 disabled:opacity-50">
+                                {deleteLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Supprimer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

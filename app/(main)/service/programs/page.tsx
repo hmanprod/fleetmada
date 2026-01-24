@@ -88,19 +88,39 @@ export default function ServiceProgramsPage() {
 
     return (
         <div className="p-6 max-w-[1600px] mx-auto">
+            {/* ZONE 1: HEADER */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                    <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Service Programs</h1>
-                    {/* <button className="text-[#008751] hover:underline text-sm font-medium flex items-center gap-1">
-                        Learn More <span className="transform -rotate-45">➜</span>
-                    </button> */}
+                    <h1 data-testid="page-title" className="text-3xl font-bold text-gray-900">Programmes d'entretien</h1>
                 </div>
                 <button
                     onClick={handleAddProgram}
                     data-testid="add-program-button"
-                    className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+                    className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
                 >
-                    <Plus size={20} /> Add Service Program
+                    <Plus size={20} /> Nouveau programme
+                </button>
+            </div>
+
+            {/* ZONE 2: NAVIGATION TABS */}
+            <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
+                <button
+                    className={`pb-3 border-b-2 ${filters.active === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`}
+                    onClick={() => handleFilterChange({ ...filters, active: undefined })}
+                >
+                    Tous
+                </button>
+                <button
+                    className={`pb-3 border-b-2 ${filters.active === true ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`}
+                    onClick={() => handleFilterChange({ ...filters, active: true })}
+                >
+                    Actifs
+                </button>
+                <button
+                    className={`pb-3 border-b-2 ${filters.active === false ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`}
+                    onClick={() => handleFilterChange({ ...filters, active: false })}
+                >
+                    Inactifs
                 </button>
             </div>
 
@@ -134,101 +154,74 @@ export default function ServiceProgramsPage() {
                 </div>
             )}
 
+            {/* ZONE 3: FILTERS BAR */}
             <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
                 <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Rechercher..."
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
                         data-testid="search-input"
-                        className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751] outline-none"
                     />
                 </div>
                 <div className="flex gap-2">
                     <button data-testid="filter-vehicle-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                        Vehicle <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
+                        Véhicule <ChevronRight size={14} className="rotate-90" />
                     </button>
                     <button data-testid="filter-vehicle-group-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                        Vehicle Group <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
-                    </button>
-                    <button data-testid="filter-oem-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                        OEM Service Program <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-500"></div>
+                        Groupe de véhicules <ChevronRight size={14} className="rotate-90" />
                     </button>
                     <button data-testid="filter-filters-button" className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                        <Filter size={14} /> Filters
+                        <Filter size={14} /> Filtres
                     </button>
                 </div>
 
                 <div className="flex-1 text-right text-sm text-gray-500">
-                    1 - 1 of 1
+                    {pagination ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total}` : '0'}
                 </div>
                 <div className="flex gap-1">
-                    <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} className="rotate-180" /></button>
-                    <button className="p-1 border border-gray-300 rounded text-gray-400 bg-white"><ChevronRight size={16} /></button>
-                    <button className="p-1 border border-gray-300 rounded text-gray-700 bg-white ml-2"><MoreHorizontal size={16} /></button>
+                    <button className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"><ChevronRight size={16} className="rotate-180" /></button>
+                    <button className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"><ChevronRight size={16} /></button>
                 </div>
             </div>
 
-            <div data-testid="program-stats-row" className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div data-testid="stat-total-programs" className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded">
-                            <Wrench className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Total Programmes</p>
-                            <p className="text-xl font-bold text-gray-900">{totalPrograms}</p>
-                        </div>
+            {/* ZONE 4: DASHBOARD STATISTIQUES */}
+            <div data-testid="program-stats-row" className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center" data-testid="stat-total-programs">
+                        <div className="text-2xl font-bold text-gray-900">{totalPrograms}</div>
+                        <div className="text-sm text-gray-600 font-medium">Total Programmes</div>
                     </div>
-                </div>
-                <div data-testid="stat-active-programs" className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded">
-                            <Calendar className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Programmes Actifs</p>
-                            <p className="text-xl font-bold text-gray-900">{activePrograms}</p>
-                        </div>
+                    <div className="text-center" data-testid="stat-active-programs">
+                        <div className="text-2xl font-bold text-green-600">{activePrograms}</div>
+                        <div className="text-sm text-gray-600 font-medium">Actifs</div>
                     </div>
-                </div>
-                <div data-testid="stat-upcoming-programs" className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-100 rounded">
-                            <AlertCircle className="w-5 h-5 text-yellow-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Échéances Proches</p>
-                            <p className="text-xl font-bold text-gray-900">{upcomingDuePrograms}</p>
-                        </div>
+                    <div className="text-center" data-testid="stat-upcoming-programs">
+                        <div className="text-2xl font-bold text-yellow-600">{upcomingDuePrograms}</div>
+                        <div className="text-sm text-gray-600 font-medium">Échéances Proches</div>
                     </div>
-                </div>
-                <div data-testid="stat-total-vehicles" className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 rounded">
-                            <ChevronRight className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Véhicules Total</p>
-                            <p className="text-xl font-bold text-gray-900">{totalVehiclesInPrograms}</p>
-                        </div>
+                    <div className="text-center" data-testid="stat-total-vehicles">
+                        <div className="text-2xl font-bold text-purple-600">{totalVehiclesInPrograms}</div>
+                        <div className="text-sm text-gray-600 font-medium">Véhicules Total</div>
                     </div>
                 </div>
             </div>
 
+            {/* ZONE 5: TABLEAU DE DONNÉES */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1">
-                                Service Program <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[4px] border-b-gray-900"></div>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                PROGRAMME D'ENTRETIEN
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Vehicles</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Schedules</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Primary Meter</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Secondary Meter</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">VÉHICULES</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">PLANNINGS</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">FRÉQUENCE</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">PROCHAINE ÉCHÉANCE</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">

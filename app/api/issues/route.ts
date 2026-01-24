@@ -16,7 +16,10 @@ interface TokenPayload {
 const IssueCreateSchema = z.object({
   vehicleId: z.string().optional(),
   summary: z.string().min(1, 'Le résumé est requis'),
+  description: z.string().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
+  reportedDate: z.string().optional().transform(val => val ? new Date(val) : new Date()),
+  dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   labels: z.array(z.string()).default([]),
   assignedTo: z.array(z.string()).optional()
 })
@@ -361,8 +364,7 @@ export async function POST(request: NextRequest) {
       const newIssue = await prisma.issue.create({
         data: {
           ...issueData,
-          userId,
-          reportedDate: new Date()
+          userId
         } as any,
         include: {
           vehicle: {

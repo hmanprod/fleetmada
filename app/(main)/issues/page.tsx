@@ -262,6 +262,17 @@ export default function IssuesPage() {
     });
   };
 
+  // Calcul des statistiques (basé sur la page actuelle car l'API ne renvoie pas de stats globales)
+  const stats = useMemo(() => {
+    return {
+      total: pagination?.totalCount || issues.length,
+      open: issues.filter(i => i.status === 'OPEN').length,
+      inProgress: issues.filter(i => i.status === 'IN_PROGRESS').length,
+      resolved: issues.filter(i => i.status === 'RESOLVED').length,
+      closed: issues.filter(i => i.status === 'CLOSED').length
+    };
+  }, [issues, pagination]);
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'CRITICAL': return 'text-red-600 bg-red-50';
@@ -316,38 +327,57 @@ export default function IssuesPage() {
         availableFields={populatedFilterFields as any}
       />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-      {/* Header */}
+      {/* ZONE 1: HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-gray-900">Problèmes</h1>
-          {/* <button className="text-gray-500 hover:bg-gray-100 p-1 rounded text-xs bg-gray-50 border border-gray-200 px-2 flex items-center gap-1">
-            <Lightbulb size={12} /> En savoir plus
-          </button> */}
         </div>
 
         <div className="flex gap-2">
-          {/* <button className="text-[#008751] hover:bg-green-50 font-medium py-2 px-3 rounded flex items-center gap-1 text-sm bg-transparent">
-            <Zap size={16} /> Automations <ChevronDown size={14} />
-          </button> */}
-          {/* <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button> */}
           <button
             onClick={handleAdd}
             data-testid="add-issue-button"
-            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
           >
-            <Plus size={20} /> Nouveau Problème
+            <Plus size={20} /> Nouveau problème
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* ZONE 2: NAVIGATION TABS */}
       <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
-        <button className={`pb-3 border-b-2 ${filters.status === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'} flex items-center gap-1`} onClick={() => handleFilterChange({ status: undefined })}>Tous <MoreHorizontal size={14} /></button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-OPEN" onClick={() => handleFilterChange({ status: 'OPEN' })}>Ouverts</button>
-        <button className="pb-3 border-b-2 border-transparent hover:text-gray-700 text-gray-500">En retard</button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} data-testid="status-tab-RESOLVED" onClick={() => handleFilterChange({ status: 'RESOLVED' })}>Résolus</button>
-        <button className={`pb-3 border-b-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent hover:text-gray-700 text-gray-500'}`} onClick={() => handleFilterChange({ status: 'CLOSED' })}>Fermés</button>
-        {/* <button className="pb-3 border-b-2 border-transparent hover:text-green-700 text-[#008751] flex items-center gap-1"><Plus size={14} /> Add Tab</button> */}
+        <button
+          className={`pb-3 border-b-2 transition-colors ${filters.status === undefined ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          onClick={() => handleFilterChange({ status: undefined })}
+        >
+          Tous
+        </button>
+        <button
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${filters.status === 'OPEN' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          data-testid="status-tab-OPEN"
+          onClick={() => handleFilterChange({ status: 'OPEN' })}
+        >
+          <div className="w-2 h-2 rounded-full bg-yellow-400"></div> Ouverts
+        </button>
+        <button
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${filters.status === 'IN_PROGRESS' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          onClick={() => handleFilterChange({ status: 'IN_PROGRESS' })}
+        >
+          <div className="w-2 h-2 rounded-full bg-blue-500"></div> En cours
+        </button>
+        <button
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${filters.status === 'RESOLVED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          data-testid="status-tab-RESOLVED"
+          onClick={() => handleFilterChange({ status: 'RESOLVED' })}
+        >
+          <div className="w-2 h-2 rounded-full bg-green-500"></div> Résolus
+        </button>
+        <button
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${filters.status === 'CLOSED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          onClick={() => handleFilterChange({ status: 'CLOSED' })}
+        >
+          <div className="w-2 h-2 rounded-full bg-gray-400"></div> Fermés
+        </button>
       </div>
 
       {/* Error Message */}
@@ -364,21 +394,21 @@ export default function IssuesPage() {
         </div>
       )}
 
-      {/* Filters Bar */}
+      {/* ZONE 3: FILTERS BAR */}
       <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center" data-testid="issues-filters">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
-            placeholder="Rechercher"
+            placeholder="Rechercher..."
             data-testid="search-input"
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-[#008751] focus:border-[#008751] text-sm"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded focus:ring-[#008751] focus:border-[#008751] text-sm outline-none"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
         <select
-          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700"
           value={filters.assignedTo || ''}
           onChange={(e) => handleFilterChange({ assignedTo: e.target.value || undefined })}
         >
@@ -388,20 +418,9 @@ export default function IssuesPage() {
           ))}
         </select>
 
-        <select
-          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none"
-          value={filters.groupId || ''}
-          onChange={(e) => handleFilterChange({ groupId: e.target.value || undefined })}
-        >
-          <option value="">Groupe : Tous</option>
-          {groups.map(g => (
-            <option key={g.id} value={g.id}>{g.name}</option>
-          ))}
-        </select>
-
         <button
           onClick={() => setIsFiltersOpen(true)}
-          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
         >
           <Filter size={14} /> Filtres
           {activeCriteria.length > 0 && (
@@ -414,35 +433,60 @@ export default function IssuesPage() {
         {(filters.assignedTo || filters.groupId || filters.labels || filters.priority || activeCriteria.length > 0) && (
           <button
             onClick={clearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-4"
+            className="text-sm text-[#008751] hover:underline font-medium"
           >
             Effacer
           </button>
         )}
 
-        {/* <div className="flex-1 text-right text-sm text-gray-500">
-          {pagination ? `${pagination.page * pagination.limit - pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} of ${pagination.totalCount}` : '0'}
+        <div className="flex-1 text-right text-sm text-gray-500">
+          {pagination ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} sur ${pagination.totalCount}` : '0'}
         </div>
-        <div className="flex gap-1 ml-auto">
+        <div className="flex gap-1">
           <button
-            className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"
+            className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             disabled={!pagination?.hasPrev}
+            onClick={() => handleFilterChange({ page: (pagination?.page || 1) - 1 })}
           >
             <ChevronRight className="rotate-180" size={16} />
           </button>
           <button
-            className="p-1 border border-gray-300 rounded text-gray-400 bg-gray-50 disabled"
+            className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             disabled={!pagination?.hasNext}
+            onClick={() => handleFilterChange({ page: (pagination?.page || 1) + 1 })}
           >
             <ChevronRight size={16} />
           </button>
-        </div> */}
-
-        {/* <button className="p-1.5 border border-gray-300 rounded text-gray-600 bg-white"><Settings size={16} /></button>
-        <button className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          Save View <ChevronDown size={14} />
-        </button> */}
+        </div>
       </div>
+
+      {/* ZONE 4: DASHBOARD STATISTIQUES */}
+      <div className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Total Problèmes</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Ouverts</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats.open}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">En cours</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Résolus</div>
+            <div className="text-2xl font-bold text-green-600">{stats.resolved}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Fermés</div>
+            <div className="text-2xl font-bold text-gray-500">{stats.closed}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ZONE 5: TABLEAU DE DONNÉES */}
 
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm" data-testid="issues-list">

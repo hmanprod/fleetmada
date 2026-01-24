@@ -813,7 +813,7 @@ pages/documents/
 └── Upload.tsx                 // Upload documents
 
 pages/places/
-├── List.tsx                   // Liste lieux
+├── List.tsx                   // Liste sites opérationnels
 └── Create.tsx                 // Création lieu avec géorepérage
 ```
 
@@ -1300,7 +1300,7 @@ model Vendor {
 ### Objectifs
 - Développer l'API pour la gestion du carburant et énergie
 - Implémenter le système de documents
-- Gérer les lieux et géorepérage
+- Gérer les sites opérationnels et géorepérage
 
 ### Durée Estimée
 **8 jours ouvrés**
@@ -1312,7 +1312,7 @@ model Vendor {
 | Schéma Fuel | Modèles FuelEntry, ChargingEntry | 2 jours |
 | API Fuel Entries | Gestion carburant et recharge | 2.5 jours |
 | API Documents | Upload et gestion documents | 2 jours |
-| API Places | Gestion des lieux et géorepérage | 1.5 jours |
+| API Places | Gestion des sites opérationnels et géorepérage | 1.5 jours |
 
 ### Modèles de Données
 
@@ -1357,7 +1357,7 @@ model Place {
 - ✅ Calculs automatiques MPG et statistiques carburant
 - ✅ Upload de documents avec métadonnées
 - ✅ Système de labels pour les documents
-- ✅ Géorepérage pour les lieux
+- ✅ Géorepérage pour les sites opérationnels
 - ✅ Historique complet des transactions
 - ⏳ **Frontend**: Pages Fuel (EntryCreate, History)
 - ⏳ **Frontend**: Pages Documents (List, Upload)

@@ -42,6 +42,7 @@ export default function WorkOrdersPage() {
     fetchWorkOrders,
     exportWorkOrders,
     statusCounts,
+    stats,
     refresh
   } = useServiceWorkOrders({
     page: currentPage,
@@ -208,10 +209,10 @@ export default function WorkOrdersPage() {
       </div>
 
       {/* ZONE 2: NAVIGATION TABS */}
-      <div className="flex px-6 bg-white border-b border-gray-200">
+      <div className="flex gap-6 px-6 bg-white border-b border-gray-200 font-medium text-sm">
         <button
           onClick={() => handleStatusChange(undefined)}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${!currentStatus ? 'border-[#008751] text-[#008751]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${!currentStatus ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <span>Tous</span>
           {statusCounts?.ALL !== undefined && (
@@ -222,9 +223,9 @@ export default function WorkOrdersPage() {
         </button>
         <button
           onClick={() => handleStatusChange('SCHEDULED')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${currentStatus === 'SCHEDULED' ? 'border-[#008751] text-[#008751]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${currentStatus === 'SCHEDULED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <span>Programmé</span>
+          <div className="w-2 h-2 rounded-full bg-blue-500"></div> <span>Programmé</span>
           {statusCounts?.SCHEDULED !== undefined && (
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${currentStatus === 'SCHEDULED' ? 'bg-[#008751] text-white' : 'bg-gray-100 text-gray-500'}`}>
               {statusCounts.SCHEDULED}
@@ -233,9 +234,9 @@ export default function WorkOrdersPage() {
         </button>
         <button
           onClick={() => handleStatusChange('IN_PROGRESS')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${currentStatus === 'IN_PROGRESS' ? 'border-[#008751] text-[#008751]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${currentStatus === 'IN_PROGRESS' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <span>En cours</span>
+          <div className="w-2 h-2 rounded-full bg-yellow-500"></div> <span>En cours</span>
           {statusCounts?.IN_PROGRESS !== undefined && (
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${currentStatus === 'IN_PROGRESS' ? 'bg-[#008751] text-white' : 'bg-gray-100 text-gray-500'}`}>
               {statusCounts.IN_PROGRESS}
@@ -244,9 +245,9 @@ export default function WorkOrdersPage() {
         </button>
         <button
           onClick={() => handleStatusChange('COMPLETED')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${currentStatus === 'COMPLETED' ? 'border-[#008751] text-[#008751]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${currentStatus === 'COMPLETED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <span>Terminé</span>
+          <div className="w-2 h-2 rounded-full bg-green-500"></div> <span>Terminé</span>
           {statusCounts?.COMPLETED !== undefined && (
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${currentStatus === 'COMPLETED' ? 'bg-[#008751] text-white' : 'bg-gray-100 text-gray-500'}`}>
               {statusCounts.COMPLETED}
@@ -255,9 +256,9 @@ export default function WorkOrdersPage() {
         </button>
         <button
           onClick={() => handleStatusChange('CANCELLED')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${currentStatus === 'CANCELLED' ? 'border-[#008751] text-[#008751]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${currentStatus === 'CANCELLED' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <span>Annulé</span>
+          <div className="w-2 h-2 rounded-full bg-gray-400"></div> <span>Annulé</span>
           {statusCounts?.CANCELLED !== undefined && (
             <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${currentStatus === 'CANCELLED' ? 'bg-[#008751] text-white' : 'bg-gray-100 text-gray-500'}`}>
               {statusCounts.CANCELLED}
@@ -319,12 +320,40 @@ export default function WorkOrdersPage() {
             onClick={clearFilters}
             className="text-sm font-medium text-[#008751] hover:underline"
           >
-            Vider les filtres
+            Effacer
           </button>
         )}
       </div>
 
-      {/* ZONE 4: DATA TABLE */}
+      {/* ZONE 4: DASHBOARD STATISTIQUES */}
+      <div className="px-6 py-4">
+        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{pagination?.total || 0}</div>
+              <div className="text-sm text-gray-600 font-medium">Total Ordres</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{statusCounts?.SCHEDULED || 0}</div>
+              <div className="text-sm text-gray-600 font-medium">Programmés</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">{statusCounts?.IN_PROGRESS || 0}</div>
+              <div className="text-sm text-gray-600 font-medium">En cours</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{statusCounts?.COMPLETED || 0}</div>
+              <div className="text-sm text-gray-600 font-medium">Terminés</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{formatCurrency(stats.totalCost)}</div>
+              <div className="text-sm text-gray-600 font-medium">Coût Total</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ZONE 5: DATA TABLE */}
       <div className="flex-1 overflow-auto bg-white">
         {loading && workOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-4">

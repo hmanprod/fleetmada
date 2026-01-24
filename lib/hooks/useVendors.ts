@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { vendorsAPI, type Vendor, type VendorListResponse, type VendorFilters } from '@/lib/services/vendors-api'
+import { vendorsAPI, type Vendor, type VendorListResponse, type VendorFilters, type VendorDetailResponse } from '@/lib/services/vendors-api'
 
 interface UseVendorsOptions {
   filters?: VendorFilters
@@ -119,6 +119,33 @@ export const useVendorSearch = () => {
   }, [])
 
   return { results, searchVendors, loading, error }
+}
+
+export const useVendor = (id: string) => {
+  const [vendor, setVendor] = useState<VendorDetailResponse['data'] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchVendor = useCallback(async () => {
+    if (!id) return
+
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await vendorsAPI.getVendor(id)
+      setVendor(response.data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement du fournisseur')
+    } finally {
+      setLoading(false)
+    }
+  }, [id])
+
+  useEffect(() => {
+    fetchVendor()
+  }, [fetchVendor])
+
+  return { vendor, loading, error, refresh: fetchVendor }
 }
 
 export default useVendors

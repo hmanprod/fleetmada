@@ -170,59 +170,47 @@ export default function VehicleRenewalsPage() {
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto relative">
-      <FiltersSidebar
-        isOpen={isFiltersOpen}
-        onClose={() => setIsFiltersOpen(false)}
-        onApply={handleApplyFilters}
-        initialFilters={activeCriteria}
-        availableFields={populatedFilterFields as any}
-      />
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
-
+      {/* ZONE 1: HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Vehicle Renewal Reminders</h1>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Renouvellements</h1>
         </div>
         <div className="flex gap-2">
-          {/* <button className="border border-gray-300 rounded p-2 text-gray-600 hover:bg-gray-50"><MoreHorizontal size={20} /></button> */}
           <button
             onClick={handleAddVehicleRenewal}
             data-testid="add-vehicle-renewal"
-            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+            className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
           >
-            <Plus size={20} /> Add Vehicle Renewal Reminder
+            <Plus size={20} /> Nouveau renouvellement
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      {/* ZONE 2: NAVIGATION TABS */}
+      <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
         <button
           onClick={() => setActiveTab('all')}
           data-testid="tab-all"
-          className={`px-4 py-2 text-sm font-medium border-b-2 ${activeTab === 'all'
-            ? 'border-[#008751] text-[#008751]'
-            : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
+          className={`pb-3 border-b-2 transition-colors ${activeTab === 'all' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          All
+          Tous
         </button>
         <button
           onClick={() => setActiveTab('due-soon')}
           data-testid="tab-due-soon"
-          className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'due-soon' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
-            }`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'due-soon' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <div className="w-2 h-2 rounded-full bg-orange-400"></div> Due Soon
+          <div className="w-2 h-2 rounded-full bg-orange-400"></div> Bientôt dû
         </button>
         <button
           onClick={() => setActiveTab('overdue')}
           data-testid="tab-overdue"
-          className={`px-4 py-2 text-sm font-medium border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-1.5 ${activeTab === 'overdue' ? 'border-b-2 border-[#008751] text-[#008751]' : ''
-            }`}
+          className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'overdue' ? 'border-[#008751] text-[#008751] font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
-          <div className="w-2 h-2 rounded-full bg-red-500"></div> Overdue
+          <div className="w-2 h-2 rounded-full bg-red-500"></div> En retard
         </button>
       </div>
+
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -230,24 +218,25 @@ export default function VehicleRenewalsPage() {
         </div>
       )}
 
+      {/* ZONE 3: FILTERS BAR */}
       <div className="flex flex-wrap gap-4 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-200 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Rechercher..."
             data-testid="search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751] outline-none"
           />
         </div>
 
         <button
           onClick={() => setIsFiltersOpen(true)}
-          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+          className="bg-white border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
         >
-          <Filter size={14} /> Filters
+          <Filter size={14} /> Filtres
           {activeCriteria.length > 0 && (
             <span className="bg-[#008751] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
               {activeCriteria.length}
@@ -258,30 +247,52 @@ export default function VehicleRenewalsPage() {
         {(searchTerm || activeCriteria.length > 0 || activeTab !== 'all') && (
           <button
             onClick={clearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            className="text-sm font-medium text-[#008751] hover:underline"
           >
-            <X size={14} /> Clear all
+            Effacer
           </button>
         )}
 
         <div className="flex-1 text-right text-sm text-gray-500" data-testid="pagination-info">
-          {pagination && renewals.length > 0 ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total}` : '0 results'}
+          {pagination && renewals.length > 0 ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total}` : '0 résultats'}
         </div>
         <div className="flex gap-1">
           <button
-            className="p-1 border border-gray-300 rounded text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             disabled={!pagination?.hasPrev}
             onClick={() => setPage(p => Math.max(1, p - 1))}
           >
             <ChevronRight size={16} className="rotate-180" />
           </button>
           <button
-            className="p-1 border border-gray-300 rounded text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
             disabled={!pagination?.hasNext}
             onClick={() => setPage(p => p + 1)}
           >
             <ChevronRight size={16} />
           </button>
+        </div>
+      </div>
+
+      {/* ZONE 4: DASHBOARD STATISTIQUES */}
+      <div className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Total renouvellements</div>
+            <div className="text-2xl font-bold text-gray-900">{pagination?.total || 0}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">En retard</div>
+            <div className="text-2xl font-bold text-red-600">{renewals.filter(r => r.isOverdue).length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Bientôt dus</div>
+            <div className="text-2xl font-bold text-orange-500">{renewals.filter(r => r.status === 'DUE' && !r.isOverdue).length}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 font-medium mb-1">Terminés</div>
+            <div className="text-2xl font-bold text-green-600">{renewals.filter(r => r.status === 'COMPLETED').length}</div>
+          </div>
         </div>
       </div>
 
@@ -304,11 +315,11 @@ export default function VehicleRenewalsPage() {
                       className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
                     />
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Renewal Type</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Watchers</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VÉHICULE</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TYPE DE RENOUVELLEMENT</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUT</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE D'ÉCHÉANCE</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OBSERVATEURS</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -354,10 +365,10 @@ export default function VehicleRenewalsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`flex items-center gap-1.5 text-sm font-medium ${getStatusColor(renewal.status, renewal.isOverdue)}`}>
                         <div className={`w-2 h-2 rounded-full ${getStatusDot(renewal.status, renewal.isOverdue)}`}></div>
-                        {renewal.status === 'OVERDUE' ? 'Overdue' :
-                          renewal.status === 'DUE' ? 'Due Soon' :
-                            renewal.status === 'COMPLETED' ? 'Completed' :
-                              renewal.status === 'DISMISSED' ? 'Dismissed' :
+                        {renewal.isOverdue ? 'En retard' :
+                          renewal.status === 'DUE' ? 'Bientôt dû' :
+                            renewal.status === 'COMPLETED' ? 'Terminé' :
+                              renewal.status === 'DISMISSED' ? 'Ignoré' :
                                 renewal.status}
                       </span>
                     </td>

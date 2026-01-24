@@ -31,7 +31,7 @@ export class PlacesApiService {
   }
 
   /**
-   * Récupérer la liste des lieux avec filtres et pagination
+   * Récupérer la liste des sites opérationnels avec filtres et pagination
    */
   static async getPlaces(filters: PlaceSearchFilters = {}): Promise<PlacesResponse> {
     const params = new URLSearchParams();
@@ -130,7 +130,7 @@ export class PlacesApiService {
   }
 
   /**
-   * Rechercher des lieux proches
+   * Rechercher des sites opérationnels proches
    */
   static async getNearbyPlaces(
     latitude: number,
@@ -197,7 +197,7 @@ export class PlacesApiService {
   }
 
   /**
-   * Rechercher des lieux par nom ou adresse
+   * Rechercher des sites opérationnels par nom ou adresse
    */
   static async searchPlaces(query: string, limit: number = 10): Promise<Place[]> {
     const response = await this.getPlaces({
@@ -209,7 +209,7 @@ export class PlacesApiService {
   }
 
   /**
-   * Obtenir des statistiques sur les lieux
+   * Obtenir des statistiques sur les sites opérationnels
    */
   static async getPlacesStats() {
     return this.request('/api/places/stats');

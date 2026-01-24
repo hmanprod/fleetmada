@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, MoreHorizontal, Info, MapPin, Plus, Minus, Loader2, Search } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Info, MapPin, Plus, Minus, Loader2, Search, Check, Upload, Camera, X, FileText, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCreatePlace, useCreatePlaceFromAddress, useGeocode } from '@/lib/hooks/usePlaces';
 import { PlaceType } from '@/types/geolocation';
@@ -14,21 +14,23 @@ export default function PlaceCreatePage() {
     address: '',
     latitude: '',
     longitude: '',
-    geofenceRadius: '',
+    geofenceRadius: '500',
     placeType: PlaceType.GENERAL,
     isActive: true
   });
 
   const [autoGeocode, setAutoGeocode] = useState(true);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<File[]>([]);
   // Hooks pour les opérations
   const { createPlace, loading: createLoading, error: createError } = useCreatePlace();
   const { createPlaceFromAddress, loading: geocodeLoading, error: geocodeError } = useCreatePlaceFromAddress();
   const { geocodeAddress, loading: geocodeAddressLoading } = useGeocode();
 
   const handleBack = () => {
-    router.push('/places');
+    router.push('/settings/parts/locations');
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -36,7 +38,6 @@ export default function PlaceCreatePage() {
       ...prev,
       [field]: value
     }));
-    // Clear validation errors when user starts typing
     if (validationErrors.length > 0) {
       setValidationErrors([]);
     }
@@ -46,35 +47,28 @@ export default function PlaceCreatePage() {
     const errors: string[] = [];
 
     if (!formData.name.trim()) {
-      errors.push('Name is required');
+      errors.push('Le nom est requis');
     }
 
-    if (formData.address && autoGeocode) {
-      // Will be geocoded automatically
-    } else {
-      if (!formData.latitude) {
-        errors.push('Latitude is required');
-      }
-      if (!formData.longitude) {
-        errors.push('Longitude is required');
-      }
+    if (autoGeocode && !formData.address.trim()) {
+      errors.push('L\'adresse est requise pour le géocodage automatique');
+    }
+
+    if (!autoGeocode) {
+      if (!formData.latitude) errors.push('La latitude est requise');
+      if (!formData.longitude) errors.push('La longitude est requise');
 
       const lat = parseFloat(formData.latitude);
       const lng = parseFloat(formData.longitude);
 
-      if (isNaN(lat) || lat < -90 || lat > 90) {
-        errors.push('Latitude must be between -90 and 90');
-      }
-
-      if (isNaN(lng) || lng < -180 || lng > 180) {
-        errors.push('Longitude must be between -180 and 180');
-      }
+      if (isNaN(lat) || lat < -90 || lat > 90) errors.push('Latitude invalide (-90 à 90)');
+      if (isNaN(lng) || lng < -180 || lng > 180) errors.push('Longitude invalide (-180 à 180)');
     }
 
     if (formData.geofenceRadius) {
       const radius = parseFloat(formData.geofenceRadius);
       if (isNaN(radius) || radius <= 0) {
-        errors.push('Geofence radius must be a positive number');
+        errors.push('Le rayon de géofence doit être un nombre positif');
       }
     }
 
@@ -87,7 +81,7 @@ export default function PlaceCreatePage() {
 
     try {
       const result = await geocodeAddress(formData.address);
-      if (result && typeof result === 'object' && 'latitude' in result && 'longitude' in result) {
+      if (result) {
         setFormData(prev => ({
           ...prev,
           latitude: (result as any).latitude.toString(),
@@ -100,16 +94,38 @@ export default function PlaceCreatePage() {
     }
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setUploadedImages(prev => [...prev, ...files]);
+    if (event.target) event.target.value = '';
+  };
+
+  const handleDocumentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setUploadedDocuments(prev => [...prev, ...files]);
+    if (event.target) event.target.value = '';
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setUploadedImages(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleRemoveDocument = (indexToRemove: number) => {
+    setUploadedDocuments(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleCamera = () => {
+    // simulation d'une prise de vue caméra
+    const mockFile = new File([''], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    setUploadedImages(prev => [...prev, mockFile]);
+  };
+
   const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       let placeData;
-
       if (autoGeocode && formData.address.trim()) {
-        // Create place with automatic geocoding
         placeData = await createPlaceFromAddress({
           name: formData.name,
           description: formData.description || undefined,
@@ -118,7 +134,6 @@ export default function PlaceCreatePage() {
           placeType: formData.placeType
         });
       } else {
-        // Create place with manual coordinates
         placeData = await createPlace({
           name: formData.name,
           description: formData.description || undefined,
@@ -131,51 +146,10 @@ export default function PlaceCreatePage() {
         });
       }
 
-      // Navigate to the new place detail page
-      router.push(`/places/${placeData.id}`);
-    } catch (error) {
-      console.error('Failed to create place:', error);
-    }
-  };
-
-  const handleSaveAndAddAnother = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      if (autoGeocode && formData.address.trim()) {
-        await createPlaceFromAddress({
-          name: formData.name,
-          description: formData.description || undefined,
-          address: formData.address,
-          geofenceRadius: formData.geofenceRadius ? parseFloat(formData.geofenceRadius) : undefined,
-          placeType: formData.placeType
-        });
-      } else {
-        await createPlace({
-          name: formData.name,
-          description: formData.description || undefined,
-          address: formData.address || undefined,
-          latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-          longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
-          geofenceRadius: formData.geofenceRadius ? parseFloat(formData.geofenceRadius) : undefined,
-          placeType: formData.placeType,
-          isActive: formData.isActive
-        });
-      }
-
-      // Reset form for another entry
-      setFormData({
-        name: '',
-        description: '',
-        address: '',
-        latitude: '',
-        longitude: '',
-        geofenceRadius: '',
-        placeType: PlaceType.GENERAL,
-        isActive: true
-      });
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push(`/places?created=true`);
+      }, 1500);
     } catch (error) {
       console.error('Failed to create place:', error);
     }
@@ -184,294 +158,370 @@ export default function PlaceCreatePage() {
   const isLoading = createLoading || geocodeLoading || geocodeAddressLoading;
   const error = createError || geocodeError;
 
+  // URL Google Maps pour le mode preview
+  const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const mapUrl = formData.latitude && formData.longitude
+    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsKey}&q=${formData.latitude},${formData.longitude}&zoom=15`
+    : null;
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
+      {/* ZONE 1: HEADER & ACTIONS */}
+      <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-4">
-          <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
-            <ArrowLeft size={18} /> Places
+          <button onClick={handleBack} className="text-gray-400 hover:text-[#008751] transition-colors flex items-center gap-1">
+            <ArrowLeft size={18} /> Sites opérationnels
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">New Place</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Nouveau lieu</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+          <button onClick={handleBack} className="px-5 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded transition-colors bg-white">Annuler</button>
           <button
             onClick={handleSave}
-            disabled={isLoading}
-            className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            data-testid="save-place-button"
+            disabled={isLoading || showSuccess}
+            className={`px-6 py-2 ${showSuccess ? 'bg-green-600' : 'bg-[#008751] hover:bg-[#007043]'} text-white font-bold rounded shadow-md disabled:opacity-50 transition-all flex items-center gap-2`}
           >
-            {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}
-            Save Place
+            {isLoading ? <Loader2 className="animate-spin" size={18} /> : showSuccess ? <Check size={18} /> : null}
+            {showSuccess ? 'Lieu créé !' : 'Enregistrer le lieu'}
           </button>
         </div>
       </div>
 
-      {error && (
-        <div className="mx-8 mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600">Error: {error}</p>
-        </div>
-      )}
-
-      {validationErrors.length > 0 && (
-        <div className="mx-8 mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-600 font-medium">Please fix the following errors:</p>
-          <ul className="text-yellow-600 text-sm mt-1 list-disc list-inside">
-            {validationErrors.map((error, index) => (
-              <li key={index}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="max-w-[1600px] mx-auto py-8 px-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Form Section */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="space-y-6">
+      <div className="max-w-[1600px] mx-auto py-8 px-8">
+        {(error || validationErrors.length > 0) && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-3 text-red-800">
+              <Info size={20} className="text-red-500" />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
-                <div className="relative">
+                <p className="font-bold">Attention</p>
+                <p className="text-sm">{error || 'Veuillez corriger les erreurs ci-dessous.'}</p>
+                {validationErrors.length > 0 && (
+                  <ul className="mt-1 text-xs list-disc list-inside opacity-80">
+                    {validationErrors.map((err, i) => <li key={i}>{err}</li>)}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Form Section */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Info size={20} className="text-[#008751]" /> Informations générales
+              </h2>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nom du lieu *</label>
                   <input
                     type="text"
+                    placeholder="Ex: Siège Social Tana, Station Total..."
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                    data-testid="place-name-input"
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all font-medium"
                   />
-                  <div className="absolute right-3 top-3 text-red-400"><MoreHorizontal size={16} /></div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Type de lieu</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: PlaceType.GENERAL, label: 'Général' },
+                      { value: PlaceType.OFFICE, label: 'Bureau' },
+                      { value: PlaceType.FUEL_STATION, label: 'Station-service' },
+                      { value: PlaceType.SERVICE_CENTER, label: 'Centre d\'entretien' },
+                      { value: PlaceType.CLIENT_SITE, label: 'Site client' },
+                      { value: PlaceType.HOME, label: 'Domicile' }
+                    ].map((type) => (
+                      <button
+                        key={type.value}
+                        onClick={() => handleInputChange('placeType', type.value)}
+                        className={`p-3 text-sm rounded-xl border transition-all text-left font-medium ${formData.placeType === type.value
+                          ? 'border-[#008751] bg-[#008751]/5 text-[#008751] ring-1 ring-[#008751]'
+                          : 'border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-300'}`}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Détails supplémentaires sur ce lieu..."
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all"
+                  ></textarea>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                  data-testid="place-description-textarea"
-                ></textarea>
-              </div>
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <MapPin size={20} className="text-[#008751]" /> Localisation
+                </h2>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Place Type</label>
-                <select
-                  value={formData.placeType}
-                  onChange={(e) => handleInputChange('placeType', e.target.value as PlaceType)}
-                  className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                  data-testid="place-type-select"
-                >
-                  <option value={PlaceType.GENERAL}>General</option>
-                  <option value={PlaceType.FUEL_STATION}>Fuel Station</option>
-                  <option value={PlaceType.SERVICE_CENTER}>Service Center</option>
-                  <option value={PlaceType.OFFICE}>Office</option>
-                  <option value={PlaceType.CLIENT_SITE}>Client Site</option>
-                  <option value={PlaceType.HOME}>Home</option>
-                </select>
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl mb-6 border border-gray-100">
+                  <div className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors ${autoGeocode ? 'bg-[#008751]' : 'bg-gray-300'}`}
+                    onClick={() => setAutoGeocode(!autoGeocode)}>
+                    <div className={`bg-white w-3 h-3 rounded-full shadow-sm transform transition-transform ${autoGeocode ? 'translate-x-5' : ''}`}></div>
+                  </div>
+                  <span className="text-sm font-bold text-gray-700">Géocodage Google Maps automatique</span>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Adresse complète *</label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <input
+                          type="text"
+                          placeholder="Rechercher une adresse sur Google Maps..."
+                          value={formData.address}
+                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          onBlur={autoGeocode ? handleGeocodeAddress : undefined}
+                          className="w-full pl-10 p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all font-medium shadow-sm"
+                        />
+                      </div>
+                      {autoGeocode && formData.address && (
+                        <button
+                          onClick={handleGeocodeAddress}
+                          disabled={geocodeAddressLoading}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2 font-bold shadow-sm"
+                        >
+                          {geocodeAddressLoading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
+                          Vérifier
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {!autoGeocode && (
+                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Latitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={formData.latitude}
+                          onChange={(e) => handleInputChange('latitude', e.target.value)}
+                          className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none font-mono text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Longitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={formData.longitude}
+                          onChange={(e) => handleInputChange('longitude', e.target.value)}
+                          className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rayon Géofence (mètres)</label>
+                    <input
+                      type="number"
+                      placeholder="500"
+                      value={formData.geofenceRadius}
+                      onChange={(e) => handleInputChange('geofenceRadius', e.target.value)}
+                      className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] outline-none transition-all font-medium"
+                    />
+                    <p className="mt-2 text-xs text-gray-400 italic">
+                      Utilisé pour détecter automatiquement l'entrée ou la sortie d'un véhicule dans cette zone.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <hr className="my-6 border-gray-200" />
+            {/* Photos Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Camera size={20} className="text-[#008751]" /> Photos
+              </h2>
 
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1">Location Information</h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  {autoGeocode
-                    ? 'Enter an address below and coordinates will be automatically detected.'
-                    : 'Enter coordinates manually or use the address field with geocoding.'
-                  }
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                    className="flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl text-sm font-bold transition-all"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choisir photos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCamera}
+                    className="flex items-center justify-center px-4 py-2 bg-blue-100 hover:bg-blue-200 border border-blue-300 rounded-xl text-sm font-bold transition-all text-blue-700"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Prendre photo
+                  </button>
+                </div>
                 <input
-                  type="checkbox"
-                  id="autoGeocode"
-                  checked={autoGeocode}
-                  onChange={(e) => setAutoGeocode(e.target.checked)}
-                  className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
                 />
-                <label htmlFor="autoGeocode" className="text-sm text-gray-700">
-                  Enable automatic geocoding
-                </label>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address {autoGeocode && <span className="text-red-500">*</span>}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    className="flex-1 p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                    placeholder="Enter full address"
-                    data-testid="place-address-input"
-                  />
-                  {autoGeocode && formData.address && (
-                    <button
-                      onClick={handleGeocodeAddress}
-                      disabled={geocodeAddressLoading}
-                      className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
-                    >
-                      {geocodeAddressLoading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
-                      Geocode
-                    </button>
-                  )}
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                    {uploadedImages.map((file, index) => (
+                      <div key={index} className="relative group aspect-square bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                        {file.size > 0 ? (
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <Camera size={24} className="text-gray-300" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg active:scale-95"
+                        >
+                          <X size={14} />
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 truncate backdrop-blur-sm">
+                          {file.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] text-gray-400 font-medium">JPG, PNG, GIF acceptés. Max 5MB par fichier.</p>
+              </div>
+            </div>
+
+            {/* Documents Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <FileText size={20} className="text-[#008751]" /> Documents
+              </h2>
+
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('doc-upload')?.click()}
+                  className="flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl text-sm font-bold transition-all"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Ajouter documents
+                </button>
+                <input
+                  id="doc-upload"
+                  type="file"
+                  multiple
+                  onChange={handleDocumentUpload}
+                  className="hidden"
+                />
+
+                {uploadedDocuments.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    {uploadedDocuments.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group hover:border-[#008751]/30 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-[#008751] shadow-sm border border-gray-100">
+                            <FileText size={20} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900 truncate max-w-[200px]">{file.name}</p>
+                            <p className="text-[10px] text-gray-500 font-mono uppercase">{(file.size / 1024).toFixed(1)} KB</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDocument(index)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] text-gray-400 font-medium">PDF, DOCX, XLSX acceptés. Max 10MB par fichier.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Map Preview Section */}
+          <div className="space-y-6">
+            <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <MapPin size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Aperçu Google Maps</h3>
+                  <p className="text-blue-100 text-sm opacity-90">Visualisez l'emplacement et le géofencing en temps réel.</p>
                 </div>
               </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16 blur-2xl"></div>
+            </div>
 
-              {!autoGeocode && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Latitude <span className="text-red-500">*</span></label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={formData.latitude}
-                      onChange={(e) => handleInputChange('latitude', e.target.value)}
-                      className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Longitude <span className="text-red-500">*</span></label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={formData.longitude}
-                      onChange={(e) => handleInputChange('longitude', e.target.value)}
-                      className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                    />
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl h-[700px] relative overflow-hidden group">
+              {mapUrl ? (
+                <iframe
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={mapUrl}
+                  title="Google Maps Preview"
+                ></iframe>
+              ) : (
+                <div className="absolute inset-0 bg-gray-50 flex items-center justify-center text-center p-12">
+                  <div className="space-y-4">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+                      <MapPin size={40} className="text-gray-300" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-400">Aucune coordonnée</h4>
+                    <p className="text-gray-400 text-sm max-w-xs mx-auto">Veuillez saisir une adresse ou des coordonnées pour prévisualiser le lieu sur la carte.</p>
                   </div>
                 </div>
               )}
-            </div>
 
-            <hr className="my-6 border-gray-200" />
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Geofence Radius (meters)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    placeholder="Enter radius in meters"
-                    value={formData.geofenceRadius}
-                    onChange={(e) => handleInputChange('geofenceRadius', e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
-                  />
-                  <div className="absolute right-3 top-3 text-gray-400">
-                    <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0L0 5H10L5 0ZM5 16L10 11H0L5 16Z" /></svg>
+              {/* Location Pin Hover UI */}
+              {formData.latitude && formData.longitude && (
+                <div className="absolute top-8 left-8 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-white/20 max-w-xs animate-in zoom-in duration-500">
+                  <p className="text-xs font-bold text-[#008751] uppercase mb-1">Localisation détectée</p>
+                  <p className="text-sm font-bold text-gray-900 truncate">{formData.address || 'Point manuel'}</p>
+                  <div className="mt-2 flex gap-3 text-[10px] font-mono text-gray-500">
+                    <span>LAT: {parseFloat(formData.latitude).toFixed(4)}</span>
+                    <span>LNG: {parseFloat(formData.longitude).toFixed(4)}</span>
                   </div>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  The geofence radius is used to determine location entries associated with this place.
-                  You can use this geofence to send alerts when a location entry is here.
-                </p>
-              </div>
+              )}
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                  className="rounded border-gray-300 text-[#008751] focus:ring-[#008751]"
-                />
-                <label htmlFor="isActive" className="text-sm text-gray-700">
-                  Active place
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Map Section */}
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded p-4 flex items-center gap-3 text-blue-800 text-sm">
-            <Info size={20} className="text-blue-500" />
-            <div>
-              <p className="font-medium">Interactive Map Preview</p>
-              <p>Enter coordinates above to see the location on the map. The geofence will be visualized as a circle around the location.</p>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-300 rounded-lg shadow-sm h-[600px] relative overflow-hidden">
-            {/* Map Placeholder with coordinates */}
-            {formData.latitude && formData.longitude ? (
-              <iframe
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${(parseFloat(formData.longitude) - 0.01).toString()}%2C${(parseFloat(formData.latitude) - 0.01).toString()}%2C${(parseFloat(formData.longitude) + 0.01).toString()}%2C${(parseFloat(formData.latitude) + 0.01).toString()}&layer=mapnik&marker=${formData.latitude}%2C${formData.longitude}`}
-                title="Location Map"
-              ></iframe>
-            ) : (
-              <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin size={48} className="text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Enter coordinates to view location on map</p>
+              <div className="absolute bottom-4 left-4">
+                <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-blue-600 shadow-sm border border-blue-100">
+                  POWERED BY GOOGLE MAPS
                 </div>
               </div>
-            )}
-
-            {/* Map Controls Mockup */}
-            <div className="absolute top-2 left-2 bg-white border border-gray-300 rounded shadow-sm flex">
-              <button className="p-2 hover:bg-gray-50 border-r border-gray-300"><span className="block w-4 h-4 border-2 border-gray-600 rounded-full"></span></button>
-              <button className="p-2 hover:bg-gray-50 border-r border-gray-300"><span className="block w-4 h-4 bg-gray-400 rounded-full"></span></button>
-              <button className="p-2 hover:bg-gray-50"><span className="block w-4 h-4 transform rotate-45 border-2 border-gray-600"></span></button>
-            </div>
-
-            <div className="absolute top-2 right-2 bg-white border border-gray-300 rounded shadow-sm">
-              <button className="p-2 hover:bg-gray-50">
-                <img src="https://maps.gstatic.com/mapfiles/api-3/images/pegman_dock_2x.png" className="w-5 h-8 object-contain opacity-70" alt="Street View" />
-              </button>
-            </div>
-
-            {/* Location Pin */}
-            {formData.latitude && formData.longitude && (
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <MapPin size={48} className="text-red-600 fill-red-600 drop-shadow-lg" />
-              </div>
-            )}
-
-            {/* Zoom Controls */}
-            <div className="absolute bottom-8 right-2 bg-white border border-gray-300 rounded shadow-sm flex flex-col">
-              <button className="p-2 hover:bg-gray-50 border-b border-gray-300"><Plus size={16} /></button>
-              <button className="p-2 hover:bg-gray-50"><Minus size={16} /></button>
-            </div>
-
-            <div className="absolute bottom-1 right-1 bg-white/80 text-[10px] px-1 text-gray-600">
-              Keyboard shortcuts | Map data ©2025 OpenStreetMap | Terms
-            </div>
-            <div className="absolute bottom-1 left-1">
-              <span className="text-blue-500 font-bold text-lg tracking-tighter">OSM</span>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="px-8 py-6 flex justify-end gap-3 bg-white border-t border-gray-200 sticky bottom-0">
-        <button onClick={handleBack} className="text-[#008751] font-medium hover:underline mr-auto">Cancel</button>
-        <button
-          onClick={handleSaveAndAddAnother}
-          disabled={isLoading}
-          className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded border border-gray-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Save & Add Another
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={isLoading}
-          className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          data-testid="save-place-button"
-        >
-          {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}
-          Save Place
-        </button>
       </div>
     </div>
   );

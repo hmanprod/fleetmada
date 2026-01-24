@@ -15,9 +15,11 @@ export interface Issue {
   vehicleId?: string
   userId: string
   summary: string
+  description?: string
   status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   reportedDate: Date
+  dueDate?: Date
   assignedTo?: string[]
   assignedToUsers?: { id: string, name: string }[] // Optional: if backend returns populated users
   labels: string[]
@@ -64,16 +66,22 @@ export interface IssueImage {
 export interface IssueCreateData {
   vehicleId?: string
   summary: string
+  description?: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  reportedDate?: string | Date
+  dueDate?: string | Date
   labels?: string[]
   assignedTo?: string[]
 }
 
 export interface IssueUpdateData {
   summary?: string
+  description?: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   labels?: string[]
   assignedTo?: string[]
+  reportedDate?: string | Date
+  dueDate?: string | Date
 }
 
 export interface IssueStatusUpdateData {

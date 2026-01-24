@@ -15,14 +15,17 @@ export function usePlaces(filters: PlaceSearchFilters = {}) {
     pages: 0
   });
 
+  // We use stringify to have a stable dependency for useCallback even if the object is recreated
+  const filterKey = JSON.stringify(filters);
+
   const fetchPlaces = useCallback(async (newFilters?: PlaceSearchFilters) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const currentFilters = newFilters || filters;
+      const currentFilters = newFilters || JSON.parse(filterKey);
       const response: PlacesResponse = await PlacesApiService.getPlaces(currentFilters);
-      
+
       setPlaces(response.places);
       setPagination(response.pagination);
     } catch (err) {
@@ -30,7 +33,7 @@ export function usePlaces(filters: PlaceSearchFilters = {}) {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filterKey]);
 
   useEffect(() => {
     fetchPlaces();
@@ -68,7 +71,7 @@ export function usePlace(id: string | null) {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const placeData = await PlacesApiService.getPlace(id);
       setPlace(placeData);
@@ -98,7 +101,7 @@ export function useCreatePlace() {
   const createPlace = useCallback(async (placeData: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const newPlace = await PlacesApiService.createPlace(placeData);
       return newPlace;
@@ -128,7 +131,7 @@ export function useCreatePlaceFromAddress() {
   }) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const newPlace = await PlacesApiService.createPlaceFromAddress(placeData);
       return newPlace;
@@ -152,7 +155,7 @@ export function useUpdatePlace() {
   const updatePlace = useCallback(async (id: string, placeData: Partial<Place>) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const updatedPlace = await PlacesApiService.updatePlace(id, placeData);
       return updatedPlace;
@@ -176,7 +179,7 @@ export function useDeletePlace() {
   const deletePlace = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       await PlacesApiService.deletePlace(id);
     } catch (err) {
@@ -191,7 +194,7 @@ export function useDeletePlace() {
   return { deletePlace, loading, error };
 }
 
-// Hook pour les lieux proches
+// Hook pour les sites opérationnels proches
 export function useNearbyPlaces() {
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
   const [loading, setLoading] = useState(false);
@@ -204,22 +207,22 @@ export function useNearbyPlaces() {
   }>({});
 
   const searchNearby = useCallback(async (
-    latitude: number, 
-    longitude: number, 
+    latitude: number,
+    longitude: number,
     radiusInKm: number = 10,
     placeType?: string
   ) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response: NearbyPlacesResponse = await PlacesApiService.getNearbyPlaces(
-        latitude, 
-        longitude, 
-        radiusInKm, 
+        latitude,
+        longitude,
+        radiusInKm,
         placeType
       );
-      
+
       setNearbyPlaces(response.places);
       setSearchParams({
         center: { latitude, longitude },
@@ -257,7 +260,7 @@ export function useGeocode() {
   const geocodeAddress = useCallback(async (address: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const result = await PlacesApiService.geocodeAddress(address);
       return result;
@@ -281,7 +284,7 @@ export function useReverseGeocode() {
   const reverseGeocode = useCallback(async (latitude: number, longitude: number) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const result = await PlacesApiService.reverseGeocode(latitude, longitude);
       return result;
@@ -306,7 +309,7 @@ export function useCurrentPosition() {
   const getCurrentPosition = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const coords = await GeocodingService.getCurrentPosition();
       setPosition(coords);
@@ -323,7 +326,7 @@ export function useCurrentPosition() {
   return { position, loading, error, getCurrentPosition };
 }
 
-// Hook pour la recherche de lieux
+// Hook pour la recherche de sites opérationnels
 export function usePlaceSearch() {
   const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
@@ -334,10 +337,10 @@ export function usePlaceSearch() {
       setResults([]);
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const places = await PlacesApiService.searchPlaces(query, limit);
       setResults(places);

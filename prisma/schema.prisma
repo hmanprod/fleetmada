@@ -230,9 +230,11 @@ model Issue {
   // Relation to User is already there
 
   summary      String
+  description  String?
   status       IssueStatus  @default(OPEN)
   priority     Priority     @default(MEDIUM)
   reportedDate DateTime     @default(now())
+  dueDate      DateTime?
   assignedTo   String[]
   labels       String[]
   watchers     Int          @default(0)
@@ -395,7 +397,44 @@ model Part {
   updatedAt    DateTime           @updatedAt
   serviceEntries ServiceEntryPart[]
   stockMovements StockMovement[]
+  locations      PartLocation[]
 }
+
+model PartManufacturer {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PartCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PartLocation {
+  id        String   @id @default(cuid())
+  partId    String
+  placeId   String
+  aisle     String?
+  row       String?
+  bin       String?
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  part      Part     @relation(fields: [partId], references: [id])
+  place     Place    @relation(fields: [placeId], references: [id])
+
+  @@index([partId])
+  @@index([placeId])
+}
+
+
 
 model ServiceEntryPart {
   id             String       @id @default(cuid())
@@ -566,6 +605,7 @@ model Vendor {
   serviceEntries ServiceEntry[]  // Services effectués par ce vendor
   fuelEntries    FuelEntry[]     // Entrées carburant chez ce vendor
   expenseEntries ExpenseEntry[]  // Dépenses chez ce vendor
+  chargingEntries ChargingEntry[] // Recharges chez ce vendor
 }
 
 model FuelEntry {
@@ -595,12 +635,14 @@ model ChargingEntry {
   userId      String
   date        DateTime
   location    String?
+  vendorId    String?            // Foreign key vers Vendor
   energyKwh   Float
   cost        Float
   durationMin Int?
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id])
   vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
 }
 
 model ExpenseEntry {
@@ -673,6 +715,7 @@ model Place {
   fuelEntries    FuelEntry[]
   serviceEntries ServiceEntry[]
   contacts       Contact[]
+  partLocations  PartLocation[]
   
   // Index géospatial pour performance
   @@index([latitude, longitude])

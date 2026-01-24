@@ -239,125 +239,123 @@ export default function InspectionHistoryPage() {
                 </div>
             </div>
 
-            {/* Onglets */}
-            <div className="flex gap-6 border-b border-gray-200 mb-6">
+            {/* ZONE 2: NAVIGATION TABS */}
+            <div className="flex gap-6 border-b border-gray-200 mb-6 font-medium text-sm">
                 <button
                     onClick={() => setActiveTab('all')}
-                    className={`pb-3 border-b-2 font-medium text-sm ${activeTab === 'all'
-                        ? 'border-[#008751] text-[#008751]'
+                    className={`pb-3 border-b-2 transition-colors ${activeTab === 'all'
+                        ? 'border-[#008751] text-[#008751] font-bold'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
-                    Toutes les Inspections ({completedInspections.length})
+                    Toutes
                 </button>
                 <button
                     onClick={() => setActiveTab('failed')}
-                    className={`pb-3 border-b-2 font-medium text-sm ${activeTab === 'failed'
-                        ? 'border-[#008751] text-[#008751]'
+                    className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'failed'
+                        ? 'border-[#008751] text-[#008751] font-bold'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
-                    Échecs de Conformité ({failedInspections.length})
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div> Échecs de conformité
                 </button>
             </div>
 
-            {/* Barre de filtres */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-                <div className="p-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                        {/* Recherche et Filtres */}
-                        <div className="flex flex-col md:flex-row items-center gap-4 flex-1">
-                            {/* Recherche - Taille réduite */}
-                            <div className="relative w-full md:w-64 shrink-0">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher..."
-                                    data-testid="inspection-search-input"
-                                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
-                                    value={searchQuery}
-                                    onChange={(e) => handleSearch(e.target.value)}
-                                />
-                            </div>
+            {/* ZONE 3: FILTERS BAR */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-6 flex flex-wrap items-center gap-4">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Rechercher..."
+                        data-testid="inspection-search-input"
+                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751] outline-none"
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                </div>
 
-                            {/* Filtres rapides - Remplissent l'espace */}
-                            <div className="flex flex-col md:flex-row items-center gap-2 flex-1 w-full">
-                                <select
-                                    className="w-full md:flex-1 border border-gray-300 rounded px-3 py-2 text-sm min-w-[200px]"
-                                    value={selectedVehicle}
-                                    onChange={(e) => setSelectedVehicle(e.target.value)}
-                                >
-                                    <option value="">Tous les véhicules</option>
-                                    {vehicles.map(vehicle => (
-                                        <option key={vehicle.id} value={vehicle.id}>
-                                            {vehicle.name}
-                                        </option>
-                                    ))}
-                                </select>
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white text-gray-700 focus:ring-[#008751] focus:border-[#008751]"
+                        value={selectedVehicle}
+                        onChange={(e) => setSelectedVehicle(e.target.value)}
+                    >
+                        <option value="">Tous les véhicules</option>
+                        {vehicles.map(vehicle => (
+                            <option key={vehicle.id} value={vehicle.id}>{vehicle.name}</option>
+                        ))}
+                    </select>
 
-                                <select
-                                    className="w-full md:w-auto border border-gray-300 rounded px-3 py-2 text-sm min-w-[130px]"
-                                    data-testid="status-filter"
-                                    value={selectedStatus}
-                                    onChange={(e) => setSelectedStatus(e.target.value)}
-                                >
-                                    <option value="">Status</option>
-                                    <option value="DRAFT">Brouillon</option>
-                                    <option value="SCHEDULED">Programmé</option>
-                                    <option value="IN_PROGRESS">En cours</option>
-                                    <option value="COMPLETED">Terminé</option>
-                                    <option value="CANCELLED">Annulé</option>
-                                </select>
-
-                                <select
-                                    className="w-full md:flex-1 border border-gray-300 rounded px-3 py-2 text-sm min-w-[200px]"
-                                    value={selectedTemplate}
-                                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                                >
-                                    <option value="">Tous les modèles</option>
-                                    {templates.map(template => (
-                                        <option key={template.id} value={template.id}>
-                                            {template.name}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <select
-                                    className="w-full md:w-auto border border-gray-300 rounded px-3 py-2 text-sm min-w-[140px]"
-                                    value={selectedCompliance}
-                                    onChange={(e) => setSelectedCompliance(e.target.value)}
-                                >
-                                    <option value="">Conformité</option>
-                                    <option value="COMPLIANT">Conforme</option>
-                                    <option value="NON_COMPLIANT">Non-conf.</option>
-                                    <option value="PENDING_REVIEW">En attente</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setIsFiltersOpen(true)}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded border border-gray-300"
-                        >
-                            <Filter size={16} /> Filtres Avancés
-                            {activeCriteria.length > 0 && (
-                                <span className="bg-[#008751] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                    {activeCriteria.length}
-                                </span>
-                            )}
-                        </button>
-
-                        {(searchQuery || selectedVehicle || selectedTemplate || selectedCompliance || activeCriteria.length > 0) && (
-                            <button
-                                onClick={clearFilters}
-                                className="ml-2 text-sm text-gray-500 hover:text-gray-700"
-                            >
-                                Effacer
-                            </button>
+                    <button
+                        onClick={() => setIsFiltersOpen(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                    >
+                        <Filter size={14} /> Filtres
+                        {activeCriteria.length > 0 && (
+                            <span className="bg-[#008751] text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                                {activeCriteria.length}
+                            </span>
                         )}
+                    </button>
+
+                    {(searchQuery || selectedVehicle || activeCriteria.length > 0) && (
+                        <button onClick={clearFilters} className="text-sm font-medium text-[#008751] hover:underline">
+                            Effacer
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex-1 text-right text-sm text-gray-500">
+                    {pagination ? `${(pagination.page - 1) * pagination.limit + 1} - ${Math.min(pagination.page * pagination.limit, pagination.totalCount)} sur ${pagination.totalCount}` : '0'}
+                </div>
+                <div className="flex gap-1">
+                    <button
+                        className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
+                        disabled={!pagination?.hasPrev}
+                        onClick={() => fetchInspections({ ...filters, page: (pagination?.page || 1) - 1 })}
+                    >
+                        <ChevronRight className="rotate-180" size={16} />
+                    </button>
+                    <button
+                        className="p-1 border border-gray-300 rounded text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50"
+                        disabled={!pagination?.hasNext}
+                        onClick={() => fetchInspections({ ...filters, page: (pagination?.page || 1) + 1 })}
+                    >
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
+            </div>
+
+            {/* ZONE 4: DASHBOARD STATISTIQUES */}
+            <div className="bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                        <div className="text-sm text-gray-500 font-medium mb-1">Total Inspections</div>
+                        <div className="text-2xl font-bold text-gray-900">{completedInspections.length}</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-sm text-gray-500 font-medium mb-1">Conformes</div>
+                        <div className="text-2xl font-bold text-green-600">
+                            {completedInspections.filter(i => i.complianceStatus === 'COMPLIANT').length}
+                        </div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-sm text-gray-500 font-medium mb-1">Non-conformes</div>
+                        <div className="text-2xl font-bold text-red-600">{failedInspections.length}</div>
+                    </div>
+                    <div className="text-center">
+                        <div className="text-sm text-gray-500 font-medium mb-1">Score moyen</div>
+                        <div className="text-2xl font-bold text-purple-600">
+                            {completedInspections.length > 0
+                                ? Math.round(completedInspections.reduce((sum, i) => sum + (i.overallScore || 0), 0) / completedInspections.length)
+                                : 0}%
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* ZONE 5: TABLEAU DE DONNÉES */}
 
             {/* Tableau */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -564,66 +562,6 @@ export default function InspectionHistoryPage() {
                 )}
             </div>
 
-            {/* Résumé des statistiques */}
-            {completedInspections.length > 0 && (
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded flex items-center justify-center">
-                                <FileText size={16} />
-                            </div>
-                            <div>
-                                <div className="text-lg font-bold text-gray-900">{completedInspections.length}</div>
-                                <div className="text-sm text-gray-500">Inspections complétées</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-green-100 text-green-600 rounded flex items-center justify-center">
-                                <CheckCircle size={16} />
-                            </div>
-                            <div>
-                                <div className="text-lg font-bold text-gray-900">
-                                    {completedInspections.filter(i => i.complianceStatus === 'COMPLIANT').length}
-                                </div>
-                                <div className="text-sm text-gray-500">Conformes</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-red-100 text-red-600 rounded flex items-center justify-center">
-                                <AlertCircle size={16} />
-                            </div>
-                            <div>
-                                <div className="text-lg font-bold text-gray-900">
-                                    {failedInspections.length}
-                                </div>
-                                <div className="text-sm text-gray-500">Non-conformes</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-yellow-100 text-yellow-600 rounded flex items-center justify-center">
-                                <TrendingUp size={16} />
-                            </div>
-                            <div>
-                                <div className="text-lg font-bold text-gray-900">
-                                    {completedInspections.length > 0
-                                        ? Math.round(completedInspections.reduce((sum, i) => sum + (i.overallScore || 0), 0) / completedInspections.length)
-                                        : 0}%
-                                </div>
-                                <div className="text-sm text-gray-500">Score moyen</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

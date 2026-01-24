@@ -105,31 +105,20 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              {/* Bouton refresh */}
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                data-testid="refresh-button"
-                className="flex items-center px-4 py-2 bg-[#008751] text-white rounded-lg hover:bg-[#007043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Actualiser
-              </button>
-
               {/* Notifications */}
-              <button data-testid="notification-button" className="relative p-2 text-gray-600 hover:text-gray-900">
+              {/* <button data-testid="notification-button" className="relative p-2 text-gray-600 hover:text-gray-900">
                 <Bell className="w-6 h-6" />
                 {systemAlerts.length > 0 && (
                   <span data-testid="notification-badge" className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {systemAlerts.length}
                   </span>
                 )}
-              </button>
+              </button> */}
 
               {/* Settings */}
-              <button className="p-2 text-gray-600 hover:text-gray-900">
+              {/* <button className="p-2 text-gray-600 hover:text-gray-900">
                 <Settings className="w-6 h-6" />
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

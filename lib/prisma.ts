@@ -2,12 +2,12 @@
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  prisma_v3: PrismaClient | undefined
 }
 
 // In development, we use a singleton to prevent connection leaks during hot reloads
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+export const prisma = globalForPrisma.prisma_v3 ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma_v3 = prisma
