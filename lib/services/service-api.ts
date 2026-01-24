@@ -77,6 +77,15 @@ export interface ServiceEntry {
   notes?: string
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   assignedTo?: string
+  issuedBy?: string
+  scheduledStartDate?: string
+  scheduledStartTime?: string
+  invoiceNumber?: string
+  poNumber?: string
+  discountType?: '%' | '€'
+  discountValue?: number
+  taxType?: '%' | '€'
+  taxValue?: number
   watchers: number
   isWorkOrder: boolean
   reasonForRepairCode?: string
@@ -88,6 +97,11 @@ export interface ServiceEntry {
     make: string;
     model: string;
     licensePlate?: string;
+  };
+  assignedToContact?: {
+    id: string;
+    firstName: string;
+    lastName: string;
   };
   user?: {
     id: string
@@ -278,6 +292,15 @@ export interface CreateServiceEntryData {
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   assignedTo?: string
   assignedToContactId?: string
+  issuedBy?: string
+  scheduledStartDate?: string
+  scheduledStartTime?: string
+  invoiceNumber?: string
+  poNumber?: string
+  discountType?: '%' | '€'
+  discountValue?: number
+  taxType?: '%' | '€'
+  taxValue?: number
   vendorId?: string
   isWorkOrder?: boolean
   reasonForRepairCode?: string

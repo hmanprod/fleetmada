@@ -109,6 +109,9 @@ export async function GET(
                             select: { id: true, number: true, description: true }
                         }
                     }
+                },
+                assignedToContact: {
+                    select: { id: true, firstName: true, lastName: true }
                 }
             }
         })
@@ -182,9 +185,20 @@ export async function PUT(
             status,
             totalCost,
             meter,
-            vendor, // vendorId
+            vendorId,
+            vendor, // vendorId (compatibility)
             notes,
             priority,
+            assignedToContactId,
+            issuedBy,
+            scheduledStartDate,
+            scheduledStartTime,
+            invoiceNumber,
+            poNumber,
+            discountValue,
+            discountType,
+            taxValue,
+            taxType,
             tasks, // This is tricky for update (sync/delete/create). 
             documents, // Array of document IDs
             resolvedIssueIds
@@ -202,9 +216,19 @@ export async function PUT(
                 status,
                 totalCost,
                 meter,
-                vendorId: vendor,
+                vendorId: vendorId || vendor,
                 notes,
                 priority,
+                assignedToContactId,
+                issuedBy,
+                scheduledStartDate: scheduledStartDate ? new Date(scheduledStartDate) : undefined,
+                scheduledStartTime,
+                invoiceNumber,
+                poNumber,
+                discountValue: discountValue ? parseFloat(discountValue) : undefined,
+                discountType,
+                taxValue: taxValue ? parseFloat(taxValue) : undefined,
+                taxType,
                 // Handling tasks update is complex (deleteMany + create, or updateMany). 
                 // For this task scope (Display verification), I'll focus on the GET. 
                 // But the Edit page calls this.
@@ -213,7 +237,7 @@ export async function PUT(
                     deleteMany: {},
                     create: tasks.map((task: any) => ({
                         serviceTaskId: task.serviceTaskId,
-                        cost: task.cost,
+                        cost: parseFloat(task.cost) || 0,
                         notes: task.notes
                     }))
                 } : undefined
@@ -221,7 +245,10 @@ export async function PUT(
             include: {
                 vehicle: true,
                 vendor: true,
-                tasks: { include: { serviceTask: true } }
+                tasks: { include: { serviceTask: true } },
+                assignedToContact: {
+                    select: { id: true, firstName: true, lastName: true }
+                }
             }
         })
 

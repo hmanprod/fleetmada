@@ -158,6 +158,9 @@ export async function GET(request: NextRequest) {
                 select: { id: true, number: true, description: true }
               }
             }
+          },
+          assignedToContact: {
+            select: { id: true, firstName: true, lastName: true }
           }
         },
         orderBy: { date: 'desc' },
@@ -269,7 +272,8 @@ export async function POST(request: NextRequest) {
       status = 'SCHEDULED',
       totalCost = 0,
       meter,
-      vendor,
+      vendorId,
+      vendor, // compatibility
       notes,
       priority,
       assignedToContactId,
@@ -277,7 +281,16 @@ export async function POST(request: NextRequest) {
       tasks = [],
       parts: serviceParts = [],
       resolvedIssueIds = [],
-      documents = []
+      documents = [],
+      issuedBy,
+      scheduledStartDate,
+      scheduledStartTime,
+      invoiceNumber,
+      poNumber,
+      discountValue,
+      discountType,
+      taxValue,
+      taxType
     } = body
 
     logAction('POST Service Entry', userId, {
@@ -318,11 +331,20 @@ export async function POST(request: NextRequest) {
           status,
           totalCost,
           meter,
-          vendorId: vendor,
+          vendorId: vendorId || vendor,
           notes,
           priority,
           assignedToContactId,
           isWorkOrder,
+          issuedBy,
+          scheduledStartDate: scheduledStartDate ? new Date(scheduledStartDate) : null,
+          scheduledStartTime,
+          invoiceNumber,
+          poNumber,
+          discountValue: discountValue ? parseFloat(discountValue) : undefined,
+          discountType,
+          taxValue: taxValue ? parseFloat(taxValue) : undefined,
+          taxType,
           tasks: {
             create: tasks.map((task: any) => {
               // Support both simple ID strings and detailed objects
@@ -366,6 +388,9 @@ export async function POST(request: NextRequest) {
                 select: { id: true, number: true, description: true }
               }
             }
+          },
+          assignedToContact: {
+            select: { id: true, firstName: true, lastName: true }
           }
         }
       })

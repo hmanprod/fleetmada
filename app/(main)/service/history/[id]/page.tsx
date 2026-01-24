@@ -92,7 +92,7 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
     }, [showMenu]);
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this service entry? This action cannot be undone.')) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette entrée de service ? Cette action est irréversible.')) {
             return;
         }
 
@@ -101,11 +101,11 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
             if (response.success) {
                 router.push('/service/history');
             } else {
-                alert('Failed to delete service entry: ' + (response.error || 'Unknown error'));
+                alert('Échec de la suppression de l\'entrée de service : ' + (response.error || 'Erreur inconnue'));
             }
         } catch (error) {
             console.error('Error deleting entry:', error);
-            alert('An error occurred while deleting the entry');
+            alert('Une erreur est survenue lors de la suppression de l\'entrée');
         }
     };
 
@@ -128,10 +128,10 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
     if (error || !entry) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-                <div className="text-red-500 font-medium mb-2">Error loading service entry</div>
-                <div className="text-gray-500 text-sm mb-4">{error || 'Service entry not found'}</div>
+                <div className="text-red-500 font-medium mb-2">Erreur lors du chargement de l'entrée de service</div>
+                <div className="text-gray-500 text-sm mb-4">{error || 'Entrée de service non trouvée'}</div>
                 <button onClick={handleBack} className="text-[#008751] hover:underline">
-                    Back to History
+                    Retour au Journal d'Entretien
                 </button>
             </div>
         );
@@ -164,13 +164,23 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
         <div className="bg-gray-50 min-h-screen pb-12">
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                    <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium mr-2">
-                        <ArrowLeft size={16} /> Journal d'Entretien
+                <div className="flex items-center gap-4">
+                    <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium">
+                        <ArrowLeft size={16} /> Retour à la liste
                     </button>
+                    <div className="h-6 w-[1px] bg-gray-200 mx-2" />
+                    <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        Entrée de Service #{entry.id.slice(-8).toUpperCase()}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${entry.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                            entry.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                                'bg-gray-100 text-gray-800'
+                            }`}>
+                            {entry.status === 'COMPLETED' ? 'Terminé' : entry.status === 'IN_PROGRESS' ? 'En cours' : entry.status}
+                        </span>
+                    </h1>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
                     <div className="relative more-menu-container">
                         <button
                             onClick={() => setShowMenu(!showMenu)}
@@ -182,6 +192,13 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
                         {showMenu && (
                             <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1">
                                 <button
+                                    onClick={() => {/* Dupliquer logic */ }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                    <Sparkles size={14} />
+                                    Dupliquer
+                                </button>
+                                <button
                                     onClick={handleDelete}
                                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                 >
@@ -191,9 +208,10 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
                             </div>
                         )}
                     </div>
+
                     <button
                         onClick={handleEdit}
-                        className="px-3 py-1.5 bg-gray-50 border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium rounded text-sm shadow-sm flex items-center gap-2"
+                        className="px-4 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold rounded text-sm shadow-sm flex items-center gap-2"
                     >
                         <Edit size={14} /> Modifier
                     </button>
@@ -204,56 +222,77 @@ export default function ServiceEntryDetailPage({ params }: { params: { id: strin
                 {/* Main Content */}
                 <div className="flex-1 space-y-6">
                     <div>
-                        <div className="flex items-center justify-between mb-6">
-                            <h1 className="text-3xl font-bold text-gray-900">Entrée de Service #{entry.id.slice(-8)}</h1>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${entry.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                entry.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-gray-100 text-gray-800'
-                                }`}>
-                                {entry.status}
-                            </span>
-                        </div>
-
                         {/* Details Card */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-6">Détails</h2>
-                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">TOUS LES CHAMPS</h3>
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Détails</h2>
+                            </div>
 
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Gauge size={14} /> Véhicule</div>
-                                    <div className="flex items-center gap-2">
+                            <div className="p-0">
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">ID</div>
+                                    <div className="text-sm font-mono text-gray-900 w-2/3">#{entry.id.slice(-8).toUpperCase()}</div>
+                                </div>
+
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Statut</div>
+                                    <div className="w-2/3">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${entry.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                            entry.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`}>
+                                            {entry.status === 'COMPLETED' ? 'Terminé' : entry.status === 'IN_PROGRESS' ? 'En cours' : entry.status}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="px-6 py-4 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Véhicule</div>
+                                    <div className="w-2/3">
                                         {entry.vehicle ? (
-                                            <>
-                                                <span className="text-sm font-medium text-[#008751] hover:underline cursor-pointer">{entry.vehicle.name}</span>
-                                                <span className="text-xs text-gray-500">({entry.vehicle.licensePlate || 'Pas de plaque'})</span>
-                                            </>
+                                            <div
+                                                className="flex items-center gap-3 cursor-pointer group"
+                                                onClick={() => router.push(`/vehicles/list/${entry.vehicle?.id}`)}
+                                            >
+                                                <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-gray-400 group-hover:text-[#008751] transition-colors overflow-hidden">
+                                                    <Gauge size={20} />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-bold text-[#008751] group-hover:underline">{entry.vehicle.name}</div>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className="text-[10px] font-medium px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded uppercase">
+                                                            {entry.vehicle.licensePlate || 'PAS DE PLAQUE'}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-400">{entry.vehicle.make} {entry.vehicle.model}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <span className="text-sm text-gray-400">Véhicule inconnu</span>
+                                            <span className="text-sm text-gray-400">—</span>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Calendar size={14} /> Date</div>
-                                    <div className="text-sm text-gray-900">{formatDate(entry.date)}</div>
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Date</div>
+                                    <div className="text-sm font-medium text-gray-900 w-2/3">{formatDate(entry.date)}</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Gauge size={14} /> Compteur</div>
-                                    <div className="text-sm text-gray-900">{entry.meter ? `${entry.meter.toLocaleString()} km` : '—'}</div>
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Compteur</div>
+                                    <div className="text-sm font-mono text-gray-900 w-2/3">{entry.meter ? `${entry.meter.toLocaleString()} km` : '—'}</div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2"><Store size={14} /> Fournisseur</div>
-                                    <div className="text-sm text-gray-900">
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Fournisseur</div>
+                                    <div className="text-sm text-gray-900 w-2/3">
                                         {entry.vendorName || (typeof entry.vendor === 'object' ? entry.vendor?.name : entry.vendor) || '—'}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3 last:border-0">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2"><FileText size={14} /> Notes</div>
-                                    <div className="text-sm text-gray-900 whitespace-pre-wrap">{entry.notes || '—'}</div>
+                                <div className="px-6 py-4 flex items-start justify-between">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3 pt-1">Notes</div>
+                                    <div className="text-sm text-gray-600 whitespace-pre-wrap w-2/3 leading-relaxed">{entry.notes || '—'}</div>
                                 </div>
                             </div>
                         </div>

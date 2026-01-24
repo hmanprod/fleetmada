@@ -48,6 +48,7 @@ export default function WorkOrderCreatePage() {
         vendorId: '',
         invoiceNumber: '',
         poNumber: '',
+        meter: '',
         sendScheduledStartReminder: false,
         useMeterForCompletion: false,
         notes: '',
@@ -122,14 +123,22 @@ export default function WorkOrderCreatePage() {
                 notes: formData.notes,
                 isWorkOrder: true,
                 totalCost: costSummary.total,
+                meter: formData.meter ? parseInt(formData.meter) : undefined,
+                issuedBy: formData.issuedBy,
+                scheduledStartDate: formData.scheduledStartDate,
+                scheduledStartTime: formData.scheduledStartTime,
+                invoiceNumber: formData.invoiceNumber,
+                poNumber: formData.poNumber,
+                discountValue: formData.discountValue,
+                discountType: formData.discountType,
+                taxValue: formData.taxValue,
+                taxType: formData.taxType,
                 tasks: [
                     ...formData.tasks.map(t => ({
                         serviceTaskId: t.entityId,
                         cost: t.cost,
                         notes: t.notes
                     })),
-                    // Note: labor items are currently contacts, we don't have a way to save them as tasks 
-                    // without a valid serviceTaskId. Consider adding a default "Labor" task in DB.
                 ],
                 parts: formData.parts.map(p => ({
                     partId: p.entityId,
@@ -391,6 +400,20 @@ export default function WorkOrderCreatePage() {
                                 loading={vendorsLoading}
                                 placeholder="Sélectionner un fournisseur"
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Compteur (Lecture actuelle)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={formData.meter}
+                                    onChange={(e) => handleInputChange('meter', e.target.value)}
+                                    placeholder="0"
+                                    className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none pr-10"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold uppercase tracking-widest">km</span>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

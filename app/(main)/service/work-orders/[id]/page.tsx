@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, Edit, MoreHorizontal, Calendar, Clock, Gauge, FileText, User, Store, Trash2, MessageSquare, Wrench, Package } from 'lucide-react';
+import { ArrowLeft, Bell, Edit, MoreHorizontal, Calendar, Clock, Gauge, FileText, User, Store, Trash2, MessageSquare, Wrench, Package, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useServiceEntry } from '@/lib/hooks/useServiceEntry';
 import { serviceAPI, ServiceEntryCommentData } from '@/lib/services/service-api';
@@ -184,13 +184,26 @@ export default function WorkOrderDetailPage({ params }: { params: { id: string }
 
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                    <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium mr-2">
-                        <ArrowLeft size={16} /> Ordres de Travail
+                <div className="flex items-center gap-4">
+                    <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium">
+                        <ArrowLeft size={16} /> Retour à la liste
                     </button>
+                    <div className="h-6 w-[1px] bg-gray-200 mx-2" />
+                    <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        Ordre de Travail #{entry.id.slice(-8).toUpperCase()}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${statusConfig.color}`}>
+                            {statusConfig.label}
+                        </span>
+                    </h1>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
+                    {entry.assignedTo && (
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 border border-gray-200" title={`Assigné à: ${entry.assignedTo}`}>
+                            {entry.assignedTo.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </div>
+                    )}
+
                     <div className="relative more-menu-container">
                         <button
                             onClick={() => setShowMenu(!showMenu)}
@@ -202,6 +215,13 @@ export default function WorkOrderDetailPage({ params }: { params: { id: string }
                         {showMenu && (
                             <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1">
                                 <button
+                                    onClick={() => {/* Dupliquer logic */ }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                    <Sparkles size={14} />
+                                    Dupliquer
+                                </button>
+                                <button
                                     onClick={handleDelete}
                                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                                 >
@@ -211,12 +231,30 @@ export default function WorkOrderDetailPage({ params }: { params: { id: string }
                             </div>
                         )}
                     </div>
+
                     <button
                         onClick={handleEdit}
-                        className="px-4 py-1.5 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded text-sm shadow-sm flex items-center gap-2"
+                        className="px-4 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold rounded text-sm shadow-sm flex items-center gap-2"
                     >
                         <Edit size={14} /> Modifier
                     </button>
+
+                    {entry.status !== 'COMPLETED' && (
+                        <button
+                            onClick={async () => {
+                                try {
+                                    await serviceAPI.updateServiceEntry(entry.id, { status: 'COMPLETED' });
+                                    toast.success('Succès', 'Ordre de travail terminé');
+                                    router.refresh();
+                                } catch (err) {
+                                    toast.error('Erreur', 'Échec de la mise à jour');
+                                }
+                            }}
+                            className="px-4 py-1.5 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded text-sm shadow-sm flex items-center gap-2"
+                        >
+                            Terminer
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -224,82 +262,118 @@ export default function WorkOrderDetailPage({ params }: { params: { id: string }
                 {/* Main Content */}
                 <div className="flex-1 space-y-6 w-full lg:w-auto">
                     <div>
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                            <h1 className="text-3xl font-bold text-gray-900">Ordre de Travail #{entry.id.slice(-8).toUpperCase()}</h1>
-                            <div className="flex items-center gap-3">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${statusConfig.color}`}>
-                                    {statusConfig.label}
-                                </span>
-                                {entry.priority && (
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${entry.priority === 'CRITICAL' ? 'border-red-200 bg-red-50 text-red-700' :
-                                        entry.priority === 'HIGH' ? 'border-orange-200 bg-orange-50 text-orange-700' :
-                                            'border-gray-200 bg-gray-50 text-gray-700'
-                                        }`}>
-                                        Priorité: {entry.priority}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
                         {/* Details Card */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-6">Détails</h2>
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Détails</h2>
+                            </div>
 
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2 font-medium tracking-tight uppercase text-[10px]">Véhicule</div>
-                                    <div className="flex items-center gap-2">
+                            <div className="p-0">
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">ID</div>
+                                    <div className="text-sm font-mono text-gray-900 w-2/3">#{entry.id.slice(-8).toUpperCase()}</div>
+                                </div>
+
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Statut</div>
+                                    <div className="w-2/3">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${statusConfig.color}`}>
+                                            {statusConfig.label}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {entry.priority && (
+                                    <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Priorité</div>
+                                        <div className="w-2/3">
+                                            <span className={`flex items-center gap-1 text-xs font-bold ${entry.priority === 'CRITICAL' ? 'text-red-600' :
+                                                entry.priority === 'HIGH' ? 'text-orange-600' :
+                                                    entry.priority === 'MEDIUM' ? 'text-yellow-600' : 'text-blue-600'
+                                                }`}>
+                                                <Bell size={12} /> {entry.priority}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="px-6 py-4 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Véhicule</div>
+                                    <div className="w-2/3">
                                         {entry.vehicle ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[#008751]">
-                                                    <Wrench size={16} />
+                                            <div
+                                                className="flex items-center gap-3 cursor-pointer group"
+                                                onClick={() => router.push(`/vehicles/list/${entry.vehicle?.id}`)}
+                                            >
+                                                <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-gray-400 group-hover:text-[#008751] transition-colors overflow-hidden">
+                                                    <Wrench size={20} />
                                                 </div>
                                                 <div>
-                                                    <span className="text-sm font-bold text-[#008751] hover:underline cursor-pointer">{entry.vehicle.name}</span>
-                                                    <div className="text-[10px] text-gray-500 uppercase">{entry.vehicle.make} {entry.vehicle.model} {entry.vehicle.licensePlate ? `• ${entry.vehicle.licensePlate}` : ''}</div>
+                                                    <div className="text-sm font-bold text-[#008751] group-hover:underline">{entry.vehicle.name}</div>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className="text-[10px] font-medium px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded uppercase">
+                                                            {entry.vehicle.licensePlate || 'PAS DE PLAQUE'}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-400">{entry.vehicle.make} {entry.vehicle.model}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <span className="text-sm text-gray-400 italic">Non spécifié</span>
+                                            <span className="text-sm text-gray-400">—</span>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2 font-medium tracking-tight uppercase text-[10px]">Date d'émission</div>
-                                    <div className="text-sm text-gray-900 font-medium flex items-center gap-2">
-                                        <Calendar size={14} className="text-gray-400" />
-                                        {formatDate(entry.date)}
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Date d'émission</div>
+                                    <div className="text-sm font-medium text-gray-900 w-2/3">{entry.date ? formatDate(entry.date) : formatDate(entry.createdAt)}</div>
+                                </div>
+
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Assigné à</div>
+                                    <div className="text-sm text-gray-900 w-2/3">
+                                        {entry.assignedToContact ? `${entry.assignedToContact.firstName} ${entry.assignedToContact.lastName}` : (entry.assignedTo || '—')}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2 font-medium tracking-tight uppercase text-[10px]">Assigné à</div>
-                                    <div className="text-sm text-gray-900 flex items-center gap-2">
-                                        <User size={14} className="text-gray-400" />
-                                        {entry.assignedTo || 'Non assigné'}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2 font-medium tracking-tight uppercase text-[10px]">Fournisseur</div>
-                                    <div className="text-sm text-gray-900 flex items-center gap-2">
-                                        <Store size={14} className="text-gray-400" />
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Fournisseur</div>
+                                    <div className="text-sm text-gray-900 w-2/3">
                                         {entry.vendorName || (typeof entry.vendor === 'object' ? entry.vendor?.name : entry.vendor) || 'Interne'}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-center border-b border-gray-50 pb-3">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2 font-medium tracking-tight uppercase text-[10px]">Compteur</div>
-                                    <div className="text-sm text-gray-900 flex items-center gap-2 font-mono">
-                                        <Gauge size={14} className="text-gray-400" />
-                                        {entry.meter ? `${entry.meter.toLocaleString()} km` : '—'}
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Compteur</div>
+                                    <div className="text-sm font-mono text-gray-900 w-2/3">{entry.meter ? `${entry.meter.toLocaleString()} km` : '—'}</div>
+                                </div>
+
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Émis par</div>
+                                    <div className="text-sm text-gray-900 w-2/3">{entry.issuedBy || entry.user?.name || '—'}</div>
+                                </div>
+
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Début planifié</div>
+                                    <div className="text-sm text-gray-900 w-2/3">
+                                        {entry.scheduledStartDate ? formatDate(entry.scheduledStartDate) : (entry.date ? formatDate(entry.date) : '—')}
+                                        {entry.scheduledStartTime ? ` à ${entry.scheduledStartTime}` : ''}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 border-b border-gray-50 pb-3">
-                                    <div className="text-sm text-gray-500 flex items-center gap-2 font-medium tracking-tight uppercase text-[10px] pt-1">Notes</div>
-                                    <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{entry.notes || '—'}</div>
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Facture #</div>
+                                    <div className="text-sm text-gray-900 w-2/3">{entry.invoiceNumber || '—'}</div>
+                                </div>
+
+                                <div className="px-6 py-3 flex items-center justify-between border-b border-gray-50">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3">Bon de Commande (PO)</div>
+                                    <div className="text-sm text-gray-900 w-2/3">{entry.poNumber || '—'}</div>
+                                </div>
+
+                                <div className="px-6 py-4 flex items-start justify-between">
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-1/3 pt-1">Notes</div>
+                                    <div className="text-sm text-gray-600 whitespace-pre-wrap w-2/3 leading-relaxed">{entry.notes || '—'}</div>
                                 </div>
                             </div>
                         </div>
@@ -413,6 +487,26 @@ export default function WorkOrderDetailPage({ params }: { params: { id: string }
                                         <td colSpan={2} className="px-6 py-1 text-right text-[10px] font-medium text-gray-400 uppercase tracking-widest">Dont Pièces</td>
                                         <td className="px-6 py-1 text-right text-xs text-gray-500">{formatCurrency(partsTotal)}</td>
                                     </tr>
+                                    {entry.discountValue && entry.discountValue > 0 ? (
+                                        <tr>
+                                            <td colSpan={2} className="px-6 py-1 text-right text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                                                Remise ({entry.discountValue}{entry.discountType || '%'})
+                                            </td>
+                                            <td className="px-6 py-1 text-right text-xs text-red-500">
+                                                -{formatCurrency(entry.discountType === '€' ? entry.discountValue : (tasksTotal + partsTotal) * (entry.discountValue / 100))}
+                                            </td>
+                                        </tr>
+                                    ) : null}
+                                    {entry.taxValue && entry.taxValue > 0 ? (
+                                        <tr>
+                                            <td colSpan={2} className="px-6 py-1 text-right text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                                                Taxe ({entry.taxValue}{entry.taxType || '%'})
+                                            </td>
+                                            <td className="px-6 py-1 text-right text-xs text-gray-500">
+                                                +{formatCurrency(entry.taxType === '€' ? entry.taxValue : ((tasksTotal + partsTotal) - (entry.discountType === '€' ? (entry.discountValue || 0) : (tasksTotal + partsTotal) * ((entry.discountValue || 0) / 100))) * (entry.taxValue / 100))}
+                                            </td>
+                                        </tr>
+                                    ) : null}
                                     <tr className="bg-gray-50/80">
                                         <td colSpan={2} className="px-6 py-6 text-right text-sm font-black text-gray-900 uppercase tracking-widest">Total TTC</td>
                                         <td className="px-6 py-6 text-right text-2xl font-black text-[#008751]">{formatCurrency(grandTotal)}</td>

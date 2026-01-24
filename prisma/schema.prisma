@@ -329,6 +329,18 @@ model ServiceEntry {
   watchers    Int                @default(0)
   isWorkOrder Boolean            @default(false)
   reasonForRepairCode String?
+  
+  // New fields
+  issuedBy    String?
+  scheduledStartDate DateTime?
+  scheduledStartTime String?
+  invoiceNumber String?
+  poNumber      String?
+  discountValue Float?             @default(0)
+  discountType  String?            @default("%")
+  taxValue      Float?             @default(0)
+  taxType       String?            @default("%")
+
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   user        User               @relation(fields: [userId], references: [id])

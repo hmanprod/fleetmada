@@ -10,7 +10,7 @@ Ce document définit les règles UX à suivre pour toutes les pages affichant un
 
 ## 1. Structure Globale de la Page
 
-La page est divisée en **4 zones verticales** dans cet ordre :
+La page est divisée en **5 zones verticales** dans cet ordre :
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -18,9 +18,11 @@ La page est divisée en **4 zones verticales** dans cet ordre :
 ├─────────────────────────────────────────────────────────────┤
 │  ZONE 2 : ONGLETS DE NAVIGATION                             │
 ├─────────────────────────────────────────────────────────────┤
-│  ZONE 3 : BARRE DE FILTRES                                  │
+│  ZONE 3 : BARRE D'ACTIONS (Filtres & Pagination)            │
 ├─────────────────────────────────────────────────────────────┤
-│  ZONE 4 : TABLEAU DE DONNÉES                                │
+│  ZONE 4 : DASHBOARD STATISTIQUES                            │
+├─────────────────────────────────────────────────────────────┤
+│  ZONE 5 : TABLEAU DE DONNÉES                                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -35,9 +37,9 @@ La page est divisée en **4 zones verticales** dans cet ordre :
 ### Règles
 | Élément | Règle |
 |---------|-------|
-| Titre | Nom de la section au singulier ou pluriel (ex: "Problèmes", "Historique Service") |
-| Bouton principal | Toujours présent, libellé "+ Nouveau [Élément]" |
-| Actions secondaires | Si nécessaires, placées à gauche du bouton principal (dropdowns, etc.) |
+| Titre | Nom de la section au singulier ou pluriel (ex: "Historique de Service", "Problèmes") |
+| Bouton principal | Toujours présent, libellé "+ Nouvelle Entrée" ou "+ Nouveau [Élément]" |
+| Couleur Bouton | Vert `#008751` (hover `#007043`) |
 
 ---
 
@@ -49,195 +51,111 @@ Permettre un **filtrage rapide par statut** sans ouvrir les filtres avancés.
 ### Règles
 | Règle | Description |
 |-------|-------------|
-| Position | Alignés à gauche, séparés par un espace régulier |
-| Premier onglet | Toujours "Tous" (affiche tous les éléments sans filtre) |
-| Onglets suivants | Correspondent aux statuts principaux de l'entité + Bulle contenant le nombre d'entité |
-| Onglet actif | Visuellement distinct (souligné + couleur accent) |
-| Compteurs | Optionnel : afficher le nombre d'éléments par onglet |
-
-### Exemples de statuts selon le contexte
-- **Problèmes** : Tous / Ouverts / En retard / Résolus / Fermés
-- **Rappels** : Tous / À venir / En retard / Complétés
-- **Entrées service** : Tous / Planifiés / En cours / Complétés
+| Position | Alignés à gauche |
+| Style actif | Texte vert `#008751` + Bordure basse verte `#008751` (2px) |
+| Style inactif | Texte gris `text-gray-500` + Bordure transparente |
+| Items | "Tous" + Statuts principaux (ex: Programmées, En cours, Terminées, Annulées) |
 
 ---
 
-## 4. Zone 3 : Barre de Filtres
+## 4. Zone 3 : Barre d'Actions (Filtres & Pagination)
 
-### Disposition (de gauche à droite)
+Cette zone regroupe la recherche, les filtres rapides et la pagination dans un conteneur unifié.
+
+### Style du conteneur
+- Background : `bg-gray-50`
+- Border : `border border-gray-200`
+- Radius : `rounded-lg`
+- Padding : `p-3`
+
+### Disposition (Flexbox)
 ```
-[ 🔍 Recherche...          ] | [Filtre 1 ▼] | [Filtre 2 ▼] | [🔧 Filters]
+[🔍 Recherche...] [Select Rapide ▼] [Filtres (Icon)] .....espace..... [1-4 sur 4] [<] [>]
 ```
 
-### Règles
-
+### Éléments
 | Élément | Règle |
 |---------|-------|
-| **Champ recherche** | Toujours en premier, occupe l'espace disponible (flex-1) |
-| **Filtres dropdown** | Maximum 2-3 filtres rapides avec l'option search si vehicules, contacts, vendors (les plus utilisés) |
-| **Bouton Filters** | Toujours en dernier, ouvre les filtres avancés (sidebar cf FiltersSidebar component) |
-| **Badge compteur** | Si filtres avancés actifs, afficher un badge avec le nombre |
-| **Bouton Clear** | Apparaît seulement si des filtres sont actifs |
-
-### Filtres dropdown recommandés par contexte
-- Assignation (Assigné à)
-- Groupement (Groupe, Véhicule, etc.)
-- Priorité ou Statut selon besoin
+| **Recherche** | Input avec icône loupe à gauche. Placeholder "Rechercher..." |
+| **Select Rapide** | (Optionnel) Un dropdown pour le filtre le plus courant (ex: Véhicule) |
+| **Bouton Filtres** | Bouton blanc avec icône. Affiche un badge compteur si filtres actifs. |
+| **Bouton Effacer** | Lien "Effacer" visible uniquement si des filtres sont actifs. |
+| **Pagination Info** | Texte "X - Y sur Z" aligné à droite (`ml-auto` ou `flex-1 text-right`). |
+| **Pagination Nav** | Boutons Précédent/Suivant (Chevrons). Désactivés si non applicable. |
 
 ---
 
-## 5. Zone 4 : Tableau de Données
+## 5. Zone 4 : Dashboard Statistiques
 
-### Structure des colonnes
+Une ligne de cartes statistiques résumant les données affichées.
 
-| Position | Type de colonne | Description |
-|----------|-----------------|-------------|
-| **1ère** | Checkbox | Sélection multiple pour actions groupées |
-| **2ème** | Indicateur visuel | Priorité, statut ou icône type |
-| **3ème** | Identifiant principal | Nom, titre ou référence de l'élément |
-| **4ème-Nème** | Données contextuelles | Colonnes spécifiques à l'entité |
-| **Avant-dernière** | Date principale | Date de création, échéance, etc. |
-| **Dernière** | Action | Chevron → indiquant la navigation |
+### Style
+- Background : `bg-white`
+- Border : `border border-gray-200`
+- Shadow : `shadow-sm`
+- Layout : Grid (cols-2 md:cols-4 ou 5)
 
-### Règles des lignes
-
-| Règle | Description |
-|-------|-------------|
-| **Ligne cliquable** | Toute la ligne est cliquable et navigue vers le détail |
-| **Hover** | Surbrillance au survol pour feedback visuel |
-| **Chevron final** | Toujours présent pour indiquer l'action de navigation |
-| **Données manquantes** | Afficher "—" (tiret long) pour les valeurs vides |
-
-### Types de colonnes et leur formatage
-
-| Type | Formatage |
-|------|-----------|
-| **Priorité** | Icône colorée + texte (CRITICAL=rouge, HIGH=orange, MEDIUM=jaune, LOW=bleu) |
-| **Statut** | Badge coloré avec texte en majuscules |
-| **Date** | Format local (DD/MM/YYYY pour fr-FR) |
-| **Personne** | Prénom + Nom |
-| **Entité liée** | Image miniature + Nom + Identifiant secondaire |
-| **Labels/Tags** | Petits badges colorés |
+### Contenu Recommandé
+- **Total** : Nombre total d'entrées
+- **Par Statut** : Comptes pour chaque statut important (Terminées, En cours, etc.)
+- **Métrique Financière** : Coût Total (si applicable), affiché en couleur (ex: mauve).
 
 ---
 
-## 6. Comportements Interactifs
+## 6. Zone 5 : Tableau de Données
 
-### Navigation
+### Structure HTML & Classes
+- Container : `bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden`
+- Header (`<thead>`) : `bg-gray-50`
+- Row (`<tr>`) : `hover:bg-gray-50 cursor-pointer border-b`
 
-| Action utilisateur | Comportement |
-|--------------------|--------------|
-| Clic sur une ligne | Navigation vers `/[entité]/[id]` (page détail) |
-| Clic sur onglet | Filtre la liste par ce statut |
-| Clic sur bouton "+ Nouveau" | Navigation vers `/[entité]/create` |
+### Colonnes Standards
 
-### Filtrage
+| Position | Type | Header Class | Cell Content |
+|----------|------|--------------|--------------|
+| **1** | Checkbox | `w-8 px-6 py-3` | Checkbox de sélection multiple |
+| **2** | Entité | `uppercase text-xs` | Avatar/Initiale + Titre (Vert/Gras) + Sous-titre |
+| **3** | Date | `uppercase text-xs` | Date formatée (DD/MM/YYYY) |
+| **4** | Statut | `uppercase text-xs` | Badge coloré + Icône |
+| **Var** | Priorité | `uppercase text-xs` | Badge simple (Gris/Bleu/Orange/Rouge) |
+| **Var** | Métriques | `uppercase text-xs` | Compteur (km), Heures, etc. |
+| **Var** | Tâches | `uppercase text-xs` | Liste tronquée (ex: 2 items + "... autres") |
+| **Fin** | Coût | `uppercase text-xs` | Montant en gras (ex: "1500 MGA") |
 
-| Action utilisateur | Comportement |
-|--------------------|--------------|
-| Saisie dans recherche | Filtre instantané (avec debounce 300ms) |
-| Changement dropdown | Filtre immédiat + mise à jour URL |
-| Bouton Filters | Ouvre sidebar de filtres avancés |
-| Bouton Clear | Réinitialise tous les filtres |
-
-### États de la page
-
-| État | Affichage |
-|------|-----------|
-| **Chargement** | Spinner centré + message "Chargement..." |
-| **Erreur** | Bandeau d'erreur avec message + bouton fermer |
-| **Liste vide** | Message explicatif + bouton d'action (créer ou clear filtres) |
-| **Liste vide (filtres actifs)** | Message + bouton "Effacer les filtres" |
+### États Spéciaux
+- **Chargement** : Spinner centré dans une ligne couvrant tout le tableau.
+- **Vide** : Icône + Message "Aucune entrée" + Bouton d'action (Créer ou Effacer filtres).
 
 ---
 
-## 7. Règles de Persistance
+## 7. Comportements & Interactions
 
-| Élément | Persistance |
-|---------|-------------|
-| Onglet actif | Dans l'URL (`?status=OPEN`) |
-| Recherche | Dans l'URL (`?search=...`) |
-| Filtres dropdown | Dans l'URL |
-| Filtres avancés | Application locale (réinitialisés au rechargement) |
-| Page de pagination | Dans l'URL (`?page=2`) |
-
----
-
-## 8. Checklist d'Implémentation
-
-Avant de considérer une page liste comme terminée, vérifier :
-
-- [ ] Header avec titre + bouton "+ Nouveau"
-- [ ] Onglets de statut fonctionnels
-- [ ] Barre de filtres avec recherche + dropdowns + bouton Filters
-- [ ] Tableau avec checkbox + colonnes de données + chevron final
-- [ ] Lignes cliquables vers page détail
-- [ ] Hover visible sur les lignes
-- [ ] État de chargement géré
-- [ ] État d'erreur géré
-- [ ] État liste vide géré
-- [ ] Filtres reflétés dans l'URL
+1.  **Clic sur ligne** : Redirection vers la page de détail `/[entité]/[id]`. (Empêcher la propagation sur la checkbox).
+2.  **Sélection** : La checkbox permet de sélectionner des éléments pour des actions groupées (via une barre flottante ou menu contextuel - non détaillé ici).
+3.  **Pagination** : Les boutons < et > changent la page et rafraîchissent les données.
+4.  **Filtres** :
+    - Recherche : Filtrage local ou serveur (debounce).
+    - Onglets : Modifient le filtre `status`.
+    - Dropdowns : Modifient les filtres spécifiques.
+    - Reset : "Effacer" réinitialise tout sauf peut-être les onglets selon le cas, ou tout.
 
 ---
 
-## 9. Exemple de Structure JSX
+## 8. Pages concernées dans FleetMada sur hmanprod/fleetmada
 
-```tsx
-<div className="page-container">
-  {/* ZONE 1: Header */}
-  <div className="header">
-    <h1>Titre de la Page</h1>
-    <button>+ Nouveau Élément</button>
-  </div>
-
-  {/* ZONE 2: Onglets */}
-  <div className="tabs">
-    <button>Tous</button>
-    <button>Statut 1</button>
-    <button>Statut 2</button>
-  </div>
-
-  {/* ZONE 3: Filtres */}
-  <div className="filters-bar">
-    <input type="search" placeholder="Rechercher..." />
-    <select>Filtre 1</select>
-    <select>Filtre 2</select>
-    <button>Filters</button>
-  </div>
-
-  {/* ZONE 4: Tableau */}
-  <table>
-    <thead>...</thead>
-    <tbody>
-      {items.map(item => (
-        <tr onClick={() => navigate(`/entity/${item.id}`)}>
-          ...
-          <td><ChevronRight /></td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-```
-
----
-
-## 10. Pages concernées dans FleetMada
-
-Cette structure s'applique à :
-- `/issues` - Problèmes
-- `/service/history` - Historique de maintenance
-- `/service/work-orders` - Historique de demande de maintenance
-- `/service/tasks` - Historique des taches de maintenance
-- `/service/programs` - Historique des programmes  de maintenance
-- `/fuel/history` - Historique carburant
-- `/fuel/charging` - Historique energie
-- `/reminders/service` - Rappels de service
-- `/reminders/vehicle-renewals` - Renouvellements véhicules
-- `/inspections/history` - Inspections
-- `/parts` - Pièces détachées
-- `/places` - Localisations
-- `/contacts` - Contacts
-- `/vehicles/list` - Véhicules
-- `/vehicles/expense` - Dépenses
-- `/vehicles/meter-history` - Historique du kilométrage
+Cette structure doit être appliquée uniformément sur :
+- `/issues/` - Détail d'un problème
+- `/service/history/` - Détail d'une entrée de maintenance
+- `/service/work-orders/` - Détail d'un ordre de travail
+- `/service/programs/` - Détail d'un programme d'entretien
+- `/fuel/history/` - Détail d'une entrée carburant
+- `/fuel/charging/` - Détail d'une recharge électrique
+- `/reminders/service/` - Détail d'un rappel de service
+- `/reminders/vehicle-renewals/` - Détail d'un renouvellement
+- `/inspections/history/` - Détail d'une inspection
+- `/parts/` - Détail d'une pièce
+- `/contacts/` - Détail d'un contact
+- `/vehicles/list/` - Détail d'un véhicule
+- `/vehicles/expense/` - Détail d'une dépense
+- `/vendors/` - Détail d'un fournisseur
+- `/places/` - Détail d'un lieu
