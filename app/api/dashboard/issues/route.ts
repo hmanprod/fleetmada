@@ -1,82 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
-
-// Interface pour les données du token JWT décodé
-interface TokenPayload {
-  userId: string
-  email: string
-  type: string
-  iat: number
-  exp?: number
-}
+import { validateToken, getBaseFilter } from '@/lib/api-utils'
 
 // Fonction de logging
 const logAction = (action: string, userId: string, details: any) => {
   console.log(`[Dashboard Issues API] ${new Date().toISOString()} - ${action} - User: ${userId}:`, details)
 }
 
-// Fonction de validation du token JWT
-const validateToken = (token: string): TokenPayload | null => {
-  try {
-    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
-    const decoded = jwt.verify(token, secret) as TokenPayload
-
-    if (decoded.type !== 'login') {
-      console.log('[Dashboard Issues API] Token type invalide:', decoded.type)
-      return null
-    }
-
-    return decoded
-  } catch (error) {
-    console.log('[Dashboard Issues API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
-    return null
-  }
-}
-
 // GET /api/dashboard/issues - Métriques et statistiques des issues pour le dashboard
 export async function GET(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('GET Dashboard Issues - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('GET Dashboard Issues - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
+    const tokenPayload = validateToken(request)
 
     if (!tokenPayload) {
-      logAction('GET Dashboard Issues - Invalid token', 'unknown', {})
       return NextResponse.json(
         { success: false, error: 'Token invalide ou expiré' },
         { status: 401 }
       )
     }
 
-    const userId = tokenPayload.userId
-
-    if (!userId) {
-      logAction('GET Dashboard Issues - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
+    const { userId, role, companyId, email } = tokenPayload
 
     logAction('GET Dashboard Issues', userId, {})
 
@@ -90,6 +34,17 @@ export async function GET(request: NextRequest) {
       const weekAgo = new Date()
       weekAgo.setDate(weekAgo.getDate() - 7)
 
+      // Base filter: by company if available, otherwise by user
+      const baseFilter = getBaseFilter(tokenPayload, 'user')
+
+      // Role-specific filters
+      const isTech = role === 'TECHNICIAN'
+      const isDriver = role === 'DRIVER'
+
+      const issueFilter: any = isTech ? { assignedTo: { has: userId } } :
+        isDriver ? { vehicle: { assignments: { some: { contact: { email }, status: 'ACTIVE' } } } } :
+          baseFilter
+
       // Récupération des métriques principales
       const [
         totalIssues,
@@ -102,45 +57,45 @@ export async function GET(request: NextRequest) {
       ] = await Promise.all([
         // Total des problèmes
         prisma.issue.count({
-          where: { userId }
+          where: issueFilter
         }),
 
         // Problèmes ouverts
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             status: 'OPEN'
           }
         }),
 
         // Problèmes en cours
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             status: 'IN_PROGRESS'
           }
         }),
 
         // Problèmes résolus
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             status: 'RESOLVED'
           }
         }),
 
         // Problèmes fermés
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             status: 'CLOSED'
           }
         }),
 
         // Problèmes critiques
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             priority: 'CRITICAL',
             status: { in: ['OPEN', 'IN_PROGRESS'] }
           }
@@ -148,8 +103,8 @@ export async function GET(request: NextRequest) {
 
         // Problèmes ce mois
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             createdAt: { gte: startOfMonth }
           }
         })
@@ -159,8 +114,8 @@ export async function GET(request: NextRequest) {
       const [recentIssues, criticalIssuesList] = await Promise.all([
         // Problèmes récents (7 derniers jours)
         prisma.issue.findMany({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             createdAt: { gte: weekAgo }
           },
           orderBy: { createdAt: 'desc' },
@@ -178,8 +133,8 @@ export async function GET(request: NextRequest) {
 
         // Problèmes critiques avec détails
         prisma.issue.findMany({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             priority: 'CRITICAL',
             status: { in: ['OPEN', 'IN_PROGRESS'] }
           },
@@ -199,8 +154,8 @@ export async function GET(request: NextRequest) {
 
       // Calculer le temps moyen de résolution en heures
       const resolvedIssuesForTime = await prisma.issue.findMany({
-        where: { 
-          userId,
+        where: {
+          ...issueFilter,
           status: { in: ['RESOLVED', 'CLOSED'] }
         },
         select: {
@@ -223,8 +178,8 @@ export async function GET(request: NextRequest) {
 
       // Calcul du taux de conformité (résolution dans les délais)
       const issuesWithSLA = await prisma.issue.count({
-        where: { 
-          userId,
+        where: {
+          ...issueFilter,
           status: { in: ['RESOLVED', 'CLOSED'] }
         }
       })
@@ -249,13 +204,6 @@ export async function GET(request: NextRequest) {
         critical: criticalIssues > 5
       }
 
-      logAction('GET Dashboard Issues - Success', userId, { 
-        totalIssues,
-        criticalIssues,
-        complianceRate,
-        avgResolutionTime
-      })
-
       return NextResponse.json(
         {
           success: true,
@@ -270,10 +218,6 @@ export async function GET(request: NextRequest) {
       )
 
     } catch (dbError) {
-      logAction('GET Dashboard Issues - Database error', userId, {
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      })
-
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la récupération des métriques des problèmes' },
         { status: 500 }
@@ -281,12 +225,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('GET Dashboard Issues - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
     return NextResponse.json(
       { success: false, error: 'Erreur serveur interne' },
       { status: 500 }
@@ -296,22 +234,11 @@ export async function GET(request: NextRequest) {
 
 // Gestion des autres méthodes
 export async function POST() {
-  return NextResponse.json(
-    { success: false, error: 'Méthode POST non supportée. Utilisez GET' },
-    { status: 405 }
-  )
+  return NextResponse.json({ success: false, error: 'Méthode non autorisée' }, { status: 405 })
 }
-
 export async function PUT() {
-  return NextResponse.json(
-    { success: false, error: 'Méthode PUT non supportée. Utilisez GET' },
-    { status: 405 }
-  )
+  return NextResponse.json({ success: false, error: 'Méthode non autorisée' }, { status: 405 })
 }
-
 export async function DELETE() {
-  return NextResponse.json(
-    { success: false, error: 'Méthode DELETE non supportée. Utilisez GET' },
-    { status: 405 }
-  )
+  return NextResponse.json({ success: false, error: 'Méthode non autorisée' }, { status: 405 })
 }

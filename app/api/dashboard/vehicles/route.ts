@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
-
-// Interface pour les données du token JWT décodé
-interface TokenPayload {
-  userId: string
-  email: string
-  type: string
-  iat: number
-  exp?: number
-}
+import { validateToken, getBaseFilter } from '@/lib/api-utils'
 
 // Interface pour les paramètres de requête
 interface VehicleQueryParams {
@@ -22,76 +13,37 @@ const logAction = (action: string, userId: string, details: any) => {
   console.log(`[Dashboard Vehicles API] ${new Date().toISOString()} - ${action} - User: ${userId}:`, details)
 }
 
-// Fonction de validation du token JWT
-const validateToken = (token: string): TokenPayload | null => {
-  try {
-    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
-    const decoded = jwt.verify(token, secret) as TokenPayload
-
-    if (decoded.type !== 'login') {
-      console.log('[Dashboard Vehicles API] Token type invalide:', decoded.type)
-      return null
-    }
-
-    return decoded
-  } catch (error) {
-    console.log('[Dashboard Vehicles API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
-    return null
-  }
-}
-
 // GET /api/dashboard/vehicles - Métriques détaillées des véhicules
 export async function GET(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('GET Vehicles - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('GET Vehicles - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
+    const tokenPayload = validateToken(request)
 
     if (!tokenPayload) {
-      logAction('GET Vehicles - Invalid token', 'unknown', {})
       return NextResponse.json(
         { success: false, error: 'Token invalide ou expiré' },
         { status: 401 }
       )
     }
 
-    const userId = tokenPayload.userId
-
-    if (!userId) {
-      logAction('GET Vehicles - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
+    const { userId, role, companyId, email } = tokenPayload
 
     // Extraction des paramètres de requête
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') as VehicleQueryParams['status'] || undefined
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    logAction('GET Vehicles', userId, { userId, status, limit })
+    logAction('GET Vehicles', userId, { role, status, limit })
 
-    // Récupération des données des véhicules
+    // Base filter: by company if available, otherwise by user
+    const baseFilter = getBaseFilter(tokenPayload, 'user')
+
+    // Role-specific filters
+    const isDriver = role === 'DRIVER'
+
+    // For vehicles, drivers see only their assigned vehicles
+    const vehicleFilter: any = isDriver ? { assignments: { some: { contact: { email }, status: 'ACTIVE' } } } : baseFilter
+
     try {
       const [
         totalVehicles,
@@ -103,20 +55,20 @@ export async function GET(request: NextRequest) {
       ] = await Promise.all([
         // Total des véhicules
         prisma.vehicle.count({
-          where: { userId }
+          where: vehicleFilter
         }),
-        
+
         // Véhicules par statut
         prisma.vehicle.groupBy({
           by: ['status'],
-          where: { userId },
+          where: vehicleFilter,
           _count: { id: true }
         }),
-        
+
         // Véhicules par type
         prisma.vehicle.groupBy({
           by: ['type'],
-          where: { userId },
+          where: vehicleFilter,
           _count: { id: true },
           orderBy: {
             _count: {
@@ -124,10 +76,10 @@ export async function GET(request: NextRequest) {
             }
           }
         }),
-        
+
         // Véhicules récents (ajoutés récemment)
         prisma.vehicle.findMany({
-          where: { userId },
+          where: vehicleFilter,
           orderBy: {
             createdAt: 'desc'
           },
@@ -143,11 +95,11 @@ export async function GET(request: NextRequest) {
             createdAt: true
           }
         }),
-        
+
         // Véhicules avec métriques détaillées
         prisma.vehicle.findMany({
-          where: { 
-            userId,
+          where: {
+            ...vehicleFilter,
             ...(status && { status })
           },
           orderBy: {
@@ -166,11 +118,11 @@ export async function GET(request: NextRequest) {
             }
           }
         }),
-        
+
         // Véhicules inactifs
         prisma.vehicle.findMany({
           where: {
-            userId,
+            ...vehicleFilter,
             status: 'INACTIVE'
           },
           orderBy: {
@@ -219,7 +171,7 @@ export async function GET(request: NextRequest) {
         vehiclesWithMetrics.map(async (vehicle: any) => {
           // Calcul des coûts récents (30 derniers jours)
           const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-          
+
           const [fuelCosts, serviceCosts, chargingCosts] = await Promise.all([
             prisma.fuelEntry.aggregate({
               where: {
@@ -244,9 +196,9 @@ export async function GET(request: NextRequest) {
             })
           ])
 
-          const recentCosts = (fuelCosts._sum.cost || 0) + 
-                            (serviceCosts._sum.totalCost || 0) + 
-                            (chargingCosts._sum.cost || 0)
+          const recentCosts = (fuelCosts._sum.cost || 0) +
+            (serviceCosts._sum.totalCost || 0) +
+            (chargingCosts._sum.cost || 0)
 
           // Dernière lecture de compteur
           const lastMeterReading = await prisma.meterEntry.findFirst({
@@ -288,10 +240,10 @@ export async function GET(request: NextRequest) {
       )
 
       // Calculs supplémentaires
-      const utilizationRate = totalVehicles > 0 ? 
+      const utilizationRate = totalVehicles > 0 ?
         Math.round(((totalVehicles - (statusBreakdown.inactive || 0)) / totalVehicles) * 100) : 0
 
-      const maintenanceRate = totalVehicles > 0 ? 
+      const maintenanceRate = totalVehicles > 0 ?
         Math.round(((statusBreakdown.maintenance || 0) / totalVehicles) * 100) : 0
 
       const vehiclesData = {
@@ -317,13 +269,6 @@ export async function GET(request: NextRequest) {
         lastUpdated: new Date().toISOString()
       }
 
-      logAction('GET Vehicles - Success', userId, { 
-        userId, 
-        totalVehicles,
-        utilizationRate,
-        maintenanceRate
-      })
-
       return NextResponse.json(
         {
           success: true,
@@ -333,10 +278,6 @@ export async function GET(request: NextRequest) {
       )
 
     } catch (dbError) {
-      logAction('GET Vehicles - Database error', userId, {
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      })
-
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la récupération des données des véhicules' },
         { status: 500 }
@@ -344,12 +285,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('GET Vehicles - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
     return NextResponse.json(
       { success: false, error: 'Erreur serveur interne' },
       { status: 500 }
@@ -359,22 +294,11 @@ export async function GET(request: NextRequest) {
 
 // Gestion des autres méthodes
 export async function POST() {
-  return NextResponse.json(
-    { error: 'Méthode non autorisée' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 })
 }
-
 export async function PUT() {
-  return NextResponse.json(
-    { error: 'Méthode non autorisée' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 })
 }
-
 export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Méthode non autorisée' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 })
 }

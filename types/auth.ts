@@ -1,9 +1,11 @@
+export type UserRole = 'ADMIN' | 'MANAGER' | 'TECHNICIAN' | 'DRIVER';
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: UserRole;
   companyId?: string;
   isEmailVerified: boolean;
   preferences: {

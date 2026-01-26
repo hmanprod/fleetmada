@@ -1,34 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
-import { checkVehicleAccess } from '@/lib/api-utils'
-
-// Interface pour les données du token JWT décodé
-interface TokenPayload {
-  userId: string
-  email: string
-  type: string
-  iat: number
-  exp?: number
-}
-
-// Fonction de validation du token JWT
-const validateToken = (token: string): TokenPayload | null => {
-  try {
-    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
-    const decoded = jwt.verify(token, secret) as TokenPayload
-
-    if (decoded.type !== 'login') {
-      console.log('[Service Entries API] Token type invalide:', decoded.type)
-      return null
-    }
-
-    return decoded
-  } catch (error) {
-    console.log('[Service Entries API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
-    return null
-  }
-}
+import { validateToken, getBaseFilter } from '@/lib/api-utils'
 
 // Fonction de logging
 const logAction = (action: string, userId: string, details: any) => {
@@ -38,46 +10,13 @@ const logAction = (action: string, userId: string, details: any) => {
 // GET /api/service/entries - Liste paginée (historique + work orders)
 export async function GET(request: NextRequest) {
   try {
-    // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('GET Service Entries - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('GET Service Entries - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
+    const tokenPayload = validateToken(request)
 
     if (!tokenPayload) {
-      logAction('GET Service Entries - Invalid token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token invalide ou expiré' },
-        { status: 401 }
-      )
+      return NextResponse.json({ success: false, error: 'Token invalide ou expiré' }, { status: 401 })
     }
 
-    const userId = tokenPayload.userId
-
-    if (!userId) {
-      logAction('GET Service Entries - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
+    const { userId, role } = tokenPayload
 
     // Extraction des paramètres de requête
     const { searchParams } = new URL(request.url)
@@ -91,13 +30,17 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
-    logAction('GET Service Entries', userId, {
-      page, limit, status, vehicleId, isWorkOrder, startDate, endDate
-    })
+    // Base filter: by company if available, otherwise by user
+    const baseFilter = getBaseFilter(tokenPayload, 'user')
 
-    const where: any = {
-      userId
-    }
+    // Technicians see assigned entries or company entries
+    const isTech = role === 'TECHNICIAN'
+    const where: any = isTech ? {
+      OR: [
+        { assignedToContactId: userId },
+        baseFilter
+      ]
+    } : baseFilter
 
     if (status) where.status = status
     if (vehicleId) where.vehicleId = vehicleId
@@ -108,60 +51,15 @@ export async function GET(request: NextRequest) {
       if (endDate) where.date.lte = new Date(endDate)
     }
 
-    const search = searchParams.get('search')
-    if (search) {
-      where.OR = [
-        { id: { contains: search, mode: 'insensitive' } },
-        { notes: { contains: search, mode: 'insensitive' } },
-        {
-          vehicle: {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { make: { contains: search, mode: 'insensitive' } },
-              { model: { contains: search, mode: 'insensitive' } },
-              { licensePlate: { contains: search, mode: 'insensitive' } }
-            ]
-          }
-        },
-        {
-          tasks: {
-            some: {
-              serviceTask: {
-                name: { contains: search, mode: 'insensitive' }
-              }
-            }
-          }
-        }
-      ]
-    }
-
     const [entries, total, statusCounts] = await Promise.all([
       prisma.serviceEntry.findMany({
         where,
         include: {
-          vehicle: {
-            select: { id: true, name: true, make: true, model: true }
-          },
-          user: {
-            select: { id: true, name: true, email: true }
-          },
-          tasks: {
-            include: {
-              serviceTask: {
-                select: { id: true, name: true, description: true }
-              }
-            }
-          },
-          parts: {
-            include: {
-              part: {
-                select: { id: true, number: true, description: true }
-              }
-            }
-          },
-          assignedToContact: {
-            select: { id: true, firstName: true, lastName: true }
-          }
+          vehicle: { select: { id: true, name: true, make: true, model: true } },
+          user: { select: { id: true, name: true, email: true } },
+          tasks: { include: { serviceTask: { select: { id: true, name: true, description: true } } } },
+          parts: { include: { part: { select: { id: true, number: true, description: true } } } },
+          assignedToContact: { select: { id: true, firstName: true, lastName: true } }
         },
         orderBy: { date: 'desc' },
         skip,
@@ -170,7 +68,7 @@ export async function GET(request: NextRequest) {
       prisma.serviceEntry.count({ where }),
       prisma.serviceEntry.groupBy({
         by: ['status'],
-        where: { userId, isWorkOrder: isWorkOrder === 'true' },
+        where: { ...where, isWorkOrder: isWorkOrder === 'true' },
         _count: { _all: true }
       })
     ])
@@ -178,18 +76,8 @@ export async function GET(request: NextRequest) {
     const counts = statusCounts.reduce((acc: any, curr: any) => {
       acc[curr.status] = curr._count._all
       return acc
-    }, {
-      SCHEDULED: 0,
-      IN_PROGRESS: 0,
-      COMPLETED: 0,
-      CANCELLED: 0,
-      ALL: 0
-    })
+    }, { SCHEDULED: 0, IN_PROGRESS: 0, COMPLETED: 0, CANCELLED: 0, ALL: 0 })
     counts.ALL = statusCounts.reduce((a, b) => a + b._count._all, 0)
-
-    logAction('GET Service Entries - Success', userId, {
-      userId, total, page, totalPages: Math.ceil(total / limit)
-    })
 
     return NextResponse.json({
       success: true,
@@ -197,9 +85,7 @@ export async function GET(request: NextRequest) {
         entries,
         statusCounts: counts,
         pagination: {
-          page,
-          limit,
-          total,
+          page, limit, total,
           totalPages: Math.ceil(total / limit),
           hasNext: page < Math.ceil(total / limit),
           hasPrev: page > 1
@@ -207,259 +93,104 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('GET Service Entries - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
-    return NextResponse.json(
-      { success: false, error: 'Erreur serveur interne' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Erreur serveur interne' }, { status: 500 })
   }
 }
 
 // POST /api/service/entries - Création nouvelle intervention
 export async function POST(request: NextRequest) {
   try {
-    // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('POST Service Entry - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('POST Service Entry - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
+    const tokenPayload = validateToken(request)
 
     if (!tokenPayload) {
-      logAction('POST Service Entry - Invalid token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token invalide ou expiré' },
-        { status: 401 }
-      )
+      return NextResponse.json({ success: false, error: 'Token invalide ou expiré' }, { status: 401 })
     }
 
-    const userId = tokenPayload.userId
-
-    if (!userId) {
-      logAction('POST Service Entry - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
+    const { userId } = tokenPayload
 
     // Extraction et validation des données
     const body = await request.json()
     const {
-      vehicleId,
-      date,
-      status = 'SCHEDULED',
-      totalCost = 0,
-      meter,
-      vendorId,
-      vendor, // compatibility
-      notes,
-      priority,
-      assignedToContactId,
-      isWorkOrder = false,
-      tasks = [],
-      parts: serviceParts = [],
-      resolvedIssueIds = [],
-      documents = [],
-      issuedBy,
-      scheduledStartDate,
-      scheduledStartTime,
-      invoiceNumber,
-      poNumber,
-      discountValue,
-      discountType,
-      taxValue,
-      taxType
+      vehicleId, date, status = 'SCHEDULED', totalCost = 0, meter, vendorId, notes,
+      priority, assignedToContactId, isWorkOrder = false, tasks = [], parts: serviceParts = [],
+      resolvedIssueIds = [], documents = [], issuedBy, scheduledStartDate,
+      scheduledStartTime, invoiceNumber, poNumber, discountValue, discountType, taxValue, taxType
     } = body
 
-    logAction('POST Service Entry', userId, {
-      userId, vehicleId, date, status, isWorkOrder
+    if (!vehicleId || !date) {
+      return NextResponse.json({ success: false, error: 'Vehicle ID and date are required' }, { status: 400 })
+    }
+
+    // Créer l'entrée de service avec les relations
+    const serviceEntry = await prisma.serviceEntry.create({
+      data: {
+        vehicleId,
+        userId,
+        date: new Date(date),
+        status,
+        totalCost,
+        meter,
+        vendorId,
+        notes,
+        priority,
+        assignedToContactId,
+        isWorkOrder,
+        issuedBy,
+        scheduledStartDate: scheduledStartDate ? new Date(scheduledStartDate) : null,
+        scheduledStartTime,
+        invoiceNumber,
+        poNumber,
+        discountValue: discountValue ? parseFloat(discountValue) : undefined,
+        discountType,
+        taxValue: taxValue ? parseFloat(taxValue) : undefined,
+        taxType,
+        tasks: {
+          create: tasks.map((task: any) => (
+            typeof task === 'string' ? { serviceTaskId: task } : {
+              serviceTaskId: task.serviceTaskId,
+              cost: task.cost,
+              notes: task.notes
+            }
+          ))
+        },
+        parts: {
+          create: serviceParts.map((part: any) => ({
+            partId: part.partId,
+            quantity: part.quantity || 1,
+            unitCost: part.unitCost || 0,
+            totalCost: (part.quantity || 1) * (part.unitCost || 0),
+            notes: part.notes
+          }))
+        }
+      },
+      include: {
+        vehicle: { select: { id: true, name: true, make: true, model: true } },
+        user: { select: { id: true, name: true, email: true } },
+        tasks: { include: { serviceTask: { select: { id: true, name: true, description: true } } } },
+        parts: { include: { part: { select: { id: true, number: true, description: true } } } },
+        assignedToContact: { select: { id: true, firstName: true, lastName: true } }
+      }
     })
 
-    // Validation
-    if (!vehicleId || !date) {
-      logAction('POST Service Entry - Missing required fields', userId, {
-        vehicleId, date
+    // Resolve linked issues
+    if (resolvedIssueIds?.length > 0) {
+      await prisma.issue.updateMany({
+        where: { id: { in: resolvedIssueIds } },
+        data: { status: 'RESOLVED' }
       })
-      return NextResponse.json(
-        { success: false, error: 'Vehicle ID and date are required' },
-        { status: 400 }
-      )
     }
 
-    try {
-      // Vérifier que le véhicule appartient à l'utilisateur ou à son entreprise
-      const vehicle = await checkVehicleAccess(vehicleId, userId)
-
-      if (!vehicle) {
-        logAction('POST Service Entry - Vehicle not found or access denied', userId, {
-          vehicleId, userId
-        })
-        return NextResponse.json(
-          { success: false, error: 'Vehicle not found or access denied' },
-          { status: 404 }
-        )
-      }
-
-      // Créer l'entrée de service avec les relations
-      const serviceEntry = await prisma.serviceEntry.create({
-        data: {
-          vehicleId,
-          userId,
-          date: new Date(date),
-          status,
-          totalCost,
-          meter,
-          vendorId: vendorId || vendor,
-          notes,
-          priority,
-          assignedToContactId,
-          isWorkOrder,
-          issuedBy,
-          scheduledStartDate: scheduledStartDate ? new Date(scheduledStartDate) : null,
-          scheduledStartTime,
-          invoiceNumber,
-          poNumber,
-          discountValue: discountValue ? parseFloat(discountValue) : undefined,
-          discountType,
-          taxValue: taxValue ? parseFloat(taxValue) : undefined,
-          taxType,
-          tasks: {
-            create: tasks.map((task: any) => {
-              // Support both simple ID strings and detailed objects
-              if (typeof task === 'string') {
-                return { serviceTaskId: task }
-              }
-              return {
-                serviceTaskId: task.serviceTaskId,
-                cost: task.cost,
-                notes: task.notes
-              }
-            })
-          },
-          parts: {
-            create: serviceParts.map((part: any) => ({
-              partId: part.partId,
-              quantity: part.quantity || 1,
-              unitCost: part.unitCost || 0,
-              totalCost: (part.quantity || 1) * (part.unitCost || 0),
-              notes: part.notes
-            }))
-          }
-        },
-        include: {
-          vehicle: {
-            select: { id: true, name: true, make: true, model: true }
-          },
-          user: {
-            select: { id: true, name: true, email: true }
-          },
-          tasks: {
-            include: {
-              serviceTask: {
-                select: { id: true, name: true, description: true }
-              }
-            }
-          },
-          parts: {
-            include: {
-              part: {
-                select: { id: true, number: true, description: true }
-              }
-            }
-          },
-          assignedToContact: {
-            select: { id: true, firstName: true, lastName: true }
-          }
-        }
-      })
-
-      // Resolve linked issues
-      if (resolvedIssueIds && resolvedIssueIds.length > 0) {
-        await prisma.issue.updateMany({
-          where: {
-            id: {
-              in: resolvedIssueIds
-            }
-          },
-          data: {
-            status: 'RESOLVED',
-            // If there's a relation field like resolvedByServiceEntryId, update it here.
-            // Assuming simplified requirement: just update status.
-          }
-        })
-      }
-
-      // Link uploaded documents
-      if (documents && documents.length > 0) {
-        await prisma.document.updateMany({
-          where: {
-            id: {
-              in: documents
-            }
-          },
-          data: {
-            attachedTo: 'service_entry',
-            attachedId: serviceEntry.id
-          }
-        })
-      }
-
-      logAction('POST Service Entry - Success', userId, {
-        userId, serviceEntryId: serviceEntry.id
-      })
-
-      return NextResponse.json(
-        {
-          success: true,
-          data: serviceEntry,
-          message: 'Intervention créée avec succès'
-        },
-        { status: 201 }
-      )
-
-    } catch (dbError) {
-      logAction('POST Service Entry - Database error', userId, {
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      })
-
-      return NextResponse.json(
-        { success: false, error: 'Erreur lors de la création de l\'intervention' },
-        { status: 500 }
-      )
-    }
+    return NextResponse.json({
+      success: true,
+      data: serviceEntry,
+      message: 'Intervention créée avec succès'
+    }, { status: 201 })
 
   } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('POST Service Entry - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
-    return NextResponse.json(
-      { success: false, error: 'Erreur serveur interne' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Erreur serveur interne' }, { status: 500 })
   }
 }
+
+// Gestion des autres méthodes
+export async function PUT() { return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 }) }
+export async function DELETE() { return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 }) }

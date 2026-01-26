@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RefreshCw, Settings, Bell, AlertTriangle, TrendingUp, Calendar, Bug } from 'lucide-react';
 
 // Import des composants dashboard
@@ -12,7 +12,12 @@ import MaintenanceStatus from '@/components/dashboard/MaintenanceStatus';
 import IssuesStatus from '@/components/dashboard/IssuesStatus';
 import AlertWidget, { AlertSummary } from '@/components/dashboard/AlertWidget';
 
+// Import des composants spécifiques par rôle
+import DriverDashboard from '@/components/dashboard/roles/DriverDashboard';
+import TechDashboard from '@/components/dashboard/roles/TechDashboard';
+
 // Import des hooks
+import { useAuth } from '@/lib/auth-context';
 import { useDashboardMetrics } from '@/lib/hooks/useDashboardMetrics';
 import { useFleetOverview } from '@/lib/hooks/useFleetOverview';
 import { useCostAnalysis } from '@/lib/hooks/useCostAnalysis';
@@ -20,10 +25,56 @@ import { useMaintenanceStatus } from '@/lib/hooks/useMaintenanceStatus';
 import { useIssuesStatus } from '@/lib/hooks/useIssuesStatus';
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'costs' | 'maintenance' | 'vehicles' | 'issues'>('overview');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Hooks pour récupérer les données
+  const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const isTech = user?.role === 'TECHNICIAN';
+  const isDriver = user?.role === 'DRIVER';
+
+  // États additionnels pour les rôles
+  const [workOrders, setWorkOrders] = useState<any[]>([]);
+  const [upcomingInspections, setUpcomingInspections] = useState<any[]>([]);
+  const [loadingExtra, setLoadingExtra] = useState(false);
+
+  // Récupération des données supplémentaires basées sur le rôle
+  useEffect(() => {
+    async function fetchExtraData() {
+      if (!user) return;
+      setLoadingExtra(true);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        if (isTech) {
+          // Fetch Work Orders
+          const resp = await fetch('/api/service/entries?isWorkOrder=true&status=IN_PROGRESS,SCHEDULED', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const json = await resp.json();
+          if (json.success) setWorkOrders(json.data.entries || []);
+        }
+
+        if (isDriver) {
+          // Fetch Inspections
+          const resp = await fetch('/api/dashboard/inspections?limit=5', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const json = await resp.json();
+          if (json.success) setUpcomingInspections(json.upcomingInspections || []);
+        }
+      } catch (err) {
+        console.error('Error fetching extra dashboard data:', err);
+      } finally {
+        setLoadingExtra(false);
+      }
+    }
+
+    fetchExtraData();
+  }, [user, isTech, isDriver]);
+
+  // Hooks pour récupérer les données de base
   const fleetOverview = useFleetOverview();
   const costAnalysis = useCostAnalysis({ period: '30d' });
   const maintenanceStatus = useMaintenanceStatus();
@@ -152,35 +203,59 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Navigation par onglets */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  data-testid={`dashboard-${tab.id}-tab`}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
-                    ? 'border-[#008751] text-[#008751]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+      {/* Navigation par onglets - Uniquement pour Admin/Manager */}
+      {isAdminOrManager && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    data-testid={`dashboard-${tab.id}-tab`}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
+                      ? 'border-[#008751] text-[#008751]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Contenu principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {/* Vue d'ensemble */}
-        {activeTab === 'overview' && (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-8">
+        {/* Dashboard spécifique au rôle Chauffeur/Opérateur */}
+        {isDriver && (
+          <DriverDashboard
+            metrics={fleetOverview.data}
+            vehicles={dashboardMetrics.vehicles?.vehiclesWithMetrics || []}
+            inspections={upcomingInspections}
+            reminders={maintenanceStatus.data?.upcomingReminders || []}
+            issues={issuesStatus.data?.recentIssues || []}
+            loading={dashboardMetrics.loading || maintenanceStatus.loading || issuesStatus.loading || loadingExtra}
+          />
+        )}
+
+        {/* Dashboard spécifique au rôle Technicien */}
+        {isTech && (
+          <TechDashboard
+            metrics={fleetOverview.data}
+            workOrders={workOrders}
+            issues={issuesStatus.data?.recentIssues || []}
+            loading={maintenanceStatus.loading || issuesStatus.loading || loadingExtra}
+          />
+        )}
+
+        {/* Dashboard Admin/Manager - Vue d'ensemble */}
+        {isAdminOrManager && activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Métriques principales */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -280,6 +355,7 @@ export default function Dashboard() {
           <CostAnalysis
             summary={costAnalysis.data.summary}
             breakdown={costAnalysis.data.breakdown}
+            history={costAnalysis.data.history}
             loading={costAnalysis.loading}
           />
         )}

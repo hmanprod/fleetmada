@@ -39,12 +39,14 @@ const generateConfirmationToken = (userId: string): string => {
 }
 
 // Génération du token JWT de connexion (auto-login)
-const generateLoginToken = (userId: string, email: string): string => {
+const generateLoginToken = (userId: string, email: string, role: string, companyId?: string | null): string => {
   const secret = process.env.JWT_SECRET || 'fallback-secret-key'
   return jwt.sign(
     {
       userId,
       email,
+      role,
+      companyId,
       type: 'login',
       iat: Math.floor(Date.now() / 1000)
     },
@@ -145,7 +147,7 @@ export async function POST(request: NextRequest) {
       const confirmationToken = generateConfirmationToken(newUser.id)
 
       // Générer le token d'authentification (auto-login)
-      const authToken = generateLoginToken(newUser.id, newUser.email)
+      const authToken = generateLoginToken(newUser.id, newUser.email, newUser.role, newUser.companyId)
 
       // Préparer la réponse (sans mot de passe)
       const nameParts = (newUser.name || '').split(' ')
@@ -158,6 +160,7 @@ export async function POST(request: NextRequest) {
         lastName: lastNameRes,
         email: newUser.email,
         avatar: newUser.avatar,
+        role: newUser.role,
         // companyId omitted to force onboarding flow
         createdAt: newUser.createdAt
       }

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../lib/auth-context';
 import {
   LayoutDashboard,
   Car,
@@ -25,6 +26,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { ViewState } from '../types';
+import { UserRole } from '../types/auth';
 
 interface SidebarProps {
   currentView?: ViewState;
@@ -33,6 +35,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const toggleExpand = (id: string) => {
@@ -57,18 +60,26 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
   };
 
   const menuItems = [
-    { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, href: '/', view: ViewState.DASHBOARD },
+    {
+      id: 'dashboard',
+      label: 'Tableau de bord',
+      icon: LayoutDashboard,
+      href: '/',
+      view: ViewState.DASHBOARD,
+      allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[]
+    },
     {
       id: 'vehicles',
       label: 'Véhicules',
       icon: Car,
       href: null,
+      allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[],
       subItems: [
-        { id: 'vehicles-list', label: 'Liste des véhicules', href: '/vehicles/list', view: ViewState.VEHICLES_LIST },
-        { id: 'vehicle-assignments', label: 'Affectations', href: '/vehicles/assignments', view: ViewState.VEHICLE_ASSIGNMENTS },
-        { id: 'meter-history', label: 'Historique compteur', href: '/vehicles/meter-history', view: ViewState.METER_HISTORY },
-        { id: 'expense', label: 'Dépenses', href: '/vehicles/expense', view: ViewState.EXPENSE_HISTORY },
-        { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement', view: ViewState.REPLACEMENT_ANALYSIS },
+        { id: 'vehicles-list', label: 'Liste des véhicules', href: '/vehicles/list', view: ViewState.VEHICLES_LIST, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[] },
+        { id: 'vehicle-assignments', label: 'Affectations', href: '/vehicles/assignments', view: ViewState.VEHICLE_ASSIGNMENTS, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+        { id: 'meter-history', label: 'Historique compteur', href: '/vehicles/meter-history', view: ViewState.METER_HISTORY, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+        { id: 'expense', label: 'Dépenses', href: '/vehicles/expense', view: ViewState.EXPENSE_HISTORY, allowedRoles: ['ADMIN', 'MANAGER'] as UserRole[] },
+        { id: 'replacement-analysis', label: 'Analyse remplacement', href: '/vehicles/replacement', view: ViewState.REPLACEMENT_ANALYSIS, allowedRoles: ['ADMIN', 'MANAGER'] as UserRole[] },
       ]
     },
     {
@@ -76,22 +87,24 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       label: 'Inspections',
       icon: ClipboardCheck,
       href: null,
+      allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[],
       subItems: [
-        { id: 'inspections-hub', label: 'Vue d\'ensemble', href: '/inspections', view: ViewState.INSPECTIONS_LIST },
-        { id: 'inspections-history', label: 'Historique', href: '/inspections/history' },
-        { id: 'inspections-schedules', label: 'Planifications', href: '/inspections/schedules' },
-        { id: 'inspections-forms', label: 'Formulaires', href: '/inspections/forms' },
+        { id: 'inspections-hub', label: 'Vue d\'ensemble', href: '/inspections', view: ViewState.INSPECTIONS_LIST, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[] },
+        { id: 'inspections-history', label: 'Historique', href: '/inspections/history', allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[] },
+        { id: 'inspections-schedules', label: 'Planifications', href: '/inspections/schedules', allowedRoles: ['ADMIN', 'MANAGER'] as UserRole[] },
+        { id: 'inspections-forms', label: 'Formulaires', href: '/inspections/forms', allowedRoles: ['ADMIN', 'MANAGER'] as UserRole[] },
       ]
     },
-    { id: 'issues', label: 'Problèmes', icon: AlertTriangle, href: '/issues', view: ViewState.ISSUES_LIST },
+    { id: 'issues', label: 'Problèmes', icon: AlertTriangle, href: '/issues', view: ViewState.ISSUES_LIST, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[] },
     {
       id: 'reminders',
       label: 'Rappels',
       icon: Clock,
       href: null,
+      allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[],
       subItems: [
-        { id: 'service-reminders', label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS },
-        { id: 'vehicle-renewals', label: 'Renouvellements véhicules', href: '/reminders/vehicle-renewals', view: ViewState.VEHICLE_RENEWALS },
+        { id: 'service-reminders', label: 'Rappels d\'entretien', href: '/reminders/service', view: ViewState.SERVICE_REMINDERS, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+        { id: 'vehicle-renewals', label: 'Renouvellements véhicules', href: '/reminders/vehicle-renewals', view: ViewState.VEHICLE_RENEWALS, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
       ]
     },
     {
@@ -99,30 +112,43 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       label: 'Entretien',
       icon: Hammer,
       href: null,
+      allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[],
       subItems: [
-        { id: 'service-history', label: 'Historique d\'entretien', href: '/service/history', view: ViewState.SERVICE_HISTORY },
-        { id: 'work-orders', label: 'Demandes d’entretien', href: '/service/work-orders', view: ViewState.WORK_ORDERS },
-        { id: 'service-tasks', label: 'Tâches d\'entretien', href: '/service/tasks', view: ViewState.SERVICE_TASKS },
-        { id: 'service-programs', label: 'Programmes d\'entretien', href: '/service/programs', view: ViewState.SERVICE_PROGRAMS },
+        { id: 'service-history', label: 'Historique d\'entretien', href: '/service/history', view: ViewState.SERVICE_HISTORY, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+        { id: 'work-orders', label: 'Demandes d’entretien', href: '/service/work-orders', view: ViewState.WORK_ORDERS, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+        { id: 'service-tasks', label: 'Tâches d\'entretien', href: '/service/tasks', view: ViewState.SERVICE_TASKS, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+        { id: 'service-programs', label: 'Programmes d\'entretien', href: '/service/programs', view: ViewState.SERVICE_PROGRAMS, allowedRoles: ['ADMIN', 'MANAGER'] as UserRole[] },
       ]
     },
-    { id: 'contacts', label: 'Contacts', icon: Users, href: '/contacts', view: ViewState.CONTACTS_LIST },
-    { id: 'vendors', label: 'Fournisseurs', icon: Store, href: '/vendors', view: ViewState.VENDORS_LIST },
+    { id: 'contacts', label: 'Contacts', icon: Users, href: '/contacts', view: ViewState.CONTACTS_LIST, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
+    { id: 'vendors', label: 'Fournisseurs', icon: Store, href: '/vendors', view: ViewState.VENDORS_LIST, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
     {
       id: 'fuel',
       label: 'Carburant & Énergie',
       icon: Fuel,
       href: null,
+      allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[],
       subItems: [
-        { id: 'fuel-history', label: 'Historique carburant', href: '/fuel/history', view: ViewState.FUEL_HISTORY },
-        { id: 'charging-history', label: 'Historique recharge', href: '/fuel/charging', view: ViewState.CHARGING_HISTORY },
+        { id: 'fuel-history', label: 'Historique carburant', href: '/fuel/history', view: ViewState.FUEL_HISTORY, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[] },
+        { id: 'charging-history', label: 'Historique recharge', href: '/fuel/charging', view: ViewState.CHARGING_HISTORY, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN', 'DRIVER'] as UserRole[] },
       ]
     },
-    { id: 'parts', label: 'Pièces', icon: Box, href: '/parts', view: ViewState.PARTS_LIST },
-    // { id: 'places', label: 'Sites opérationnels', icon: MapPin, href: '/places', view: ViewState.PLACES_LIST },
-    // { id: 'documents', label: 'Documents', icon: FileText, href: '/documents', view: ViewState.DOCUMENTS_LIST },
-    // { id: 'reports', label: 'Rapports', icon: BarChart3, href: '/reports', view: ViewState.REPORTS_LIST },
+    { id: 'parts', label: 'Pièces', icon: Box, href: '/parts', view: ViewState.PARTS_LIST, allowedRoles: ['ADMIN', 'MANAGER', 'TECHNICIAN'] as UserRole[] },
   ];
+
+  // Filtrer les éléments du menu en fonction du rôle
+  const filteredMenuItems = menuItems.filter(item => {
+    if (!user) return false;
+    if (item.allowedRoles && !item.allowedRoles.includes(user.role)) return false;
+    return true;
+  }).map(item => ({
+    ...item,
+    subItems: item.subItems?.filter(subItem => {
+      if (!user) return false;
+      if ((subItem as any).allowedRoles && !(subItem as any).allowedRoles.includes(user.role)) return false;
+      return true;
+    })
+  }));
 
   return (
     <div className="sidebar w-64 bg-[#0f4c3a] text-white flex flex-col h-screen fixed left-0 top-0 overflow-y-auto z-10 scrollbar-thin scrollbar-thumb-green-700">
@@ -136,7 +162,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
           Commencer
         </div> */}
 
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const isExpanded = expandedItems.includes(item.id);
           const hasSubItems = item.subItems && item.subItems.length > 0;
           const active = item.href ? isActive(item.href, item.view) : (hasSubItems && isParentActive(item.subItems || []));

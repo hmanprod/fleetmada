@@ -53,6 +53,10 @@ export interface DashboardCosts {
       percentage: number;
     };
   };
+  history: Array<{
+    name: string;
+    costs: number;
+  }>;
   lastUpdated: string;
 }
 

@@ -1,84 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
-
-// Interface pour les données du token JWT décodé
-interface TokenPayload {
-  userId: string
-  email: string
-  type: string
-  iat: number
-  exp?: number
-}
+import { validateToken, getBaseFilter } from '@/lib/api-utils'
 
 // Fonction de logging
 const logAction = (action: string, userId: string, details: any) => {
   console.log(`[Dashboard Overview API] ${new Date().toISOString()} - ${action} - User: ${userId}:`, details)
 }
 
-// Fonction de validation du token JWT
-const validateToken = (token: string): TokenPayload | null => {
-  try {
-    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
-    const decoded = jwt.verify(token, secret) as TokenPayload
-
-    if (decoded.type !== 'login') {
-      console.log('[Dashboard Overview API] Token type invalide:', decoded.type)
-      return null
-    }
-
-    return decoded
-  } catch (error) {
-    console.log('[Dashboard Overview API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
-    return null
-  }
-}
-
 // GET /api/dashboard/overview - Vue d'ensemble générale (véhicules, statuts, totaux)
 export async function GET(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('GET Overview - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('GET Overview - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
+    const tokenPayload = validateToken(request)
 
     if (!tokenPayload) {
-      logAction('GET Overview - Invalid token', 'unknown', {})
       return NextResponse.json(
         { success: false, error: 'Token invalide ou expiré' },
         { status: 401 }
       )
     }
 
-    const userId = tokenPayload.userId
+    const { userId, role, companyId, email } = tokenPayload
 
-    if (!userId) {
-      logAction('GET Overview - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
+    // Base filters: by company if available, otherwise by user
+    const userFilter = getBaseFilter(tokenPayload)
+    const vehicleFilter = getBaseFilter(tokenPayload, 'user')
 
-    logAction('GET Overview', userId, { userId })
+    // Role-specific behavior
+    const isTech = role === 'TECHNICIAN'
+    const isDriver = role === 'DRIVER'
+
+    // Advanced filters for metrics
+    const issueFilter: any = isTech ? { assignedTo: { has: userId } } :
+      isDriver ? { vehicle: { assignments: { some: { contact: { email }, status: 'ACTIVE' } } } } :
+        userFilter
+
+    const serviceFilter: any = isTech ? { assignedToContactId: userId } : userFilter
+    const inspectionFilter: any = isDriver ? { userId } : userFilter
+
+    logAction('GET Overview', userId, { role })
 
     // Récupération des métriques d'ensemble
     try {
@@ -96,38 +56,38 @@ export async function GET(request: NextRequest) {
       ] = await Promise.all([
         // Total des véhicules
         prisma.vehicle.count({
-          where: { userId }
+          where: vehicleFilter as any
         }),
-        
+
         // Véhicules par statut
         prisma.vehicle.groupBy({
           by: ['status'],
-          where: { userId },
+          where: vehicleFilter as any,
           _count: { id: true }
         }),
-        
+
         // Total des problèmes
         prisma.issue.count({
-          where: { userId }
+          where: issueFilter
         }),
-        
+
         // Problèmes ouverts
         prisma.issue.count({
-          where: { 
-            userId,
+          where: {
+            ...issueFilter,
             status: { in: ['OPEN', 'IN_PROGRESS'] }
           }
         }),
-        
+
         // Total des entrées de service
         prisma.serviceEntry.count({
-          where: { userId }
+          where: serviceFilter
         }),
-        
+
         // Rappels à venir (7 prochains jours)
         prisma.serviceReminder.count({
           where: {
-            vehicle: { userId },
+            vehicle: vehicleFilter as any,
             status: 'ACTIVE',
             nextDue: {
               gte: new Date(),
@@ -135,34 +95,34 @@ export async function GET(request: NextRequest) {
             }
           }
         }),
-        
+
         // Rappels en retard
         prisma.serviceReminder.count({
           where: {
-            vehicle: { userId },
+            vehicle: vehicleFilter as any,
             status: 'ACTIVE',
             nextDue: {
               lt: new Date()
             }
           }
         }),
-        
+
         // Total des inspections
         prisma.inspection.count({
-          where: { userId }
+          where: inspectionFilter
         }),
-        
+
         // Inspections par statut
         prisma.inspection.groupBy({
           by: ['status'],
-          where: { userId },
+          where: inspectionFilter,
           _count: { id: true }
         }),
-        
+
         // Inspections par conformité
         prisma.inspection.groupBy({
           by: ['complianceStatus'],
-          where: { userId },
+          where: inspectionFilter,
           _count: { id: true }
         })
       ])
@@ -172,13 +132,13 @@ export async function GET(request: NextRequest) {
         acc[item.status.toLowerCase()] = item._count.id
         return acc
       }, {} as Record<string, number>)
-      
+
       // Transformation des données de statut des inspections
       const inspectionsStatusBreakdown = inspectionsByStatus.reduce((acc, item) => {
         acc[item.status.toLowerCase()] = item._count.id
         return acc
       }, {} as Record<string, number>)
-      
+
       // Transformation des données de conformité des inspections
       const inspectionsComplianceBreakdown = inspectionsByCompliance.reduce((acc, item) => {
         acc[item.complianceStatus.toLowerCase().replace('_', '-')] = item._count.id
@@ -186,7 +146,7 @@ export async function GET(request: NextRequest) {
       }, {} as Record<string, number>)
 
       // Calculs supplémentaires
-      const utilizationRate = totalVehicles > 0 ? 
+      const utilizationRate = totalVehicles > 0 ?
         Math.round(((totalVehicles - (statusBreakdown.inactive || 0)) / totalVehicles) * 100) : 0
 
       const overview = {
@@ -226,14 +186,6 @@ export async function GET(request: NextRequest) {
         lastUpdated: new Date().toISOString()
       }
 
-      logAction('GET Overview - Success', userId, { 
-        userId, 
-        totalVehicles,
-        openIssues,
-        totalInspections,
-        utilizationRate 
-      })
-
       return NextResponse.json(
         {
           success: true,
@@ -243,10 +195,6 @@ export async function GET(request: NextRequest) {
       )
 
     } catch (dbError) {
-      logAction('GET Overview - Database error', userId, {
-        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-      })
-
       return NextResponse.json(
         { success: false, error: 'Erreur lors de la récupération des données' },
         { status: 500 }
@@ -254,12 +202,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    const userId = request.headers.get('x-user-id') || 'unknown'
-    logAction('GET Overview - Server error', userId, {
-      error: error instanceof Error ? error.message : 'Unknown server error',
-      stack: error instanceof Error ? error.stack : undefined
-    })
-
     return NextResponse.json(
       { success: false, error: 'Erreur serveur interne' },
       { status: 500 }
@@ -269,22 +211,11 @@ export async function GET(request: NextRequest) {
 
 // Gestion des autres méthodes
 export async function POST() {
-  return NextResponse.json(
-    { error: 'Méthode non autorisée' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 })
 }
-
 export async function PUT() {
-  return NextResponse.json(
-    { error: 'Méthode non autorisée' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 })
 }
-
 export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Méthode non autorisée' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Méthode non autorisée' }, { status: 405 })
 }

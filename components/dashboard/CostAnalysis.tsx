@@ -36,6 +36,7 @@ interface CostBreakdown {
 interface CostAnalysisProps {
   summary: CostSummary;
   breakdown: CostBreakdown;
+  history: Array<{ name: string; costs: number }>;
   loading?: boolean;
   className?: string;
 }
@@ -43,6 +44,7 @@ interface CostAnalysisProps {
 export default function CostAnalysis({
   summary,
   breakdown,
+  history,
   loading = false,
   className = ''
 }: CostAnalysisProps) {
@@ -102,15 +104,11 @@ export default function CostAnalysis({
     }
   ].filter(item => item.value > 0);
 
-  // Données simulées pour les tendances (à remplacer par de vraies données de l'API)
-  const trendData = [
-    { name: 'Jan', costs: breakdown.fuel.total * 0.8 },
-    { name: 'Fév', costs: breakdown.fuel.total * 0.9 },
-    { name: 'Mar', costs: breakdown.fuel.total * 1.1 },
-    { name: 'Avr', costs: breakdown.fuel.total * 0.95 },
-    { name: 'Mai', costs: breakdown.fuel.total * 1.05 },
-    { name: 'Juin', costs: breakdown.fuel.total }
-  ];
+  // Données de l'API pour les tendances
+  const trendData = history.map(item => ({
+    name: item.name,
+    value: item.costs
+  }));
 
   if (loading) {
     return (
@@ -152,7 +150,7 @@ export default function CostAnalysis({
             isPositive: false
           }}
         />
-        
+
         <MetricCard
           title="Coûts Carburant"
           value={formatCurrency(summary.totalFuelCost)}
@@ -164,7 +162,7 @@ export default function CostAnalysis({
             isPositive: false
           }}
         />
-        
+
         <MetricCard
           title="Coûts Entretien"
           value={formatCurrency(summary.totalServiceCost)}
@@ -172,7 +170,7 @@ export default function CostAnalysis({
           color="green"
           subtitle={`${breakdown.service.percentage}% du total`}
         />
-        
+
         <MetricCard
           title="Consommation Moy."
           value={formatMPG(summary.averageMPG)}
@@ -192,7 +190,7 @@ export default function CostAnalysis({
           height={350}
           showLegend={true}
         />
-        
+
         {/* Évolution des coûts */}
         <TrendChart
           title="Évolution des Coûts"
@@ -214,7 +212,7 @@ export default function CostAnalysis({
             </div>
             <Fuel className="text-red-500" size={24} />
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Total</span>
@@ -229,7 +227,7 @@ export default function CostAnalysis({
               <span className="text-sm text-gray-900">{breakdown.fuel.percentage}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-red-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${breakdown.fuel.percentage}%` }}
               ></div>
@@ -246,7 +244,7 @@ export default function CostAnalysis({
             </div>
             <Wrench className="text-green-500" size={24} />
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Total</span>
@@ -261,7 +259,7 @@ export default function CostAnalysis({
               <span className="text-sm text-gray-900">{breakdown.service.percentage}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-green-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${breakdown.service.percentage}%` }}
               ></div>
@@ -278,7 +276,7 @@ export default function CostAnalysis({
             </div>
             <Battery className="text-blue-500" size={24} />
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Total</span>
@@ -293,7 +291,7 @@ export default function CostAnalysis({
               <span className="text-sm text-gray-900">{breakdown.charging.percentage}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${breakdown.charging.percentage}%` }}
               ></div>
@@ -308,7 +306,7 @@ export default function CostAnalysis({
           <TrendingUp className="mr-2" size={20} />
           Analyse des Coûts
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
             <div className="flex items-center text-blue-800">
@@ -320,7 +318,7 @@ export default function CostAnalysis({
               <span>L'entretien coûte en moyenne {formatCurrency(breakdown.service.total / Math.max(breakdown.service.count, 1))} par intervention</span>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center text-blue-800">
               <Battery size={16} className="mr-2 text-blue-600" />

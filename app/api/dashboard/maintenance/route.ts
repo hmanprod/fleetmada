@@ -1,84 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
-
-// Interface pour les données du token JWT décodé
-interface TokenPayload {
-  userId: string
-  email: string
-  type: string
-  iat: number
-  exp?: number
-}
+import { validateToken, getBaseFilter } from '@/lib/api-utils'
 
 // Fonction de logging
 const logAction = (action: string, userId: string, details: any) => {
   console.log(`[Dashboard Maintenance API] ${new Date().toISOString()} - ${action} - User: ${userId}:`, details)
 }
 
-// Fonction de validation du token JWT
-const validateToken = (token: string): TokenPayload | null => {
-  try {
-    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
-    const decoded = jwt.verify(token, secret) as TokenPayload
-
-    if (decoded.type !== 'login') {
-      console.log('[Dashboard Maintenance API] Token type invalide:', decoded.type)
-      return null
-    }
-
-    return decoded
-  } catch (error) {
-    console.log('[Dashboard Maintenance API] Token validation failed:', error instanceof Error ? error.message : 'Unknown error')
-    return null
-  }
-}
-
 // GET /api/dashboard/maintenance - État maintenance et rappels
 export async function GET(request: NextRequest) {
   try {
     // Extraction et validation du token JWT
-    const authHeader = request.headers.get('authorization')
-
-    if (!authHeader) {
-      logAction('GET Maintenance - Missing authorization header', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Token d\'authentification manquant' },
-        { status: 401 }
-      )
-    }
-
-    const parts = authHeader.split(' ')
-    if (parts.length !== 2 || parts[0] !== 'Bearer') {
-      logAction('GET Maintenance - Invalid authorization header format', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'Format de token invalide' },
-        { status: 401 }
-      )
-    }
-
-    const token = parts[1]
-    const tokenPayload = validateToken(token)
+    const tokenPayload = validateToken(request)
 
     if (!tokenPayload) {
-      logAction('GET Maintenance - Invalid token', 'unknown', {})
       return NextResponse.json(
         { success: false, error: 'Token invalide ou expiré' },
         { status: 401 }
       )
     }
 
-    const userId = tokenPayload.userId
+    const { userId, role, companyId, email } = tokenPayload
 
-    if (!userId) {
-      logAction('GET Maintenance - Missing user ID in token', 'unknown', {})
-      return NextResponse.json(
-        { success: false, error: 'ID utilisateur manquant' },
-        { status: 401 }
-      )
-    }
+    // Base filter: by company if available, otherwise by user
+    const baseFilter = getBaseFilter(tokenPayload, 'vehicle.user')
 
-    logAction('GET Maintenance', userId, { userId })
+    // Role-specific filters
+    const isTech = role === 'TECHNICIAN'
+    const isDriver = role === 'DRIVER'
+
+    // For maintenance, techs see everything assigned to them or in company if they manage it
+    // Drivers see only for their assigned vehicles
+    const maintenanceFilter = isDriver ? { vehicle: { assignments: { some: { contact: { email: tokenPayload.email } } } } } : baseFilter
+    const serviceFilter = isTech ? { assignedToContactId: userId } : (companyId ? { user: { companyId } } : { userId })
 
     // Récupération des données de maintenance
     try {
@@ -94,15 +48,15 @@ export async function GET(request: NextRequest) {
         // Total des rappels actifs
         prisma.serviceReminder.count({
           where: {
-            vehicle: { userId },
+            ...maintenanceFilter,
             status: 'ACTIVE'
           }
         }),
-        
+
         // Rappels à venir (7 prochains jours)
         prisma.serviceReminder.count({
           where: {
-            vehicle: { userId },
+            ...maintenanceFilter,
             status: 'ACTIVE',
             nextDue: {
               gte: new Date(),
@@ -110,44 +64,44 @@ export async function GET(request: NextRequest) {
             }
           }
         }),
-        
+
         // Rappels en retard
         prisma.serviceReminder.count({
           where: {
-            vehicle: { userId },
+            ...maintenanceFilter,
             status: 'ACTIVE',
             nextDue: {
               lt: new Date()
             }
           }
         }),
-        
+
         // Rappels terminés (derniers 30 jours)
         prisma.serviceReminder.count({
           where: {
-            vehicle: { userId },
+            ...maintenanceFilter as any,
             status: { in: ['COMPLETED', 'DISMISSED'] },
             updatedAt: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 jours
             }
           }
         }),
-        
+
         // Services récents (derniers 30 jours)
         prisma.serviceEntry.count({
           where: {
-            userId,
+            ...serviceFilter as any,
             status: 'COMPLETED',
             date: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 jours
             }
           }
         }),
-        
+
         // Détails des rappels à venir
         prisma.serviceReminder.findMany({
           where: {
-            vehicle: { userId },
+            ...maintenanceFilter,
             status: 'ACTIVE',
             nextDue: {
               gte: new Date(),
@@ -169,11 +123,11 @@ export async function GET(request: NextRequest) {
           },
           take: 5
         }),
-        
+
         // Détails des rappels en retard
         prisma.serviceReminder.findMany({
           where: {
-            vehicle: { userId },
+            ...maintenanceFilter,
             status: 'ACTIVE',
             nextDue: {
               lt: new Date()
@@ -197,35 +151,35 @@ export async function GET(request: NextRequest) {
       ])
 
       // Transformation des données de rappels à venir
-      const upcomingDetails = upcomingReminderDetails
+      const upcomingDetails = (upcomingReminderDetails as any[])
         .filter(reminder => reminder.nextDue !== null)
         .map(reminder => ({
           id: reminder.id,
           task: reminder.task,
-          vehicleName: reminder.vehicle.name,
-          vehicleMake: reminder.vehicle.make,
-          vehicleModel: reminder.vehicle.model,
+          vehicleName: reminder.vehicle?.name,
+          vehicleMake: reminder.vehicle?.make,
+          vehicleModel: reminder.vehicle?.model,
           nextDue: reminder.nextDue,
-          daysUntilDue: Math.ceil((reminder.nextDue!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+          daysUntilDue: Math.ceil((new Date(reminder.nextDue!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
           compliance: reminder.compliance
         }))
 
       // Transformation des données de rappels en retard
-      const overdueDetails = overdueReminderDetails
+      const overdueDetails = (overdueReminderDetails as any[])
         .filter(reminder => reminder.nextDue !== null)
         .map(reminder => ({
           id: reminder.id,
           task: reminder.task,
-          vehicleName: reminder.vehicle.name,
-          vehicleMake: reminder.vehicle.make,
-          vehicleModel: reminder.vehicle.model,
+          vehicleName: reminder.vehicle?.name,
+          vehicleMake: reminder.vehicle?.make,
+          vehicleModel: reminder.vehicle?.model,
           nextDue: reminder.nextDue,
-          daysOverdue: Math.ceil((new Date().getTime() - reminder.nextDue!.getTime()) / (1000 * 60 * 60 * 24)),
+          daysOverdue: Math.ceil((new Date().getTime() - new Date(reminder.nextDue!).getTime()) / (1000 * 60 * 60 * 24)),
           compliance: reminder.compliance
         }))
 
       // Calcul du taux de conformité
-      const complianceRate = totalReminders > 0 ? 
+      const complianceRate = totalReminders > 0 ?
         Math.round(((completedReminders) / (totalReminders + completedReminders)) * 100) : 100
 
       const maintenanceData = {
@@ -247,8 +201,8 @@ export async function GET(request: NextRequest) {
         lastUpdated: new Date().toISOString()
       }
 
-      logAction('GET Maintenance - Success', userId, { 
-        userId, 
+      logAction('GET Maintenance - Success', userId, {
+        userId,
         totalReminders,
         upcomingReminders,
         overdueReminders,

@@ -16,12 +16,14 @@ interface LoginRequest {
 }
 
 // Génération du token JWT de connexion
-const generateLoginToken = (userId: string, email: string): string => {
+const generateLoginToken = (userId: string, email: string, role: string, companyId?: string | null): string => {
   const secret = process.env.JWT_SECRET || 'fallback-secret-key'
   return jwt.sign(
     {
       userId,
       email,
+      role,
+      companyId,
       type: 'login',
       iat: Math.floor(Date.now() / 1000)
     },
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Génération du token JWT
-    const token = generateLoginToken(user.id, user.email)
+    const token = generateLoginToken(user.id, user.email, user.role, user.companyId)
 
     // Préparation de la réponse utilisateur (sans mot de passe)
     const nameParts = (user.name || '').split(' ')
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
       lastName,
       email: user.email,
       avatar: user.avatar,
+      role: user.role,
       companyId: user.companyId,
       createdAt: user.createdAt
     }

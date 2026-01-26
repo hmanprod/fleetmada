@@ -30,6 +30,47 @@ async function main() {
 
     const userPassword = await bcrypt.hash('userpassword123', 10);
 
+    // 1.1 Extra Mock Users with Roles
+    console.log('👥 Seeding extra mock users with roles...');
+    const managerUser = await prisma.user.upsert({
+        where: { email: 'manager@fleetmadagascar.mg' },
+        update: {},
+        create: {
+            name: 'Marc Manager',
+            email: 'manager@fleetmadagascar.mg',
+            password: userPassword,
+            companyId: fleetMadagascar.id,
+            role: 'MANAGER',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
+        }
+    });
+
+    const technicianUser = await prisma.user.upsert({
+        where: { email: 'tech@fleetmadagascar.mg' },
+        update: {},
+        create: {
+            name: 'Thomas Tech',
+            email: 'tech@fleetmadagascar.mg',
+            password: userPassword,
+            companyId: fleetMadagascar.id,
+            role: 'TECHNICIAN',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+        }
+    });
+
+    const driverUser = await prisma.user.upsert({
+        where: { email: 'driver@fleetmadagascar.mg' },
+        update: {},
+        create: {
+            name: 'Daniel Driver',
+            email: 'driver@fleetmadagascar.mg',
+            password: userPassword,
+            companyId: fleetMadagascar.id,
+            role: 'DRIVER',
+            avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&h=150&fit=crop&crop=face',
+        }
+    });
+
     // 2. Places
     console.log('📍 Seeding Places...');
     const mainOffice = await prisma.place.upsert({

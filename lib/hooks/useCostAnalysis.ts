@@ -30,6 +30,10 @@ export interface CostAnalysis {
       percentage: number;
     };
   };
+  history: Array<{
+    name: string;
+    costs: number;
+  }>;
   lastUpdated: string;
 }
 

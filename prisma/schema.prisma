@@ -17,6 +17,7 @@ model User {
   companyId       String?
   company         Company?        @relation(fields: [companyId], references: [id])
   avatar          String?
+  role            UserRole        @default(ADMIN)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   chargingEntries ChargingEntry[]
@@ -1270,4 +1271,11 @@ model Group {
   contacts  Contact[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  DRIVER
 }

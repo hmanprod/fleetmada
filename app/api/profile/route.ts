@@ -46,6 +46,7 @@ interface UserResponse {
   lastName: string
   email: string
   avatar?: string | null
+  role: string
   companyId?: string | null
   createdAt: Date
   updatedAt: Date
@@ -68,6 +69,7 @@ const prepareUserResponse = (user: any): UserResponse => {
     lastName,
     email: user.email,
     avatar: user.avatar,
+    role: user.role,
     companyId: user.companyId,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt

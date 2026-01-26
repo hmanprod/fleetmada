@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
           _sum: { cost: true },
           _avg: { mpg: true }
         }),
-        
+
         // Coûts de service/entretien
         prisma.serviceEntry.aggregate({
           where: {
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
           },
           _sum: { totalCost: true }
         }),
-        
+
         // Coûts de chargement électrique
         prisma.chargingEntry.aggregate({
           where: {
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
           },
           _sum: { cost: true }
         }),
-        
+
         // Comptage des entrées carburant
         prisma.fuelEntry.count({
           where: {
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
             date: { gte: startDate }
           }
         }),
-        
+
         // Comptage des entrées de service
         prisma.serviceEntry.count({
           where: {
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
             date: { gte: startDate }
           }
         }),
-        
+
         // Comptage des entrées de chargement
         prisma.chargingEntry.count({
           where: {
@@ -197,6 +197,58 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // 2. Historique des coûts (6 derniers mois)
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+      sixMonthsAgo.setDate(1)
+      sixMonthsAgo.setHours(0, 0, 0, 0)
+
+      const [historicalFuel, historicalService, historicalCharging] = await Promise.all([
+        prisma.fuelEntry.findMany({
+          where: { userId, date: { gte: sixMonthsAgo } },
+          select: { date: true, cost: true }
+        }),
+        prisma.serviceEntry.findMany({
+          where: { userId, date: { gte: sixMonthsAgo } },
+          select: { date: true, totalCost: true }
+        }),
+        prisma.chargingEntry.findMany({
+          where: { userId, date: { gte: sixMonthsAgo } },
+          select: { date: true, cost: true }
+        })
+      ])
+
+      // Grouper par mois
+      const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
+      const monthlyData: Record<string, number> = {}
+
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date()
+        d.setMonth(d.getMonth() - i)
+        const monthKey = `${months[d.getMonth()]} ${d.getFullYear().toString().substr(-2)}`
+        monthlyData[monthKey] = 0
+      }
+
+      historicalFuel.forEach(entry => {
+        const d = new Date(entry.date)
+        const monthKey = `${months[d.getMonth()]} ${d.getFullYear().toString().substr(-2)}`
+        if (monthlyData[monthKey] !== undefined) monthlyData[monthKey] += entry.cost
+      })
+
+      historicalService.forEach(entry => {
+        const d = new Date(entry.date)
+        const monthKey = `${months[d.getMonth()]} ${d.getFullYear().toString().substr(-2)}`
+        if (monthlyData[monthKey] !== undefined) monthlyData[monthKey] += entry.totalCost
+      })
+
+      historicalCharging.forEach(entry => {
+        const d = new Date(entry.date)
+        const monthKey = `${months[d.getMonth()]} ${d.getFullYear().toString().substr(-2)}`
+        if (monthlyData[monthKey] !== undefined) monthlyData[monthKey] += entry.cost
+      })
+
+      const history = Object.entries(monthlyData).map(([name, costs]) => ({ name, costs }))
+
       const costsData = {
         summary: {
           totalCosts,
@@ -208,11 +260,12 @@ export async function GET(request: NextRequest) {
           entryCount: fuelEntries + serviceEntries + chargingEntries
         },
         breakdown,
+        history,
         lastUpdated: new Date().toISOString()
       }
 
-      logAction('GET Costs - Success', userId, { 
-        userId, 
+      logAction('GET Costs - Success', userId, {
+        userId,
         period,
         totalCosts: totalCosts.toFixed(2)
       })

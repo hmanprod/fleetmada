@@ -98,11 +98,11 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
     };
 
     const validateForm = (): boolean => {
-        if (!formData.number.trim()) {
+        if (!formData.number || !formData.number.trim()) {
             toast.error('Erreur', 'Le numéro de pièce est requis');
             return false;
         }
-        if (!formData.description.trim()) {
+        if (!formData.description || !formData.description.trim()) {
             toast.error('Erreur', 'La description est requise');
             return false;
         }
