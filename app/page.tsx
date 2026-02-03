@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Car } from 'lucide-react';
+import Image from 'next/image';
 
 export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -23,15 +24,16 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="bg-[#0f4c3a] p-2 rounded-lg">
-            <Car className="h-8 w-8 text-white" />
-          </div>
-          <span className="text-3xl font-bold text-[#0f4c3a] tracking-tight">FleetMada</span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0c2e26]">
+        <div className="relative w-64 h-32">
+          <Image
+            src="/img/logo.png"
+            alt="FleetMada Logo"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008751]"></div>
-        <p className="mt-4 text-gray-600">Chargement...</p>
       </div>
     );
   }

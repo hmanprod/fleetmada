@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../lib/auth-context';
 import {
@@ -153,8 +154,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
   return (
     <div className="sidebar w-64 bg-[#0f4c3a] text-white flex flex-col h-screen fixed left-0 top-0 overflow-y-auto z-10 scrollbar-thin scrollbar-thumb-green-700">
       <div className="p-4 flex items-center gap-2 border-b border-[#1b6a50] sticky top-0 bg-[#0f4c3a] z-20">
-        <Car className="h-8 w-8 text-white" />
-        <span className="text-xl font-bold tracking-tight">FleetMada</span>
+        <div className="relative w-32 h-8">
+          <Image
+            src="/img/logo.png"
+            alt="FleetMada Logo"
+            fill
+            className="object-contain object-left"
+            priority
+          />
+        </div>
       </div>
 
       <div className="flex-1 py-4 pb-20">

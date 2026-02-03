@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'Authentification - FleetMada',
@@ -17,17 +18,20 @@ export default function AuthLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-2">
-              <div className="bg-[#0f4c3a] p-2 rounded-lg">
-                <span className="text-white font-bold text-lg">F</span>
+              <div className="p-2 rounded-lg relative w-32 h-8">
+                <Image
+                  src="/img/logo-dark.png"
+                  alt="FleetMada Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
-              <span className="text-xl font-bold text-[#0f4c3a] tracking-tight">
-                FleetMada
-              </span>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Contenu des pages d'authentification */}
       <main className="flex-1">
         {children}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Car, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import { useAuth } from '../../../lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -23,12 +24,12 @@ const LoginPage = () => {
   useEffect(() => {
     const errorParam = searchParams.get('error');
     const fromParam = searchParams.get('from');
-    
+
     if (errorParam) {
       try {
         const decodedError = decodeURIComponent(errorParam);
         setUrlError(decodedError);
-        
+
         // Nettoyer l'URL après avoir récupéré l'erreur
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('error');
@@ -60,20 +61,25 @@ const LoginPage = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center items-center gap-2 mb-6">
-          <div className="bg-[#0f4c3a] p-2 rounded-lg">
-            <Car className="h-8 w-8 text-white" />
+          <div className="p-2 rounded-lg relative w-48 h-16">
+            <Image
+              src="/img/logo-dark.png"
+              alt="FleetMada Logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
-          <span className="text-3xl font-bold text-[#0f4c3a] tracking-tight">FleetMada</span>
         </div>
         <h2 className="mt-2 text-center text-2xl font-bold text-gray-900">
           Connectez-vous à votre compte
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        {/* <p className="mt-2 text-center text-sm text-gray-600">
           Ou{' '}
           <button onClick={handleNavigateToRegister} className="font-medium text-[#008751] hover:text-[#007043]">
             commencez votre essai gratuit de 14 jours
           </button>
-        </p>
+        </p> */}
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

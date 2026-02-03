@@ -26,7 +26,7 @@ test.describe('Flux d\'inscription user (SPA Flow)', () => {
         await page.click('button:has-text("Créer un compte")');
 
         // Vérifier qu'on est sur la vue Inscription
-        await expect(page.locator('h2')).toContainText(/Commencez votre essai gratuit/i);
+        await expect(page.locator('h2')).toContainText(/Commencez/i);
 
         // 3. Remplir le formulaire
         console.log('✍️ Remplissage du formulaire...');

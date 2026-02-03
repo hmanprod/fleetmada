@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '../../lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Car, AlertTriangle } from 'lucide-react';
+import Image from 'next/image';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       const currentPath = window.location.pathname;
       const errorMessage = encodeURIComponent('Vous devez être connecté pour accéder à cette page.');
       const redirectUrl = `/login?error=${errorMessage}&from=${encodeURIComponent(currentPath)}`;
-      
+
       // Redirection immédiate
       router.replace(redirectUrl);
     }
@@ -29,15 +30,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="bg-[#0f4c3a] p-2 rounded-lg">
-            <Car className="h-8 w-8 text-white" />
-          </div>
-          <span className="text-3xl font-bold text-[#0f4c3a] tracking-tight">FleetMada</span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0c2e26]">
+        <div className="relative w-64 h-32">
+          <Image
+            src="/img/logo.png"
+            alt="FleetMada Logo"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008751]"></div>
-        <p className="mt-4 text-gray-600">Chargement...</p>
       </div>
     );
   }
@@ -47,10 +49,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
         <div className="flex items-center gap-2 mb-6">
-          <div className="bg-[#0f4c3a] p-2 rounded-lg">
-            <Car className="h-8 w-8 text-white" />
+          <div className="bg-[#0f4c3a] p-2 rounded-lg relative w-32 h-8">
+            <Image
+              src="/img/logo.png"
+              alt="FleetMada Logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
-          <span className="text-3xl font-bold text-[#0f4c3a] tracking-tight">FleetMada</span>
         </div>
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
           <div className="flex items-center justify-center mb-4">
