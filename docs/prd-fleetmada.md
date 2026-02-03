@@ -439,7 +439,536 @@ FleetMada est une application web full-stack permettant aux gestionnaires de flo
 
 ---
 
-## 4. Flux utilisateur
+## 4. Structure du projet
+
+### 4.1 Arborescence actuelle
+
+```
+fleetmada/
+├── .DS_Store
+├── .agent/                          # Configuration agent
+│   ├── rules/
+│   │   └── locale-fr.md
+│   ├── skills/
+│   │   └── agent-browser/
+│   └── workflows/
+│       ├── create-page-ux-rules.md
+│       ├── detail-page-ux-rules.md
+│       ├── list-page-ux-rules.md
+│       └── translate-to-french.md
+├── .agents/                         # Configuration agents
+│   └── skills/
+│       └── agent-browser/
+│           ├── SKILL.md
+│           ├── references/
+│           │   ├── authentication.md
+│           │   ├── commands.md
+│           │   ├── proxy-support.md
+│           │   ├── session-management.md
+│           │   ├── snapshot-refs.md
+│           │   └── video-recording.md
+│           └── templates/
+│               ├── authenticated-session.sh
+│               ├── capture-workflow.sh
+│               └── form-automation.sh
+├── .env                             # Variables d'environnement
+├── .env.example
+├── .env.local
+├── .git/                            # Git repository
+├── .gitignore
+├── .kilocode/                       # Configuration Kilocode
+│   └── skills/
+│       └── agent-browser/
+├── .kiro/                           # Configuration Kiro
+│   └── skills/
+├── .next/                           # Build Next.js
+├── .opencode/                       # Configuration OpenCode
+│   └── skills/
+│       ├── agent-browser/
+│       └── skill-creator/
+├── .vscode/                         # Configuration VS Code
+├── App.tsx                          # Composant principal
+├── README.md
+├── SUMMARY.md
+├── app/                             # Application Next.js 14
+│   ├── (auth)/                      # Routes d'authentification
+│   │   ├── layout.tsx
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── onboarding/
+│   │   │   └── page.tsx
+│   │   └── register/
+│   │       └── page.tsx
+│   ├── (main)/                      # Routes principales
+│   │   ├── contacts/                # Gestion des contacts
+│   │   │   ├── [id]/
+│   │   │   │   ├── edit/
+│   │   │   │   └── page.tsx
+│   │   │   ├── components/
+│   │   │   │   ├── ContactSelect.tsx
+│   │   │   │   └── filters/
+│   │   │   ├── create/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── dashboard/               # Tableau de bord
+│   │   │   └── page.tsx
+│   │   ├── documents/               # Gestion des documents
+│   │   │   ├── [id]/
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── upload/
+│   │   │       └── page.tsx
+│   │   ├── fuel/                    # Gestion du carburant
+│   │   │   ├── charging/
+│   │   │   │   ├── [id]/
+│   │   │   │   ├── create/
+│   │   │   │   └── page.tsx
+│   │   │   └── history/
+│   │   │       ├── [id]/
+│   │   │       ├── create/
+│   │   │       └── page.tsx
+│   │   ├── inspections/             # Gestion des inspections
+│   │   │   ├── components/
+│   │   │   │   ├── ProgressIndicator.tsx
+│   │   │   │   ├── ScoringSystem.tsx
+│   │   │   │   └── filters/
+│   │   │   ├── forms/
+│   │   │   │   ├── [id]/
+│   │   │   │   ├── components/
+│   │   │   │   ├── create/
+│   │   │   │   └── page.tsx
+│   │   │   ├── history/
+│   │   │   │   ├── [id]/
+│   │   │   │   ├── create/
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── schedules/
+│   │   │       └── page.tsx
+│   │   ├── issues/                  # Gestion des problèmes
+│   │   │   ├── [id]/
+│   │   │   │   ├── edit/
+│   │   │   │   └── page.tsx
+│   │   │   ├── components/
+│   │   │   │   └── filters/
+│   │   │   ├── create/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   ├── parts/                   # Gestion des pièces
+│   │   │   ├── [id]/
+│   │   │   │   ├── edit/
+│   │   │   │   └── page.tsx
+│   │   │   ├── components/
+│   │   │   │   ├── CategorySelect.tsx
+│   │   │   │   ├── LocationSelect.tsx
+│   │   │   │   ├── ManufacturerSelect.tsx
+│   │   │   │   ├── PartSelect.tsx
+│   │   │   │   └── PlaceSelect.tsx
+│   │   │   ├── create/
+│   │   │   └── page.tsx
+│   │   ├── places/                  # Gestion des lieux
+│   │   │   ├── [id]/
+│   │   │   ├── create/
+│   │   │   └── page.tsx
+│   │   ├── reminders/               # Rappels
+│   │   │   ├── service/
+│   │   │   └── vehicle-renewals/
+│   │   ├── reports/                 # Rapports
+│   │   │   └── page.tsx
+│   │   ├── service/                 # Gestion des services
+│   │   │   ├── components/
+│   │   │   ├── history/
+│   │   │   ├── page.tsx
+│   │   │   ├── programs/
+│   │   │   ├── tasks/
+│   │   │   └── work-orders/
+│   │   ├── settings/                # Paramètres
+│   │   │   ├── general/
+│   │   │   ├── groups/
+│   │   │   ├── layout.tsx
+│   │   │   ├── login-password/
+│   │   │   ├── parts/
+│   │   │   └── user-profile/
+│   │   ├── vehicles/                # Gestion des véhicules
+│   │   │   ├── assignments/
+│   │   │   ├── components/
+│   │   │   ├── expense/
+│   │   │   ├── list/
+│   │   │   ├── meter-history/
+│   │   │   ├── replacement/
+│   │   │   └── types.ts
+│   │   └── vendors/                 # Gestion des fournisseurs
+│   ├── api/                         # API Routes Next.js
+│   │   ├── assignments/
+│   │   │   └── route.ts
+│   │   ├── auth/                    # Authentification
+│   │   │   ├── check-blacklist/
+│   │   │   ├── clean-expired-tokens/
+│   │   │   ├── login/
+│   │   │   ├── logout/
+│   │   │   ├── register/
+│   │   │   └── verify-user/
+│   │   ├── charging/
+│   │   │   └── entries/
+│   │   ├── contacts/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   ├── dashboard/               # APIs du tableau de bord
+│   │   │   ├── costs/
+│   │   │   ├── fuel/
+│   │   │   ├── inspections/
+│   │   │   ├── issues/
+│   │   │   ├── maintenance/
+│   │   │   ├── overview/
+│   │   │   ├── parts/
+│   │   │   └── vehicles/
+│   │   ├── documents/
+│   │   │   ├── [id]/
+│   │   │   ├── by-attachment/
+│   │   │   ├── route.ts
+│   │   │   ├── search/
+│   │   │   └── upload/
+│   │   ├── expenses/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   ├── fuel/
+│   │   │   └── entries/
+│   │   ├── groups/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   ├── inspection-schedules/
+│   │   │   └── route.ts
+│   │   ├── inspection-templates/
+│   │   │   ├── [id]/
+│   │   │   ├── route.ts
+│   │   │   └── templates-json/
+│   │   ├── inspections/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   ├── issues/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   ├── meter-entries/
+│   │   │   └── route.ts
+│   │   ├── notifications/
+│   │   │   └── route.ts
+│   │   ├── onboarding/
+│   │   │   └── company/
+│   │   ├── parts/
+│   │   │   ├── [id]/
+│   │   │   ├── categories/
+│   │   │   ├── low-stock/
+│   │   │   ├── manufacturers/
+│   │   │   ├── route.ts
+│   │   │   ├── stats/
+│   │   │   └── usage-analytics/
+│   │   ├── places/
+│   │   │   ├── [id]/
+│   │   │   ├── geocode/
+│   │   │   ├── nearby/
+│   │   │   ├── reverse-geocode/
+│   │   │   ├── route.ts
+│   │   │   └── search/
+│   │   ├── profile/
+│   │   │   └── route.ts
+│   │   ├── reports/
+│   │   │   ├── [id]/
+│   │   │   ├── generate/
+│   │   │   └── route.ts
+│   │   ├── service/
+│   │   │   ├── entries/
+│   │   │   ├── programs/
+│   │   │   ├── reminders/
+│   │   │   └── tasks/
+│   │   ├── settings/
+│   │   │   ├── general/
+│   │   │   ├── preferences/
+│   │   │   └── security/
+│   │   ├── test-auth/
+│   │   │   └── route.ts
+│   │   ├── vehicle-renewals/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   ├── vehicles/
+│   │   │   ├── [id]/
+│   │   │   └── route.ts
+│   │   └── vendors/
+│   ├── components/                  # Composants d'application
+│   │   ├── AuthFlow.tsx
+│   │   ├── ProtectedRoute.tsx
+│   │   └── ui/
+│   │       └── ConfirmationModal.tsx
+│   ├── globals.css                  # Styles globaux
+│   ├── layout.tsx                   # Layout principal
+│   ├── loading.tsx
+│   └── page.tsx                     # Page d'accueil
+├── components/                      # Composants réutilisables
+│   ├── EntitySidebar.tsx
+│   ├── Layout.tsx
+│   ├── NotificationToast.tsx
+│   ├── ProtectedRoute.tsx
+│   ├── Sidebar.tsx
+│   ├── TopBar.tsx
+│   ├── dashboard/                   # Composants du tableau de bord
+│   │   ├── AlertWidget.tsx
+│   │   ├── ComplianceChart.tsx
+│   │   ├── CostAnalysis.tsx
+│   │   ├── InspectionStatus.tsx
+│   │   ├── IssuesStatus.tsx
+│   │   ├── MaintenanceStatus.tsx
+│   │   ├── MetricCard.tsx
+│   │   ├── RemindersWidget.tsx
+│   │   ├── StatusGauge.tsx
+│   │   ├── TrendChart.tsx
+│   │   ├── UpcomingInspections.tsx
+│   │   ├── VehicleOverview.tsx
+│   │   └── roles/
+│   │       ├── DriverDashboard.tsx
+│   │       └── TechDashboard.tsx
+│   └── inspections/                 # Composants d'inspections
+│       ├── InspectionCalendar.tsx
+│       ├── InspectionExportPanel.tsx
+│       └── InspectionScheduler.tsx
+├── docker-compose.yml               # Configuration Docker
+├── docs/                            # Documentation
+│   ├── contexte-business-fleetmada.md
+│   ├── document-contexte-fleetmada.md
+│   ├── planning-sprints.md
+│   ├── prd-fleetmada.md
+│   ├── product-vision.md
+│   └── profile-api-documentation.md
+├── init.sql/                        # Scripts d'initialisation DB
+├── lib/                             # Bibliothèques et utilitaires
+│   ├── api-utils.ts
+│   ├── auth-api.ts
+│   ├── auth-context.tsx
+│   ├── hooks/                       # Hooks React personnalisés
+│   │   ├── useAuthToken.ts
+│   │   ├── useChargingEntries.ts
+│   │   ├── useContactPhotos.ts
+│   │   ├── useContacts.ts
+│   │   ├── useCostAnalysis.ts
+│   │   ├── useDashboardMetrics.ts
+│   │   ├── useDocument.ts
+│   │   ├── useDocumentOperations.ts
+│   │   ├── useDocumentSearch.ts
+│   │   ├── useDocuments.ts
+│   │   ├── useFleetOverview.ts
+│   │   ├── useFuelEntries.ts
+│   │   ├── useGroups.ts
+│   │   ├── useInspectionDashboard.ts
+│   │   ├── useInspectionPagination.ts
+│   │   ├── useInspectionTemplates.ts
+│   │   ├── useInspections.ts
+│   │   ├── useIssueComments.ts
+│   │   ├── useIssueDetails.ts
+│   │   ├── useIssuePhotos.ts
+│   │   ├── useIssues.ts
+│   │   ├── useIssuesStatus.ts
+│   │   ├── useMaintenanceStatus.ts
+│   │   ├── useMeterEntries.ts
+│   │   ├── useNotifications.ts
+│   │   ├── usePartDetails.ts
+│   │   ├── useParts.ts
+│   │   ├── usePlaces.ts
+│   │   ├── useReports.ts
+│   │   ├── useServiceEntries.ts
+│   │   ├── useServiceEntry.ts
+│   │   ├── useServiceEntryComments.ts
+│   │   ├── useServiceEntryPhotos.ts
+│   │   ├── useServicePrograms.ts
+│   │   ├── useServiceReminders.ts
+│   │   ├── useServiceTasks.ts
+│   │   ├── useServiceWorkOrders.ts
+│   │   ├── useSettings.ts
+│   │   ├── useUploadDocuments.ts
+│   │   ├── useVehicleAssignments.ts
+│   │   ├── useVehicleComments.ts
+│   │   ├── useVehicleExpenses.ts
+│   │   ├── useVehiclePhotos.ts
+│   │   ├── useVehicleRenewals.ts
+│   │   ├── useVehicles.ts
+│   │   └── useVendors.ts
+│   ├── prisma.ts                    # Configuration Prisma
+│   ├── services/                    # Services API
+│   │   ├── charging-api.ts
+│   │   ├── contacts-api.ts
+│   │   ├── document-upload-service.ts
+│   │   ├── export-service.ts
+│   │   ├── fuel-api.ts
+│   │   ├── geocoding-service.ts
+│   │   ├── inspection-cache-service.ts
+│   │   ├── inspection-export-service.ts
+│   │   ├── inspections-api.ts
+│   │   ├── issues-api.ts
+│   │   ├── notification-service.ts
+│   │   ├── notifications-api.ts
+│   │   ├── parts-api.ts
+│   │   ├── places-api.ts
+│   │   ├── reminder-generator.ts
+│   │   ├── reminders-api.ts
+│   │   ├── report-generator.ts
+│   │   ├── service-api.ts
+│   │   ├── settings-api.ts
+│   │   ├── vehicle-renewals-api.ts
+│   │   ├── vehicles-api.ts
+│   │   └── vendors-api.ts
+│   ├── types/                       # Types TypeScript
+│   └── validations/                 # Schémas de validation
+│       └── vehicle-validations.ts
+├── metadata.json                    # Métadonnées du projet
+├── middleware.ts                    # Middleware Next.js
+├── node_modules/                    # Dépendances npm
+├── package-lock.json
+├── package.json                     # Configuration npm
+├── playwright-report/               # Rapports de tests E2E
+│   ├── data/
+│   │   ├── 194040d9499954d7be0f5173df9317077f75ce96.png
+│   │   └── 472977b6ad4186bd371562f54b24330f240a0c11.md
+│   └── index.html
+├── playwright.config.ts             # Configuration Playwright
+├── postcss.config.js                # Configuration PostCSS
+├── prisma/                          # Configuration base de données
+│   ├── migrations/                  # Migrations Prisma
+│   │   ├── 20251214172655_init/
+│   │   ├── 20251214180307_add_blacklisted_token/
+│   │   ├── 20251214195406_add_company_fields/
+│   │   ├── 20251214195545_refactor_company_table/
+│   │   ├── 20251215203039_add_vehicle_fields_and_expense_entry/
+│   │   ├── 20251215205510_service_module_extension/
+│   │   ├── 20251215210701_add_inspections_models/
+│   │   ├── 20260104191147_add_license_and_passenger_count_v2/
+│   │   ├── 20260106174728_add_comments_to_vehicle_assignment/
+│   │   ├── 20260111183822_add_groups/
+│   │   ├── 20260111204306_add_multi_assignee_support/
+│   │   ├── 20260117151140_add_reason_for_repair_code/
+│   │   ├── 20260117155457_add_reminder_thresholds/
+│   │   ├── 20260124201729_add_user_role/
+│   │   └── migration_lock.toml
+│   ├── schema.prisma                # Schéma de base de données
+│   ├── seed-dev.ts                  # Données de test
+│   ├── seed-setup.ts                # Configuration initiale
+│   └── templates/                   # Templates d'inspection
+│       ├── accident.json
+│       ├── daily_safety_inspection.json
+│       ├── divr_full.json
+│       ├── dvir.json
+│       ├── standard_inspection.json
+│       └── vehicle_inspection.json
+├── prisma.config.ts                 # Configuration Prisma
+├── public/                          # Assets statiques
+│   ├── .DS_Store
+│   ├── img/
+│   │   ├── logo-dark.png
+│   │   └── logo.png
+│   └── uploads/                     # Fichiers uploadés
+│       ├── documents/
+│       │   ├── 1768680950292_catalogue.png
+│       │   └── 1768680954676_Desengagement_HEI.pdf
+│       └── photos/
+│           └── vehicles/
+├── scripts/                         # Scripts de test et utilitaires
+│   ├── check_test_data.js
+│   ├── create-test-user.js
+│   ├── create_test_data.js
+│   ├── test-auth-apis-global.js
+│   ├── test-contacts-vendors-apis.js
+│   ├── test-dashboard-apis.js
+│   ├── test-db-direct.js
+│   ├── test-documents-apis.js
+│   ├── test-fresh-logout.js
+│   ├── test-frontend-auth-integration.js
+│   ├── test-fuel-apis.js
+│   ├── test-infrastructure.js
+│   ├── test-inspections-frontend.js
+│   ├── test-issues-apis.js
+│   ├── test-issues-inspections-apis.js
+│   ├── test-logout-api.js
+│   ├── test-logout-manual.js
+│   ├── test-middleware.js
+│   ├── test-parts-apis.js
+│   ├── test-places-apis.js
+│   ├── test-profile-api.js
+│   ├── test-reminders-apis.js
+│   ├── test-reminders-complete.js
+│   ├── test-reports-apis.js
+│   ├── test-service-apis.js
+│   ├── test-settings-apis.js
+│   ├── test-user-model.js
+│   └── test-vehicles-apis.js
+├── tailwind.config.js               # Configuration Tailwind CSS
+├── test-results/                    # Résultats des tests
+│   ├── .last-run.json
+│   └── assignments-persistence-Ve-15f4b-nd-persist-a-new-assignment-chromium/
+│       ├── error-context.md
+│       └── test-failed-1.png
+├── tests/                           # Tests E2E Playwright
+│   ├── assignments-persistence.spec.ts
+│   ├── contacts.spec.ts
+│   ├── dashboard.spec.ts
+│   ├── documents.spec.ts
+│   ├── fuel.spec.ts
+│   ├── inspections.spec.ts
+│   ├── issues.spec.ts
+│   ├── login-onboarding.spec.ts
+│   ├── parts.spec.ts
+│   ├── places.spec.ts
+│   ├── registration-flow.spec.ts
+│   ├── reminders.spec.ts
+│   ├── reports.spec.ts
+│   ├── service.spec.ts
+│   ├── settings.spec.ts
+│   ├── setup/
+│   │   └── parts-seed.setup.ts
+│   ├── vehicle-filters.spec.ts
+│   ├── vehicles.spec.ts
+│   └── vendors.spec.ts
+├── tsconfig.json                    # Configuration TypeScript
+├── tsconfig.tsbuildinfo
+├── types/                           # Types TypeScript globaux
+│   ├── auth.ts
+│   ├── comments.ts
+│   ├── documents.ts
+│   ├── fuel.ts
+│   ├── geolocation.ts
+│   ├── photos.ts
+│   └── reports.ts
+└── types.ts                         # Types principaux
+```
+
+### 4.2 Organisation des modules
+
+#### 4.2.1 Frontend (app/)
+- **Routes d'authentification** (`(auth)/`): Login, register, onboarding
+- **Routes principales** (`(main)/`): Toutes les fonctionnalités métier
+- **API Routes** (`api/`): Endpoints REST pour chaque module
+- **Composants** (`components/`): Composants réutilisables
+
+#### 4.2.2 Backend (lib/)
+- **Hooks React** (`hooks/`): Logique de récupération des données
+- **Services** (`services/`): Logique métier et appels API
+- **Types** (`types/`): Définitions TypeScript
+- **Validations** (`validations/`): Schémas de validation
+
+#### 4.2.3 Base de données (prisma/)
+- **Schéma** (`schema.prisma`): Modèle de données
+- **Migrations** (`migrations/`): Évolution de la base
+- **Seeds** (`seed-*.ts`): Données de test et configuration
+
+#### 4.2.4 Tests (tests/)
+- **Tests E2E** (`.spec.ts`): Tests Playwright complets
+- **Setup** (`setup/`): Configuration des tests
+- **Rapports** (`test-results/`): Résultats des tests
+
+#### 4.2.5 Documentation (docs/)
+- **PRD** (`prd-fleetmada.md`): Ce document
+- **Contexte** (`contexte-business-fleetmada.md`): Contexte métier
+- **Vision** (`product-vision.md`): Vision produit
+- **Planning** (`planning-sprints.md`): Planification
+
+---
+
+## 5. Flux utilisateur
 
 ### 4.1 Authentification
 1. Utilisateur accède à `/login`
