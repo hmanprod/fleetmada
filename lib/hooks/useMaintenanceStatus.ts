@@ -68,8 +68,8 @@ export function useMaintenanceStatus() {
     }
   };
 
-  const refresh = () => {
-    fetchData();
+  const refresh = async () => {
+    await fetchData();
   };
 
   // Computed values

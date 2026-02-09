@@ -1,5 +1,4 @@
 import { test as setup } from '@playwright/test';
-import { partsAPI } from '../../lib/services/parts-api';
 
 /**
  * Test setup - Seed data for Parts E2E tests
@@ -23,6 +22,16 @@ setup('authenticate and seed parts data', async ({ page }) => {
 
     // 4. Seed test data via API
     console.log('Seeding parts test data...');
+
+    const token = await page.evaluate(() => {
+        return (
+            localStorage.getItem('authToken') ||
+            document.cookie.match(/authToken=([^;]*)/)?.[1] ||
+            null
+        );
+    });
+
+    if (!token) throw new Error('Missing auth token after login (cannot seed parts)');
 
     const testParts = [
         {
@@ -56,12 +65,26 @@ setup('authenticate and seed parts data', async ({ page }) => {
 
     // Create parts using the API
     for (const partData of testParts) {
-        try {
-            await partsAPI.createPart(partData);
+        const resp = await page.request.post('/api/parts', {
+            data: partData,
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (resp.ok()) {
             console.log(`Created part: ${partData.number}`);
-        } catch (error) {
-            console.log(`Part ${partData.number} might already exist, skipping...`);
+            continue;
         }
+
+        if (resp.status() === 409) {
+            console.log(`Part ${partData.number} already exists, skipping...`);
+            continue;
+        }
+
+        const text = await resp.text().catch(() => '');
+        throw new Error(`Failed to seed part ${partData.number}: HTTP ${resp.status()} ${text}`);
     }
 
     console.log('Seed data creation completed');

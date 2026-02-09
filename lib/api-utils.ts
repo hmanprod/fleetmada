@@ -40,27 +40,30 @@ export const getBaseFilter = (token: TokenPayload, relationPath?: string) => {
     const { userId, companyId, role } = token;
     const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
 
+    const mkNestedFilter = (leaf: any) => {
+        const filter: any = {};
+        const parts = relationPath?.split('.') ?? [];
+        if (parts.length === 0) return leaf;
+
+        let current = filter;
+        for (let i = 0; i < parts.length; i++) {
+            current[parts[i]] = i === parts.length - 1 ? leaf : {};
+            current = current[parts[i]];
+        }
+        return filter;
+    };
+
     if (isAdminOrManager && companyId) {
         // Si c'est un admin, on filtre par entreprise
-        if (!relationPath) {
-            // Pour les modèles qui ont une relation directe avec User
-            return { user: { companyId } };
-        } else {
-            // Pour les modèles avec relation imbriquée
-            const filter: any = {};
-            const parts = relationPath.split('.');
-            let current = filter;
-            for (let i = 0; i < parts.length; i++) {
-                current[parts[i]] = i === parts.length - 1 ? { companyId } : {};
-                current = current[parts[i]];
-            }
-            return filter;
-        }
+        if (!relationPath) return { user: { companyId } };
+        return mkNestedFilter({ companyId });
     }
 
-    // Par défaut (ou si Driver/Tech), on filtre par l'utilisateur lui-même
-    // Sauf si on veut plus de granularité (voir plus bas)
-    return { userId };
+    // Par défaut (ou si Driver/Tech), on filtre par l'utilisateur lui-même.
+    // Si une relationPath est fournie (ex: 'vehicle.user'), on applique le filtre
+    // au niveau de cette relation afin d'éviter des where invalides (ex: modèles sans userId).
+    if (!relationPath) return { userId };
+    return mkNestedFilter({ id: userId });
 };
 
 /**
@@ -73,7 +76,15 @@ export const checkVehicleAccess = async (vehicleId: string, userId: string): Pro
     const [vehicle, requestingUser] = await Promise.all([
         prisma.vehicle.findUnique({
             where: { id: vehicleId },
-            include: { user: true }
+            include: {
+                user: true,
+                _count: {
+                    select: {
+                        chargingEntries: true,
+                        reminders: true
+                    }
+                }
+            }
         }),
         prisma.user.findUnique({
             where: { id: userId }

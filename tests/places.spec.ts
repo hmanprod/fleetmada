@@ -14,10 +14,10 @@ test.describe('Module Places - E2E Tests', () => {
 
         // Login
         await page.goto('/login');
-        await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
-        await page.fill('input[type="password"]', 'testpassword123');
-        await page.click('button[type="submit"]');
-        await page.waitForURL('/dashboard');
+        await page.getByTestId('email-input').fill('admin@fleetmadagascar.mg');
+        await page.getByTestId('password-input').fill('testpassword123');
+        await page.getByTestId('login-button').click();
+        await page.waitForURL('**/dashboard**', { timeout: 30000 });
     });
 
     test.afterEach(async () => {
@@ -31,18 +31,22 @@ test.describe('Module Places - E2E Tests', () => {
         await page.getByTestId('add-place-button').click();
         await page.waitForURL('**/places/create');
 
-        await page.getByTestId('place-name-input').fill('Test Office');
-        await page.getByTestId('place-description-textarea').fill('This is a test office description');
-        await page.getByTestId('place-type-select').selectOption('OFFICE');
-        await page.getByTestId('place-address-input').fill('Antananarivo, Madagascar');
+        await page.getByPlaceholder(/Siège Social|Station Total/i).fill('Test Office');
+        await page.getByPlaceholder(/Détails supplémentaires/i).fill('This is a test office description');
+        await page.getByRole('button', { name: 'Bureau' }).click();
 
-        // We don't click Geocode because it might call an external API or fail in test environment
-        // But we can fill manual coordinates if we disable auto geocode
-        await page.locator('#autoGeocode').uncheck();
-        await page.fill('input[name="latitude"], label:has-text("Latitude") + input', '-18.8792');
-        await page.fill('input[name="longitude"], label:has-text("Longitude") + input', '47.5079');
+        // Disable geocoding to avoid external calls, then fill coordinates manually
+        const geocodeToggle = page.getByText('Géocodage Google Maps automatique').locator('..').locator('div').first();
+        await geocodeToggle.click();
 
-        await page.getByTestId('save-place-button').last().click();
+        await page.getByPlaceholder(/Rechercher une adresse/i).fill('Antananarivo, Madagascar');
+
+        const latitudeInput = page.locator('label:has-text("Latitude")').locator('..').locator('input');
+        const longitudeInput = page.locator('label:has-text("Longitude")').locator('..').locator('input');
+        await latitudeInput.fill('-18.8792');
+        await longitudeInput.fill('47.5079');
+
+        await page.getByRole('button', { name: /Enregistrer le lieu/i }).click();
 
         // Since it's a mock save for now (or real if backend works), we expect navigation back or to details
         await page.waitForURL(/\/places(\/|$)/);
@@ -51,7 +55,7 @@ test.describe('Module Places - E2E Tests', () => {
     test('should search for places', async () => {
         await page.goto('/places');
         await page.getByTestId('search-input').fill('Test');
-        await page.press('input[data-testid="search-input"]', 'Enter');
+        await page.getByTestId('search-input').press('Enter');
 
         // Check if table exists
         await expect(page.locator('table')).toBeVisible();

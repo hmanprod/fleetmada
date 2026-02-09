@@ -1,21 +1,19 @@
 ---
 name: product-qa-auditor
-description: Automated web application exploration and QA auditing using agent-browser. Detects functional bugs, UX issues, generates structured test cases, and produces actionable QA reports. Use when you need to audit web applications, detect anomalies, generate test suites, or create QA progression reports for staging/sandbox environments.
+description: Module-by-module QA auditing with Playwright. Runs targeted audits, generates per-module reports, and supports an iterate-until-green workflow for product QA.
 ---
 
 # Product QA Auditor
 
 ## Overview
 
-Automates web application exploration and quality assurance auditing using agent-browser integration. This skill enables systematic detection of functional bugs, UX inconsistencies, and generates comprehensive test artifacts for QA teams.
+Automates module-by-module QA auditing using Playwright. Produces per-module reports and supports an iterate-until-green workflow (audit → fix → re-run).
 
 ## Core Capabilities
 
 ### 1. Automated Web Application Exploration
-- Navigate web applications starting from entry URL
-- Interact with UI elements (buttons, forms, menus)
-- Capture contextual summaries of each screen
-- Build comprehensive navigation trees
+- Crawl a module’s routes and collect console/page/API errors
+- Capture screenshots and navigation trees for triage
 
 ### 2. Functional Bug Detection
 - Compare observed behavior against PRD requirements
@@ -40,54 +38,65 @@ Automates web application exploration and quality assurance auditing using agent
 
 **Start Here:** What type of QA audit do you need?
 
-→ **Full Application Audit**: Use complete exploration workflow
-→ **Targeted Feature Audit**: Focus on specific workflows/pages
-→ **Regression Testing**: Generate tests for existing functionality
-→ **UX Review**: Focus on user experience evaluation
+→ **Targeted Module Audit (recommended)**: audit 1 module, fix, re-run until GREEN  
+→ **Full Application Audit**: audit all modules sequentially (index + per-module reports)  
+→ **Regression Testing**: add/update Playwright specs for the module and re-run  
+→ **UX Review**: treat UX findings as backlog items; keep tests stable
 
-## Complete Exploration Workflow
+## FleetMada: Module-by-module audits
 
-### Step 1: Initialize Exploration
-```
-agent-browser open <URL>
-agent-browser snapshot
-```
+Dans FleetMada, le script `npm run qa:audit` fonctionne en mode **module-first**:
 
-Capture initial state and identify interactive elements.
-
-### Step 2: Systematic Navigation
-- Identify all clickable elements and forms
-- Create exploration queue prioritizing critical paths
-- Document each interaction and resulting state
-- Capture errors and unexpected behaviors
-
-### Step 3: Analysis & Detection
-- Compare behaviors against PRD requirements
-- Apply UX heuristics to each screen
-- Identify anomalies and inconsistencies
-- Document findings with context
-
-### Step 4: Test Generation
-- Convert observations into structured test cases
-- Create regression suites for critical paths
-- Generate QA progression checklist
-- Format outputs for team consumption
-
-## Agent-Browser Integration
-
-### Essential Commands
 ```bash
-agent-browser open <URL>           # Load application
-agent-browser snapshot             # Capture current state
-agent-browser click @e<ID>         # Interact with elements
-agent-browser fill @e<ID> "value"  # Fill form fields
+# Lister les modules
+npm run qa:audit -- --list-modules
+
+# Auditer un module et itérer jusqu’au vert (recommandé)
+npm run qa:audit -- --module vehicles --strict
 ```
 
-### Navigation Strategy
-1. **Breadth-first exploration**: Cover all accessible pages
-2. **Interaction mapping**: Document all user flows
-3. **State capture**: Snapshot before/after interactions
-4. **Error handling**: Capture and analyze error states
+Définition “GREEN” (mode `--strict`):
+- Playwright `passed`
+- Aucun finding `P0` / `P1`
+
+Boucle de travail recommandée:
+1) Lancer l’audit d’un module (`--strict`)
+2) Lire `qa/audits/<runId>/index.md` puis `qa/audits/<runId>/<moduleId>/report.md`
+3) Corriger (code ou tests)
+4) Relancer le même module jusqu’à **GREEN**
+
+## Workflow (Playwright-first)
+
+### Step 1: Run targeted audit
+
+```bash
+npm run qa:audit -- --module <id> --strict
+```
+
+### Step 1b: Full run (optional)
+
+```bash
+npm run qa:audit -- --all --strict --bail
+```
+
+### Step 2: Triage
+- Open `qa/audits/<runId>/index.md` to see RED/GREEN per module
+- For the module under test, open `qa/audits/<runId>/<moduleId>/report.md`
+- If Playwright failed, open `qa/audits/<runId>/<moduleId>/evidence/playwright-report/`
+- Use screenshots/exploration evidence under `qa/audits/<runId>/<moduleId>/evidence/`
+
+### Step 3: Fix + re-run
+- Fix code or update tests for the module
+- Re-run the same module until it’s GREEN
+
+## Notes (keeping the skill coherent)
+- This workflow relies on **Playwright** (tests + exploration).
+- If you add/update module tests, update the module mapping in `qa/modules.ts` so `qa:audit` runs the right files.
+
+## Where tests live (FleetMada)
+- Playwright specs: `tests/*.spec.ts`
+- Module mapping: `qa/modules.ts`
+- Module commands reference: `qa/MODULES.md`
 
 ## QA Progression Checklist
 
@@ -113,36 +122,10 @@ Test Implementation Progress:
 
 ## Output Formats
 
-### Exploration Report Structure
-```json
-{
-  "screens": [
-    {
-      "url": "https://example.com/login",
-      "actions": ["snapshot", "fill email", "fill password", "click login-button"],
-      "errors": [],
-      "uxObservations": ["placeholder missing on password field"]
-    }
-  ],
-  "anomalies": ["Login button disabled after correct inputs (unexpected)"],
-  "testCasesGenerated": [
-    {
-      "id": "TC-LOGIN-001",
-      "description": "Valid login flow",
-      "steps": ["Navigate to login", "Enter credentials", "Click login"],
-      "expectedResults": ["User successfully logged in", "Redirected to dashboard"]
-    }
-  ],
-  "qaProgress": {
-    "identifyWhatToTest": true,
-    "selectTestType": true,
-    "writeTests": true,
-    "runTests": false,
-    "coverageCheck": false,
-    "fixTests": false
-  }
-}
-```
+FleetMada writes, per run:
+- Index du run: `qa/audits/<YYYY-MM-DD>/<runId>/index.md` + `index.json`
+- Rapport d’un module: `qa/audits/<YYYY-MM-DD>/<moduleId>/<runId>/report.md` + `report.json`
+- Evidence: `qa/audits/<YYYY-MM-DD>/<moduleId>/<runId>/evidence/`
 
 ### Test Case Template
 ```
@@ -191,18 +174,9 @@ Type: [Functional/UX/Integration/E2E]
 
 ## Resources
 
-This skill includes specialized resources for QA automation:
-
-### scripts/
-- `exploration_engine.py` - Core navigation and interaction logic
-- `ux_analyzer.py` - UX heuristics evaluation engine
-- `test_generator.py` - Structured test case generation
-- `report_formatter.py` - JSON/Markdown report generation
-
-### references/
+This skill is documentation-only for the FleetMada workflow (no bundled scripts).
 - `ux_heuristics.md` - Comprehensive UX evaluation criteria
 - `test_templates.md` - Standardized test case formats
-- `agent_browser_guide.md` - Detailed agent-browser usage patterns
 - `qa_best_practices.md` - Industry QA standards and methodologies
 
 ### assets/

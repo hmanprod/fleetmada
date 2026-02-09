@@ -60,13 +60,13 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center items-center gap-2 mb-6">
+          <div className="flex justify-center items-center gap-2 mb-6">
           <div className="p-2 rounded-lg relative w-48 h-16">
             <Image
               src="/img/logo-dark.png"
               alt="FleetMada Logo"
               fill
-              className="object-contain"
+              className="object-contain pointer-events-none"
               priority
             />
           </div>
@@ -192,6 +192,7 @@ const LoginPage = () => {
             <div className="mt-6 grid grid-cols-1 gap-3">
               <button
                 onClick={handleNavigateToRegister}
+                data-testid="create-account-button"
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 Créer un compte

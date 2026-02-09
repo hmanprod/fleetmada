@@ -49,12 +49,18 @@ export default function NewIssuePage() {
         dueDate: '',
     });
 
+    const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({
+        type: null,
+        message: '',
+    });
+
     const [isUploading, setIsUploading] = useState(false);
     const [docList, setDocList] = useState<{ id: string; name: string; type: 'photo' | 'document'; url?: string }[]>([]);
     const photoInputRef = useRef<HTMLInputElement>(null);
     const documentInputRef = useRef<HTMLInputElement>(null);
 
     const handleInputChange = (field: string, value: any) => {
+        setFormStatus({ type: null, message: '' });
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -64,10 +70,12 @@ export default function NewIssuePage() {
 
     const validateForm = (): boolean => {
         if (!formData.vehicleId) {
-            toast.error('Erreur', 'Veuillez sélectionner un véhicule / actif');
+            setFormStatus({ type: 'error', message: 'Veuillez sélectionner un véhicule' });
+            toast.error('Erreur', 'Veuillez sélectionner un véhicule');
             return false;
         }
         if (!formData.summary.trim()) {
+            setFormStatus({ type: 'error', message: 'Le résumé est requis' });
             toast.error('Erreur', 'Le résumé est requis');
             return false;
         }
@@ -95,12 +103,14 @@ export default function NewIssuePage() {
             const data = prepareSubmitData();
             await createIssue(data);
 
+            setFormStatus({ type: 'success', message: 'Problème créé avec succès' });
             toast.success('Succès', 'Problème créé avec succès');
             if (andClose) {
                 setTimeout(() => router.push('/issues'), 1500);
             }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du problème';
+            setFormStatus({ type: 'error', message: errorMessage });
             toast.error('Erreur', errorMessage);
         }
     };
@@ -127,9 +137,11 @@ export default function NewIssuePage() {
             });
             setDocList([]);
 
+            setFormStatus({ type: 'success', message: 'Problème créé avec succès. Vous pouvez en ajouter un autre.' });
             toast.success('Succès', 'Problème créé avec succès. Vous pouvez en ajouter un autre.');
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création du problème';
+            setFormStatus({ type: 'error', message: errorMessage });
             toast.error('Erreur', errorMessage);
         }
     };
@@ -220,6 +232,7 @@ export default function NewIssuePage() {
                     <button
                         onClick={() => handleSave(true)}
                         disabled={saving}
+                        data-testid="save-button"
                         className="px-6 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
                     >
                         {saving && <Loader2 size={16} className="animate-spin" />}
@@ -233,9 +246,34 @@ export default function NewIssuePage() {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
                     <h2 className="text-lg font-bold text-gray-900 mb-6">Détails</h2>
 
+                    {formStatus.type && (
+                        <div
+                            className={`mb-6 p-3 border rounded-md text-sm font-medium ${formStatus.type === 'success'
+                                ? 'bg-green-50 border-green-200 text-green-700'
+                                : 'bg-red-50 border-red-200 text-red-700'
+                                }`}
+                            data-testid={formStatus.type === 'success' ? 'success-message' : 'error-message'}
+                        >
+                            {formStatus.message}
+                        </div>
+                    )}
+
                     <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Actif <span className="text-red-500">*</span></label>
+                            <select
+                                data-testid="vehicle-select"
+                                className="sr-only"
+                                value={formData.vehicleId}
+                                onChange={(e) => handleInputChange('vehicleId', e.target.value)}
+                            >
+                                <option value="">Veuillez sélectionner</option>
+                                {vehicles.map(v => (
+                                    <option key={(v as any).id} value={(v as any).id}>
+                                        {(v as any).name || 'Sans nom'}
+                                    </option>
+                                ))}
+                            </select>
                             <VehicleSelect
                                 vehicles={vehicles as any[]}
                                 selectedVehicleId={formData.vehicleId}
@@ -246,6 +284,16 @@ export default function NewIssuePage() {
 
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-2">Priorité</label>
+                            <select
+                                data-testid="priority-select"
+                                className="sr-only"
+                                value={formData.priority}
+                                onChange={(e) => handleInputChange('priority', e.target.value)}
+                            >
+                                {priorityOptions.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
                             <div className="flex gap-3">
                                 {priorityOptions.map((opt) => (
                                     <button
@@ -305,6 +353,7 @@ export default function NewIssuePage() {
                                 type="text"
                                 value={formData.summary}
                                 onChange={(e) => handleInputChange('summary', e.target.value)}
+                                data-testid="summary-input"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none"
                                 placeholder="Entrer un résumé"
                             />
@@ -316,6 +365,7 @@ export default function NewIssuePage() {
                             <textarea
                                 value={formData.description}
                                 onChange={(e) => handleInputChange('description', e.target.value)}
+                                data-testid="description-textarea"
                                 className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none resize-none"
                                 placeholder="Détails supplémentaires sur le problème..."
                             />

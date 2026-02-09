@@ -212,7 +212,11 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
             {/* HEADER */}
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-30 flex justify-between items-center shadow-sm">
                 <div className="flex items-center gap-6">
-                    <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 font-medium text-sm transition-colors">
+                    <button
+                        onClick={handleBack}
+                        data-testid="back-button"
+                        className="text-gray-500 hover:text-gray-700 flex items-center gap-1 font-medium text-sm transition-colors"
+                    >
                         <ChevronLeft size={18} /> Retour
                     </button>
                     <div className="flex items-center gap-2">
@@ -225,6 +229,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
+                        data-testid="save-changes-button"
                         className="px-6 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
                     >
                         {isSaving && <Loader2 size={16} className="animate-spin" />}
@@ -249,6 +254,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                                         type="text"
                                         value={formData.number}
                                         onChange={(e) => handleInputChange('number', e.target.value)}
+                                        data-testid="part-number"
                                         className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none font-medium"
                                         placeholder="Ex: WF-10902"
                                     />
@@ -457,6 +463,7 @@ export default function PartEditPage({ params }: { params: { id: string } }) {
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
+                        data-testid="save-changes-button"
                         className="px-6 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-md shadow-sm flex items-center gap-2 transition-all disabled:opacity-50 text-sm"
                     >
                         {isSaving && <Loader2 size={16} className="animate-spin" />}

@@ -156,15 +156,28 @@ export default function Dashboard() {
                 </span>
               </div>
 
+              {/* Refresh */}
+              <button
+                type="button"
+                data-testid="refresh-button"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Actualiser"
+                title="Actualiser"
+              >
+                <RefreshCw className={`w-6 h-6 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+
               {/* Notifications */}
-              {/* <button data-testid="notification-button" className="relative p-2 text-gray-600 hover:text-gray-900">
+              <button data-testid="notification-button" className="relative p-2 text-gray-600 hover:text-gray-900">
                 <Bell className="w-6 h-6" />
                 {systemAlerts.length > 0 && (
                   <span data-testid="notification-badge" className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {systemAlerts.length}
                   </span>
                 )}
-              </button> */}
+              </button>
 
               {/* Settings */}
               {/* <button className="p-2 text-gray-600 hover:text-gray-900">

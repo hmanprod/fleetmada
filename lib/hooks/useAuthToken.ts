@@ -39,14 +39,29 @@ export async function authenticatedFetch(
   token: string,
   options: RequestInit = {}
 ) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
+  const controller = options.signal ? null : new AbortController();
+  const timeoutMs = 30000;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      signal: options.signal ?? controller?.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    if ((error as any)?.name === 'AbortError') {
+      throw new Error(`API timeout after ${timeoutMs}ms: ${url}`);
+    }
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status} ${response.statusText}`);

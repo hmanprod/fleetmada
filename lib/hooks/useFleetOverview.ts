@@ -59,8 +59,8 @@ export function useFleetOverview() {
     }
   };
 
-  const refresh = () => {
-    fetchData();
+  const refresh = async () => {
+    await fetchData();
   };
 
   // Computed values

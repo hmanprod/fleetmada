@@ -45,11 +45,15 @@ export async function middleware(request: NextRequest) {
     userAgent: request.headers.get('user-agent')?.substring(0, 100) || 'Unknown'
   })
 
-  // Interdire l'accès aux routes de documents et rapports pour tout le monde
-  const FORBIDDEN_ROUTES = ['/documents', '/reports']
-  if (FORBIDDEN_ROUTES.some(route => pathname.startsWith(route))) {
-    logAuthAttempt('Access to forbidden route blocked', { pathname })
-    return NextResponse.redirect(new URL('/', request.url))
+  // Optional kill-switch: block Documents/Reports UI routes.
+  // Default is to allow access; set FLEETMADA_DISABLE_DOCS_REPORTS_ROUTES=1 to enable blocking.
+  const shouldBlockDocsReports = process.env.FLEETMADA_DISABLE_DOCS_REPORTS_ROUTES === '1'
+  if (shouldBlockDocsReports) {
+    const FORBIDDEN_ROUTES = ['/documents', '/reports']
+    if (FORBIDDEN_ROUTES.some(route => pathname.startsWith(route))) {
+      logAuthAttempt('Access to forbidden route blocked', { pathname })
+      return NextResponse.redirect(new URL('/', request.url))
+    }
   }
 
   // Autoriser l'accès aux routes non-API et aux ressources statiques
@@ -108,7 +112,7 @@ export async function middleware(request: NextRequest) {
 
     // Vérifier la blacklist pour toutes les routes protégées
     try {
-      const response = await fetch('http://localhost:3000/api/auth/check-blacklist', {
+      const response = await fetch(new URL('/api/auth/check-blacklist', request.url), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

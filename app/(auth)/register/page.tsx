@@ -74,7 +74,7 @@ const RegisterPage = () => {
               src="/img/logo-dark.png"
               alt="FleetMada Logo"
               fill
-              className="object-contain"
+              className="object-contain pointer-events-none"
               priority
             />
           </div>

@@ -255,7 +255,6 @@ Use this checklist to track QA implementation progress for any feature or applic
 - **Test Case Template**: `assets/test_case_template.json`
 - **Report Templates**: `assets/report_template.html`
 - **UX Heuristics**: `references/ux_heuristics.md`
-- **Agent-Browser Guide**: `references/agent_browser_guide.md`
 
 ### Common Test Scenarios
 

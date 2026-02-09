@@ -124,9 +124,11 @@ export default function UserProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Prénom <span className="text-red-500">*</span></label>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">Prénom <span className="text-red-500">*</span></label>
               <div className="relative">
                 <input
+                  id="firstName"
+                  name="firstName"
                   type="text"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -138,8 +140,10 @@ export default function UserProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
               <input
+                id="lastName"
+                name="lastName"
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}

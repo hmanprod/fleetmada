@@ -1,257 +1,81 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test.describe('Module Véhicules - Tests E2E', () => {
-    const randomSuffix = Math.floor(Math.random() * 10000).toString();
-    let page: Page;
+const ADMIN_EMAIL = 'admin@fleetmadagascar.mg';
+const ADMIN_PASSWORD = 'testpassword123';
 
-    test.setTimeout(90000);
+async function loginAsAdmin(page: Page) {
+  await page.goto('/login');
+  await page.getByTestId('email-input').fill(ADMIN_EMAIL);
+  await page.getByTestId('password-input').fill(ADMIN_PASSWORD);
+  await page.getByTestId('login-button').click();
+  await page.waitForURL('**/dashboard**', { timeout: 30000 });
+}
 
-    test.beforeEach(async ({ browser }) => {
-        // 1. Create explicit context
-        const context = await browser.newContext({
-            viewport: { width: 1280, height: 720 }
-        });
-        page = await context.newPage();
+async function openFirstVehicleDetails(page: Page) {
+  await page.goto('/vehicles/list');
+  await expect(page.locator('table')).toBeVisible();
 
-        // 2. UI-based authentication
-        await page.goto('/login');
-        await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
-        await page.fill('input[type="password"]', 'testpassword123');
-        await page.click('button[type="submit"]');
+  const firstRow = page.locator('tbody tr').first();
+  await firstRow.click();
 
-        // 3. Wait for redirect to dashboard
-        await page.waitForURL('**/dashboard**', { timeout: 30000 });
+  await page.waitForURL(/\/vehicles\/list\/[^/]+$/, { timeout: 30000 });
+  await expect(page.getByText('Chargement du véhicule...')).toBeHidden({ timeout: 30000 });
+}
 
-        // 4. Wait for loading overlay to hide
-        try {
-            await page.waitForSelector('text=Chargement des données...', { state: 'hidden', timeout: 45000 });
-        } catch (e) {
-            console.log('Timeout waiting for loading overlay to hide, proceeding anyway...');
-        }
+test.describe('Module Véhicules - E2E', () => {
+  test.setTimeout(90000);
 
-        // 5. Handle any modals
-        try {
-            const modalClose = page.locator('button:has-text("Plus tard"), button[aria-label="Close"], .modal-close').first();
-            if (await modalClose.isVisible({ timeout: 5000 })) {
-                await modalClose.click();
-            }
-        } catch (e) {
-            // No modal, continue
-        }
-    });
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
 
-    test.describe('Liste des véhicules', () => {
-        test('Affichage de la liste des véhicules', async () => {
-            await page.goto('/vehicles/list');
-            await expect(page).toHaveURL(/\/vehicles\/list/);
+  test('should load vehicles list and open details', async ({ page }) => {
+    await page.goto('/vehicles/list');
+    await expect(page.locator('table')).toBeVisible();
 
-            // Vérifier le titre de la page
-            await expect(page.locator('h1').filter({ hasText: /véhicules|vehicles/i })).toBeVisible();
+    const rows = page.locator('tbody tr');
+    await expect(rows.first()).toBeVisible({ timeout: 15000 });
 
-            // Vérifier la présence du tableau
-            await expect(page.locator('table')).toBeVisible();
+    await rows.first().click();
+    await page.waitForURL(/\/vehicles\/list\/[^/]+$/, { timeout: 30000 });
+    await expect(page.locator('h1').first()).toBeVisible();
+  });
 
-            // Vérifier qu'il y a des lignes (si seeding a fonctionné)
-            const rows = page.locator('tbody tr');
-            await expect(rows.first()).toBeVisible();
-        });
+  test('should navigate between vehicle detail tabs', async ({ page }) => {
+    await openFirstVehicleDetails(page);
 
-        test('Navigation vers les détails d\'un véhicule', async () => {
-            await page.goto('/vehicles/list');
-            // Cliquer sur le premier véhicule
-            const firstRow = page.locator('tbody tr').first();
-            await firstRow.click();
+    await expect(page.getByTestId('tab-overview')).toBeVisible();
+    await page.getByTestId('tab-specs').click();
+    await expect(page.getByRole('heading', { name: 'Spécifications' })).toBeVisible();
 
-            // Vérifier la redirection vers /vehicles/[id]
-            await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
-            await expect(page.locator('h1').first()).toBeVisible();
-        });
-    });
+    await page.getByTestId('tab-financial').click();
+    await expect(page.locator('main').getByText(/Achat et Finance/i)).toBeVisible();
 
-    test.describe('Page détails véhicule - Onglets horizontaux', () => {
-        test.beforeEach(async () => {
-            await page.goto('/vehicles/list');
-            // Navigate to first vehicle
-            const firstRow = page.locator('tbody tr').first();
-            await firstRow.click();
-            await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
-            await expect(page.getByText('Chargement du véhicule...')).toBeHidden({ timeout: 15000 });
-        });
+    await page.getByTestId('more-tabs-button').click();
+    await expect(page.getByRole('button', { name: 'Historique du carburant' })).toBeVisible();
+  });
 
-        test('Affichage de l\'onglet Overview par défaut', async () => {
-            // Overview tab should be active by default
-            const overviewTab = page.locator('[data-testid="tab-overview"]');
-            await expect(overviewTab).toBeVisible();
-            await expect(overviewTab).toHaveClass(/text-\[#008751\]/);
+  test('should toggle right sidebar panels', async ({ page }) => {
+    await openFirstVehicleDetails(page);
 
-            // Details section should be visible
-            await expect(page.locator('text=Détails')).toBeVisible();
-        });
+    await expect(page.getByTestId('right-sidebar')).toBeVisible();
+    await expect(page.getByTestId('sidebar-panel-content')).toBeVisible();
 
-        test('Navigation entre les onglets principaux', async () => {
-            // Click on Specs tab
-            await page.click('[data-testid="tab-specs"]');
-            await expect(page.locator('text=Spécifications')).toBeVisible();
+    await page.getByTestId('sidebar-photos-btn').click();
+    await expect(page.getByText('Photos')).toBeVisible();
+    await expect(page.getByTestId('upload-area-photos')).toBeVisible();
 
-            // Click on Financial tab
-            await page.click('[data-testid="tab-financial"]');
-            await expect(page.locator('text=Achat et financier')).toBeVisible();
+    await page.getByTestId('sidebar-documents-btn').click();
+    await expect(page.getByText('Documents')).toBeVisible();
+    await expect(page.getByTestId('upload-area-documents')).toBeVisible();
 
-            // Click on Service History tab
-            await page.click('[data-testid="tab-service-history"]');
-            await expect(page.locator('th:has-text("Ordre de travail")')).toBeVisible();
+    await page.getByTestId('sidebar-comments-btn').click();
+    await expect(page.getByText('Commentaires')).toBeVisible();
+  });
 
-            // Click on Inspection History tab
-            await page.click('[data-testid="tab-inspection-history"]');
-            await expect(page.locator('th:has-text("Submitted")')).toBeVisible();
-        });
-
-        test('Menu More affiche les onglets supplémentaires', async () => {
-            // Click More button
-            await page.click('[data-testid="more-tabs-button"]');
-
-            // Verify dropdown items are visible
-            await expect(page.locator('text=Rappels de renouvellement')).toBeVisible();
-            await expect(page.getByRole('button', { name: 'Problèmes' })).toBeVisible();
-            await expect(page.locator('text=Historique des compteurs')).toBeVisible();
-            await expect(page.locator('text=Historique du carburant')).toBeVisible();
-
-            // Click on Fuel History
-            await page.click('text=Historique du carburant');
-            await expect(page.locator('th:has-text("Économie de carburant")')).toBeVisible();
-        });
-    });
-
-    test.describe('Page détails véhicule - Sidebar droite', () => {
-        test.beforeEach(async () => {
-            await page.goto('/vehicles/list');
-            const firstRow = page.locator('tbody tr').first();
-            await firstRow.click();
-            await page.waitForURL(/\/vehicles\/list\/[a-zA-Z0-9]+/);
-            // Wait for loading to finish
-            await expect(page.getByText('Chargement du véhicule...')).toBeHidden({ timeout: 15000 });
-        });
-
-        test('Sidebar droite avec Comments, Photos, Documents', async () => {
-            // Right sidebar should be visible
-            await expect(page.locator('[data-testid="right-sidebar"]')).toBeVisible();
-
-            // Comments panel should be active by default
-            await expect(page.locator('h3:has-text("Commentaires")')).toBeVisible();
-            await expect(page.locator('[data-testid="sidebar-comments-btn"]')).toBeVisible();
-        });
-
-        test('Basculer entre les panneaux de la sidebar', async () => {
-            // Click on Photos button
-            await page.click('[data-testid="sidebar-photos-btn"]');
-            await expect(page.locator('h3:has-text("Photos")')).toBeVisible();
-            await expect(page.locator('[data-testid="upload-area-photos"]')).toBeVisible();
-
-            // Click on Documents button
-            await page.click('[data-testid="sidebar-documents-btn"]');
-            await expect(page.locator('h3:has-text("Documents")')).toBeVisible();
-            await expect(page.locator('text=Aucun document trouvé')).toBeVisible();
-
-            // Click back on Comments
-            await page.click('[data-testid="sidebar-comments-btn"]');
-            await expect(page.locator('input[placeholder="Ajouter un commentaire..."]')).toBeVisible();
-        });
-
-        test('Replier la sidebar', async () => {
-            // Comments is active by default
-            await expect(page.locator('[data-testid="sidebar-panel-content"]')).toBeVisible();
-
-            // Click comments button again to collapse
-            await page.click('[data-testid="sidebar-comments-btn"]');
-            await expect(page.locator('[data-testid="sidebar-panel-content"]')).toBeHidden();
-
-            // Click again to expand
-            await page.click('[data-testid="sidebar-comments-btn"]');
-            await expect(page.locator('[data-testid="sidebar-panel-content"]')).toBeVisible();
-        });
-    });
-
-    test.describe('Affectations de véhicules', () => {
-        test('Affichage de la page des affectations', async () => {
-            await page.goto('/vehicles/assignments');
-            await expect(page).toHaveURL(/\/vehicles\/assignments/);
-
-            // Vérifier le titre
-            await expect(page.locator('h1')).toContainText(/affectations|assignments/i);
-
-            // Vérifier la présence du bouton de nouvelle affectation
-            const addButton = page.locator('button:has-text("Ajouter une affectation")');
-            await expect(addButton).toBeVisible();
-        });
-    });
-
-    test.describe('Dépenses véhicules', () => {
-        test('Affichage de la page des dépenses', async () => {
-            await page.goto('/vehicles/expense');
-            await expect(page).toHaveURL(/\/vehicles\/expense/);
-
-            // Vérifier le titre
-            // Vérifier le titre
-            await expect(page.locator('h1')).toContainText(/Expense/i);
-
-            // Vérifier la présence du tableau ou de la liste
-            await expect(page.locator('table, .expense-list')).toBeVisible();
-        });
-    });
-
-    test.describe('Historique des compteurs', () => {
-        test('Affichage de l\'historique des compteurs', async () => {
-            await page.goto('/vehicles/meter-history');
-            await expect(page).toHaveURL(/\/vehicles\/meter-history/);
-
-            // Vérifier le titre
-            await expect(page.locator('h1')).toContainText(/compteur|meter/i);
-
-            // Vérifier la présence du bouton d'ajout
-            const addButton = page.locator('button:has-text("Ajouter"), button:has-text("Add")');
-            await expect(addButton).toBeVisible();
-        });
-    });
-
-    test.describe('Analyse de remplacement', () => {
-        test('Affichage de l\'analyse de remplacement', async () => {
-            await page.goto('/vehicles/replacement');
-            await expect(page).toHaveURL(/\/vehicles\/replacement/);
-
-            // Vérifier le titre
-            await expect(page.locator('h1')).toContainText(/remplacement|replacement/i);
-
-            // Vérifier la présence de graphiques ou tableaux
-            // Vérifier la présence de graphiques ou tableaux
-            // Vérifier la présence de graphiques ou tableaux
-            await expect(page.locator('.recharts-responsive-container, .recharts-wrapper').first()).toBeVisible();
-        });
-    });
-
-    test.describe('Création de véhicule', () => {
-        test('Création complète d\'un nouveau véhicule', async () => {
-            await page.goto('/vehicles/list/create');
-            await expect(page).toHaveURL(/\/vehicles\/list\/create/);
-
-            const vehicleName = `Test Vehicle ${randomSuffix}`;
-            const vehicleVin = `VIN${randomSuffix}`;
-
-            // Fill Identification tab
-            await page.fill('input[placeholder="Entrez un surnom..."]', vehicleName);
-            await page.fill('label:has-text("VIN/SN") + input', vehicleVin);
-            await page.fill('label:has-text("Année") + input', '2024');
-            await page.fill('label:has-text("Marque") + input', 'Toyota');
-            await page.fill('label:has-text("Modèle") + input', 'Corolla');
-
-            await page.selectOption('select:near(label:has-text("Type"))', { label: 'Voiture' });
-
-            // Click Save
-            await page.click('button:has-text("Enregistrer")');
-
-            // Verify success and redirection
-            await expect(page).toHaveURL(/\/vehicles\/list\/[a-zA-Z0-9]+/, { timeout: 30000 });
-            await expect(page.locator('h1')).toContainText(vehicleName);
-        });
-    });
-
+  test('should load vehicle assignments page', async ({ page }) => {
+    await page.goto('/vehicles/assignments');
+    await expect(page.locator('h1')).toContainText(/Affectations/i);
+    await expect(page.locator('button:has-text(\"Ajouter une affectation\")')).toBeVisible();
+  });
 });

@@ -24,7 +24,7 @@ export default function VehicleAssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { token, loading: tokenLoading } = useAuthToken();
 
@@ -125,6 +125,13 @@ export default function VehicleAssignmentsPage() {
       fetchData(filters);
     }
   }, [token, filters]);
+
+  // Avoid infinite loading UI when auth token is missing/unavailable.
+  useEffect(() => {
+    if (!tokenLoading && !token) {
+      setIsLoading(false);
+    }
+  }, [tokenLoading, token]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -268,11 +275,19 @@ export default function VehicleAssignmentsPage() {
     setCurrentDate(newDate);
   };
 
-  if (isLoading) {
+  if (tokenLoading || isLoading) {
     return (
       <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white">
         <Loader2 className="w-8 h-8 text-[#008751] animate-spin mb-2" />
         <p className="text-gray-500 font-medium">Chargement des affectations...</p>
+      </div>
+    );
+  }
+
+  if (!token) {
+    return (
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white">
+        <p className="text-gray-500 font-medium">Veuillez vous connecter pour accéder aux affectations.</p>
       </div>
     );
   }

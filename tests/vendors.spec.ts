@@ -14,10 +14,10 @@ test.describe('Module Vendors - E2E Tests', () => {
 
         // Login
         await page.goto('/login');
-        await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
-        await page.fill('input[type="password"]', 'testpassword123');
-        await page.click('button[type="submit"]');
-        await page.waitForURL('/dashboard');
+        await page.getByTestId('email-input').fill('admin@fleetmadagascar.mg');
+        await page.getByTestId('password-input').fill('testpassword123');
+        await page.getByTestId('login-button').click();
+        await page.waitForURL('**/dashboard**', { timeout: 30000 });
     });
 
     test.afterEach(async () => {
@@ -25,13 +25,15 @@ test.describe('Module Vendors - E2E Tests', () => {
     });
 
     test('should navigate to Vendors and create a new vendor', async () => {
+        const vendorName = `Test Vendor ${Date.now()}`;
+
         await page.goto('/vendors');
         await expect(page.getByTestId('vendors-title')).toBeVisible();
 
         await page.getByTestId('add-vendor-button').click();
         await page.waitForURL('**/vendors/create');
 
-        await page.getByTestId('vendor-name-input').fill('Test Vendor');
+        await page.getByTestId('vendor-name-input').fill(vendorName);
         await page.getByTestId('vendor-phone-input').fill('0340000000');
         await page.getByTestId('vendor-email-input').fill('test@vendor.com');
 
@@ -41,15 +43,16 @@ test.describe('Module Vendors - E2E Tests', () => {
             await select.selectOption('Fuel');
         }
 
-        await page.getByText('Save Vendor').last().click();
+        await page.getByTestId('save-vendor-button').click();
 
-        await page.waitForURL('**/vendors');
+        await expect(page.getByText(/Fournisseur créé avec succès/i)).toBeVisible({ timeout: 20000 });
+        await page.waitForURL('**/vendors', { timeout: 30000 });
     });
 
     test('should search for vendors', async () => {
         await page.goto('/vendors');
         await page.getByTestId('search-input').fill('Chevron');
-        await page.press('input[data-testid="search-input"]', 'Enter');
+        await page.getByTestId('search-input').press('Enter');
 
         await expect(page.locator('table')).toBeVisible();
     });

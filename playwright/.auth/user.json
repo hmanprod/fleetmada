@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "authToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWxjd3FhdGkwMDAyOHEwZjlsNWM4Ym9iIiwiZW1haWwiOiJhZG1pbkBmbGVldG1hZGFnYXNjYXIubWciLCJyb2xlIjoiQURNSU4iLCJjb21wYW55SWQiOiJjbWxjd3FhdGYwMDAwOHEwZnU0ZndldmpiIiwidHlwZSI6ImxvZ2luIiwiaWF0IjoxNzcwNTc3OTYxLCJleHAiOjE3NzA2NjQzNjF9.0_fHrZjheyCPdvcg0DCW3lx0eIurtG2eE63uGHEGSUs",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1770664361.649759,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "authToken",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWxjd3FhdGkwMDAyOHEwZjlsNWM4Ym9iIiwiZW1haWwiOiJhZG1pbkBmbGVldG1hZGFnYXNjYXIubWciLCJyb2xlIjoiQURNSU4iLCJjb21wYW55SWQiOiJjbWxjd3FhdGYwMDAwOHEwZnU0ZndldmpiIiwidHlwZSI6ImxvZ2luIiwiaWF0IjoxNzcwNTc3OTYxLCJleHAiOjE3NzA2NjQzNjF9.0_fHrZjheyCPdvcg0DCW3lx0eIurtG2eE63uGHEGSUs"
+        }
+      ]
+    }
+  ]
+}

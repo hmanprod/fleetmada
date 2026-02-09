@@ -321,3 +321,4 @@ test-results/
 playwright-report/
 .sonarqube/
 .scannerwork/
+qa/audits/

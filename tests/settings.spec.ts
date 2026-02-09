@@ -1,42 +1,25 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Module Settings', () => {
-  const randomSuffix = Math.floor(Math.random() * 10000).toString();
-  let page: Page;
-
   test.setTimeout(90000);
 
-  test.beforeEach(async ({ browser }) => {
-    // 1. Create explicit context
-    const context = await browser.newContext({
-      viewport: { width: 1280, height: 720 }
-    });
-    page = await context.newPage();
-
-    // 2. UI-based authentication
+  test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
-    await page.fill('input[type="password"]', 'testpassword123');
-    await page.click('button[type="submit"]');
+    await page.getByTestId('email-input').fill('admin@fleetmadagascar.mg');
+    await page.getByTestId('password-input').fill('testpassword123');
+    await page.getByTestId('login-button').click();
 
-    // 3. Wait for redirect to dashboard
     await page.waitForURL('**/dashboard**', { timeout: 30000 });
 
-    // 4. Wait for loading overlay to hide
     try {
-      await page.waitForSelector('text=Chargement des données...', { state: 'hidden', timeout: 45000 });
-    } catch (e) {
-      console.log('Timeout waiting for loading overlay to hide, proceeding anyway...');
+      await page.locator('text=Chargement des données...').waitFor({ state: 'hidden', timeout: 45000 });
+    } catch {
+      // ignore
     }
 
-    // 5. Handle any modals
-    try {
-      const modalClose = page.locator('button:has-text("Plus tard"), button[aria-label="Close"], .modal-close').first();
-      if (await modalClose.isVisible({ timeout: 5000 })) {
-        await modalClose.click();
-      }
-    } catch (e) {
-      // No modal, continue
+    const modalClose = page.locator('button:has-text("Plus tard"), button[aria-label="Close"], .modal-close').first();
+    if (await modalClose.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await modalClose.click();
     }
   });
 
@@ -45,21 +28,20 @@ test.describe('Module Settings', () => {
       await page.goto('/settings/general');
 
       // Vérifier le chargement de la page
-      await expect(page.locator('h1')).toContainText('Paramètres généraux');
+      await expect(page.getByRole('heading', { name: 'Paramètres généraux' })).toBeVisible();
 
       // Modifier le nom de l'entreprise
-      const companyNameInput = page.locator('input[value="ONNO"]').first();
-      // Si le champ n'a pas la valeur par défaut, on le cherche par son label ou autre attribut
-      const nameInput = page.locator('input').first(); // Simplification pour l'exemple
-
-      await nameInput.fill('FleetMada Test Corp');
+      const companyNameInput = page
+        .locator('label:has-text("Nom de l\\\'entreprise")')
+        .locator('..')
+        .locator('input');
+      await companyNameInput.fill('FleetMada Test Corp');
 
       // Sauvegarder
-      await page.click('button:has-text("Enregistrer")'); // Adapter le sélecteur selon l'UI réelle
+      await page.getByRole('button', { name: /^Enregistrer$/ }).click();
 
       // Vérifier le message de succès
-      await expect(page.locator('.text-green-600')).toBeVisible();
-      await expect(page.locator('.text-green-600')).toContainText('succès');
+      await expect(page.getByText(/Paramètres mis à jour avec succès/i)).toBeVisible({ timeout: 20000 });
     });
   });
 
@@ -68,20 +50,27 @@ test.describe('Module Settings', () => {
       await page.goto('/settings/user-profile');
 
       // Vérifier le titre
-      await expect(page.locator('h1')).toContainText('Profil utilisateur');
+      await expect(page.getByRole('heading', { name: 'Profil utilisateur' })).toBeVisible();
 
       // Modifier le prénom
-      await page.fill('input[name="firstName"]', 'Test');
-      await page.fill('input[name="lastName"]', 'User');
-
-      // Changer une préférence
-      await page.selectOption('select', { value: '100' }); // Items per page
+      await page.getByLabel(/Prénom/i).fill('Test');
+      await page.getByLabel(/^Nom/i).fill('User');
 
       // Sauvegarder
-      await page.click('button[type="submit"]');
+      const profileUpdate = page.waitForResponse(
+        res => res.url().includes('/api/profile') && res.request().method() === 'PUT',
+        { timeout: 30000 }
+      );
+      const preferencesUpdate = page.waitForResponse(
+        res => res.url().includes('/api/settings/preferences') && res.request().method() === 'PUT',
+        { timeout: 30000 }
+      );
 
-      // Vérifier le succès
-      await expect(page.locator('.text-green-600')).toBeVisible();
+      await page.locator('form').getByRole('button', { name: /^Enregistrer$/ }).click();
+
+      const [profileResponse, preferencesResponse] = await Promise.all([profileUpdate, preferencesUpdate]);
+      expect(profileResponse.ok()).toBeTruthy();
+      expect(preferencesResponse.ok()).toBeTruthy();
     });
   });
 
@@ -89,12 +78,14 @@ test.describe('Module Settings', () => {
     test('devrait afficher les options de sécurité', async ({ page }) => {
       await page.goto('/settings/login-password');
 
+      await expect(page.getByRole('heading', { name: /Identifiant/i })).toBeVisible();
+
       // Vérifier les onglets
-      await expect(page.locator('button:has-text("Informations de connexion")')).toBeVisible();
-      await expect(page.locator('button:has-text("Changer le mot de passe")')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Informations de connexion' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Changer le mot de passe' })).toBeVisible();
 
       // Tester le changement d'onglet
-      await page.click('button:has-text("Changer le mot de passe")');
+      await page.getByRole('button', { name: 'Changer le mot de passe' }).click();
 
       // Vérifier les champs de mot de passe
       await expect(page.locator('input[type="password"]')).toHaveCount(3);
@@ -102,7 +93,7 @@ test.describe('Module Settings', () => {
 
     test('devrait valider les mots de passe', async ({ page }) => {
       await page.goto('/settings/login-password');
-      await page.click('button:has-text("Changer le mot de passe")');
+      await page.getByRole('button', { name: 'Changer le mot de passe' }).click();
 
       // Remplir avec des mots de passe qui ne correspondent pas
       const inputs = page.locator('input[type="password"]');
@@ -110,10 +101,10 @@ test.describe('Module Settings', () => {
       await inputs.nth(1).fill('newpass123');
       await inputs.nth(2).fill('mismatch123');
 
-      await page.click('button:has-text("Enregistrer")');
+      await page.getByRole('button', { name: /^Enregistrer$/ }).click();
 
       // Vérifier le message d'erreur
-      await expect(page.locator('text=Les mots de passe ne correspondent pas')).toBeVisible();
+      await expect(page.getByText(/ne correspondent pas/i)).toBeVisible();
     });
   });
 });

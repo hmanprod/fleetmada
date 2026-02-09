@@ -88,7 +88,7 @@ export function useCostAnalysis(options: UseCostAnalysisOptions = {}) {
   };
 
   const refresh = (customPeriod?: string) => {
-    fetchData(customPeriod);
+    return fetchData(customPeriod);
   };
 
   const changePeriod = (newPeriod: '7d' | '30d' | '90d' | '1y') => {

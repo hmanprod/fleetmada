@@ -4,6 +4,10 @@ test.describe('Flux d\'inscription user (SPA Flow)', () => {
     test('Inscription complète, onboarding et redirection vers dashboard', async ({ page }) => {
         // Capturer les logs du navigateur
         page.on('console', msg => console.log(`[Browser] ${msg.type()}: ${msg.text()}`));
+        page.on('requestfailed', req => console.log(`[RequestFailed] ${req.method()} ${req.url()} :: ${req.failure()?.errorText || 'failed'}`));
+        page.on('response', resp => {
+            if (resp.status() === 404) console.log(`[HTTP 404] ${resp.url()}`);
+        });
 
         console.log('🚀 Démarrage du test d\'inscription (SPA)...');
 
@@ -15,7 +19,7 @@ test.describe('Flux d\'inscription user (SPA Flow)', () => {
         console.log(`📧 Email généré: ${email}`);
 
         // 1. Aller sur la racine (SPA Entry Point)
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'networkidle' });
 
         // Vérifier qu'on est sur le Login initialement
         await expect(page.locator('h2')).toContainText(/Connectez-vous à votre compte/i);
@@ -23,7 +27,7 @@ test.describe('Flux d\'inscription user (SPA Flow)', () => {
         // 2. Changer vers Inscription
         console.log('🔄 Passage vers la page d\'inscription...');
         // Cliquer sur le bouton "Créer un compte" du bas
-        await page.click('button:has-text("Créer un compte")');
+        await page.getByTestId('create-account-button').click();
 
         // Vérifier qu'on est sur la vue Inscription
         await expect(page.locator('h2')).toContainText(/Commencez/i);

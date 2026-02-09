@@ -14,10 +14,10 @@ test.describe('Module Contacts - E2E Tests', () => {
 
         // Login
         await page.goto('/login');
-        await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
-        await page.fill('input[type="password"]', 'testpassword123');
-        await page.click('button[type="submit"]');
-        await page.waitForURL('/dashboard');
+        await page.getByTestId('email-input').fill('admin@fleetmadagascar.mg');
+        await page.getByTestId('password-input').fill('testpassword123');
+        await page.getByTestId('login-button').click();
+        await page.waitForURL('**/dashboard**', { timeout: 30000 });
     });
 
     test.afterEach(async () => {
@@ -31,18 +31,22 @@ test.describe('Module Contacts - E2E Tests', () => {
         await page.getByTestId('add-contact-button').click();
         await page.waitForURL('**/contacts/create');
 
-        await page.getByTestId('first-name-input').fill('Jean');
+        await page.getByTestId('first-name-input').fill(`Jean-${Date.now()}`);
         await page.getByTestId('last-name-input').fill('Dupont');
 
-        await page.getByTestId('save-contact-button').last().click();
+        page.once('dialog', async dialog => {
+            await dialog.accept();
+        });
+        await page.getByTestId('save-contact-button').first().click();
 
-        await page.waitForURL('**/contacts');
+        await page.getByRole('button', { name: /^Contacts$/ }).click();
+        await page.waitForURL('**/contacts', { timeout: 30000 });
     });
 
     test('should search for contacts', async () => {
         await page.goto('/contacts');
         await page.getByTestId('search-input').fill('Marie');
-        await page.press('input[data-testid="search-input"]', 'Enter');
+        await page.getByTestId('search-input').press('Enter');
 
         await expect(page.locator('table')).toBeVisible();
     });

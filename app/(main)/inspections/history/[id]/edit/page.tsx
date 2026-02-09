@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useInspections from '@/lib/hooks/useInspections';
-import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 import type { InspectionResultData } from '@/lib/services/inspections-api';
 
 interface InspectionResultExecution {
@@ -24,7 +23,6 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
 
     // Hooks
     const { loading, error, fetchInspectionById, updateInspection, submitInspectionResults } = useInspections();
-    const { getTemplateItems } = useInspectionTemplates();
     const [inspection, setInspection] = useState<any>(null);
 
     // États pour l'édition
@@ -70,19 +68,28 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
                     setGeneralNotes(foundInspection.notes || '');
                     setOverallScore(foundInspection.overallScore || 0);
 
-                    // Charger les items du template
-                    if (foundInspection.inspectionTemplateId) {
-                        loadTemplateItems(foundInspection.inspectionTemplateId);
-                    }
+                    // Charger les items *réels* de l'inspection (inspection.items) pour conserver les bons IDs
+                    // (les résultats et l'API /results utilisent inspectionItemId, pas templateItemId).
+                    const inspectionItems = Array.isArray(foundInspection.items) ? foundInspection.items : [];
+                    setTemplateItems(
+                        inspectionItems.map((insItem: any) => ({
+                            id: insItem.id, // inspectionItemId
+                            templateItemId: insItem.templateItemId || insItem.templateItem?.id,
+                            name: insItem.name || insItem.templateItem?.name || '—',
+                            description: insItem.description || insItem.templateItem?.description || '',
+                            category: insItem.category || insItem.templateItem?.category || 'Général',
+                            isRequired: insItem.isRequired ?? insItem.templateItem?.isRequired ?? false
+                        }))
+                    );
 
                     // Charger les résultats existants
                     if (foundInspection.results && foundInspection.results.length > 0) {
                         const existingResults = foundInspection.results.map((result: any) => ({
                             inspectionItemId: result.inspectionItemId,
-                            resultValue: result.resultValue,
+                            resultValue: result.resultValue ?? undefined,
                             isCompliant: result.isCompliant,
-                            notes: result.notes || '',
-                            imageUrl: result.imageUrl
+                            notes: result.notes ?? undefined,
+                            imageUrl: result.imageUrl ?? undefined
                         }));
                         setResults(existingResults);
                     }
@@ -93,28 +100,6 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
         };
         loadInspection();
     }, [params.id, fetchInspectionById]);
-
-    const loadTemplateItems = async (templateId: string) => {
-        try {
-            const items = await getTemplateItems(templateId);
-            setTemplateItems(items);
-
-            // Initialiser les résultats pour les nouveaux items
-            const newResults = items.map((item: any) => {
-                const existingResult = results.find(r => r.inspectionItemId === item.id);
-                return existingResult || {
-                    inspectionItemId: item.id,
-                    resultValue: '',
-                    isCompliant: true,
-                    notes: '',
-                    imageUrl: undefined
-                };
-            });
-            setResults(newResults);
-        } catch (err) {
-            console.error('Erreur lors du chargement des items:', err);
-        }
-    };
 
     const handleBack = () => {
         router.push(`/inspections/history/${params.id}`);
@@ -168,10 +153,16 @@ export default function InspectionEditPage({ params }: { params: { id: string } 
             setSaving(true);
 
             // Mettre à jour les données de base
-            await updateInspection(params.id, formData);
+            const updatePayload: any = { ...formData };
+            if (formData.scheduledDate) {
+                updatePayload.scheduledDate = new Date(formData.scheduledDate).toISOString();
+            } else {
+                delete updatePayload.scheduledDate;
+            }
+            await updateInspection(params.id, updatePayload);
 
             // Soumettre les résultats modifiés
-            if (results.length > 0) {
+            if (activeTab === 'results' && results.length > 0) {
                 await submitInspectionResults(params.id, {
                     results: results
                 });

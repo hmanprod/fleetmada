@@ -29,7 +29,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "playwright:install": "npx playwright install",
-    "setup": "npm install && npm run docker:up && cp .env.example .env.local && npm run db:generate && npm run db:migrate"
+    "setup": "npm install && npm run docker:up && cp .env.example .env.local && npm run db:generate && npm run db:migrate",
+    "qa:audit": "node --import tsx scripts/qa/audit.ts",
+    "qa:playwright:list": "playwright test -c qa/playwright.qa.config.ts --list"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",

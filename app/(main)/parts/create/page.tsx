@@ -188,7 +188,11 @@ export default function PartCreatePage() {
       {/* ZONE 1: HEADER */}
       <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-30 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-6">
-          <button onClick={handleBack} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 font-medium text-sm transition-colors">
+          <button
+            onClick={handleBack}
+            data-testid="back-button"
+            className="text-gray-500 hover:text-gray-700 flex items-center gap-1 font-medium text-sm transition-colors"
+          >
             <ChevronLeft size={18} /> Pièces
           </button>
           <div className="flex items-center gap-2">
@@ -208,6 +212,7 @@ export default function PartCreatePage() {
           <button
             onClick={() => handleSave(true)}
             disabled={isSaving}
+            data-testid="save-part-button"
             className="px-6 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
           >
             {isSaving && <Loader2 size={16} className="animate-spin" />}
@@ -232,6 +237,7 @@ export default function PartCreatePage() {
                     type="text"
                     value={formData.number}
                     onChange={(e) => handleInputChange('number', e.target.value)}
+                    data-testid="part-number"
                     className="w-full p-2.5 pl-10 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none font-medium"
                     placeholder="Ex: WF-10902"
                   />
@@ -252,6 +258,7 @@ export default function PartCreatePage() {
               <textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
+                data-testid="part-description"
                 className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none resize-none"
                 placeholder="Décrivez précisément l'utilité et l'usage de cette pièce..."
               />
@@ -285,16 +292,28 @@ export default function PartCreatePage() {
             <CreditCard size={20} className="text-gray-400" /> Stock et Coût
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Coût unitaire (Ar)</label>
               <input
                 type="number"
                 value={formData.cost || ''}
                 onChange={(e) => handleInputChange('cost', parseFloat(e.target.value) || 0)}
+                data-testid="part-cost"
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none font-medium"
                 min="0"
                 step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Quantité initiale</label>
+              <input
+                type="number"
+                value={formData.quantity || ''}
+                onChange={(e) => handleInputChange('quantity', parseInt(e.target.value) || 0)}
+                data-testid="part-quantity"
+                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none font-medium"
+                min="0"
               />
             </div>
             <div>
@@ -320,6 +339,7 @@ export default function PartCreatePage() {
                 type="number"
                 value={formData.minimumStock || ''}
                 onChange={(e) => handleInputChange('minimumStock', parseInt(e.target.value) || 0)}
+                data-testid="part-minimum-stock"
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] outline-none font-medium"
                 min="0"
               />

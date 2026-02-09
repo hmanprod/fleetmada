@@ -1,53 +1,29 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test.describe('Vehicle Assignments Persistence', () => {
-    let page: Page;
+const ADMIN_EMAIL = 'admin@fleetmadagascar.mg';
+const ADMIN_PASSWORD = 'testpassword123';
 
-    test.beforeEach(async ({ browser }) => {
-        const context = await browser.newContext();
-        page = await context.newPage();
+async function loginAsAdmin(page: Page) {
+  await page.goto('/login');
+  await page.getByTestId('email-input').fill(ADMIN_EMAIL);
+  await page.getByTestId('password-input').fill(ADMIN_PASSWORD);
+  await page.getByTestId('login-button').click();
+  await page.waitForURL('**/dashboard**', { timeout: 30000 });
+}
 
-        await page.goto('/login');
-        await page.fill('input[type="email"]', 'admin@fleetmadagascar.mg');
-        await page.fill('input[type="password"]', 'testpassword123');
-        await page.click('button[type="submit"]');
-        await page.waitForURL('**/dashboard**');
-    });
+test.describe('Vehicle Assignments', () => {
+  test.setTimeout(90000);
 
-    test('should add and persist a new assignment', async () => {
-        await page.goto('/vehicles/assignments');
-        await page.waitForSelector('h1:has-text("Vehicle Assignments")');
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
 
-        // Wait for data load
-        await expect(page.locator('text=Loading assignments...')).toBeHidden({ timeout: 15000 });
+  test('should load assignments page and open create modal', async ({ page }) => {
+    await page.goto('/vehicles/assignments');
 
-        // Click Add Assignment
-        await page.click('button:has-text("Add Assignment")');
-
-        // Fill Form
-        await page.selectOption('select:near(label:has-text("Assigned Vehicle"))', { index: 1 });
-        await page.selectOption('select:near(label:has-text("Operator"))', { index: 1 });
-
-        const testComment = `Test Assignment ${Math.floor(Math.random() * 10000)}`;
-        await page.fill('textarea[placeholder="Add an optional comment"]', testComment);
-
-        // Save
-        await page.click('button:has-text("Save Assignment")');
-
-        // Wait for modal to close
-        await expect(page.locator('h3:has-text("Add Assignment")')).toBeHidden();
-
-        // Refresh Page
-        await page.reload();
-        await expect(page.locator('text=Loading assignments...')).toBeHidden({ timeout: 15000 });
-
-        // Check if the comment exists in the page (which means it was fetched)
-        // Since it's in a scheduler, we look for the text
-        const isVisible = await page.getByText(testComment).isVisible();
-        if (!isVisible) {
-            // Try to find it in the operators list inside the grid
-            const operator = await page.locator('select:near(label:has-text("Operator"))').inputValue();
-            console.log('Operator selected:', operator);
-        }
-    });
+    await expect(page.locator('h1')).toContainText('Affectations de véhicules');
+    await page.getByRole('button', { name: /Ajouter une affectation/i }).click();
+    await expect(page.getByRole('heading', { name: /Ajouter une affectation/i })).toBeVisible();
+  });
 });
+

@@ -125,7 +125,8 @@ test.describe('Module Documents E2E Tests', () => {
       await page.waitForTimeout(2000);
 
       console.log('Checking if document card is visible...');
-      await expect(page.getByTestId('document-card')).toBeVisible();
+      const documentCard = page.getByTestId('document-card').filter({ hasText: fileName }).first();
+      await expect(documentCard).toBeVisible({ timeout: 15000 });
       await expect(page.locator('text=' + fileName)).toBeVisible();
     });
 
