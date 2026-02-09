@@ -61,7 +61,7 @@ Définition “GREEN” (mode `--strict`):
 
 Boucle de travail recommandée:
 1) Lancer l’audit d’un module (`--strict`)
-2) Lire `qa/audits/<runId>/index.md` puis `qa/audits/<runId>/<moduleId>/report.md`
+2) Lire `qa/audits/<YYYY-MM-DD>/<runId>/index.md` puis `qa/audits/<YYYY-MM-DD>/<moduleId>/<runId>/report.md`
 3) Corriger (code ou tests)
 4) Relancer le même module jusqu’à **GREEN**
 
@@ -80,10 +80,10 @@ npm run qa:audit -- --all --strict --bail
 ```
 
 ### Step 2: Triage
-- Open `qa/audits/<runId>/index.md` to see RED/GREEN per module
-- For the module under test, open `qa/audits/<runId>/<moduleId>/report.md`
-- If Playwright failed, open `qa/audits/<runId>/<moduleId>/evidence/playwright-report/`
-- Use screenshots/exploration evidence under `qa/audits/<runId>/<moduleId>/evidence/`
+- Open `qa/audits/<YYYY-MM-DD>/<runId>/index.md` to see RED/GREEN per module
+- For the module under test, open `qa/audits/<YYYY-MM-DD>/<moduleId>/<runId>/report.md`
+- If Playwright failed, open `qa/audits/<YYYY-MM-DD>/<moduleId>/<runId>/evidence/playwright-report/`
+- Use screenshots/exploration evidence under `qa/audits/<YYYY-MM-DD>/<moduleId>/<runId>/evidence/`
 
 ### Step 3: Fix + re-run
 - Fix code or update tests for the module

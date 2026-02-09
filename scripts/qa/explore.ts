@@ -13,6 +13,12 @@ const SEED_USERS: Record<UserRole, Credentials> = {
   DRIVER: { email: 'driver@fleetmadagascar.mg', password: 'userpassword123' },
 };
 
+function routeToScreenshotSlug(route: string) {
+  const normalized = route === '/' ? 'root' : route || 'root';
+  const slug = safeFileSlug(normalized);
+  return slug || 'root';
+}
+
 async function waitForAppIdle(page: Page) {
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(250);
@@ -150,7 +156,7 @@ export async function runExploration(params: {
         'evidence',
         'exploration',
         'screenshots',
-        `${role}_${safeFileSlug(route || 'root')}.png`
+        `${role}_${routeToScreenshotSlug(route)}.png`
       );
       const screenshotAbs = path.join(params.auditDir, screenshotRel);
       await page.screenshot({ path: screenshotAbs, fullPage: true }).catch(() => undefined);
@@ -236,7 +242,7 @@ export async function runExploration(params: {
         'evidence',
         'exploration',
         'screenshots',
-        `${role}_${safeFileSlug(route || 'root')}.png`
+        `${role}_${routeToScreenshotSlug(route)}.png`
       );
       const screenshotAbs = path.join(params.auditDir, screenshotRel);
       await page.screenshot({ path: screenshotAbs, fullPage: true }).catch(() => undefined);

@@ -477,15 +477,16 @@ async function main() {
         });
       }
 
-      if (mod.areas.includes('documents') || mod.areas.includes('reports')) {
+      const docsReportsRoutesDisabled = process.env.FLEETMADA_DISABLE_DOCS_REPORTS_ROUTES === '1';
+      if (docsReportsRoutesDisabled && (mod.areas.includes('documents') || mod.areas.includes('reports'))) {
         moduleFindings.push({
           id: 'NOTE-MW-DOCS-REPORTS',
           type: 'test',
           severity: 'P3',
-          title: 'Confirm intent: middleware blocks /documents and /reports for everyone',
-          hypothesis:
-            'middleware.ts redirects these non-API routes to /. If product expects these modules, this is likely a defect.',
-          tags: ['middleware', 'routing'],
+          title: 'Documents/Reports routes disabled by config',
+          observed:
+            'FLEETMADA_DISABLE_DOCS_REPORTS_ROUTES=1 is set; middleware redirects /documents and /reports to /. This is expected in this configuration.',
+          tags: ['middleware', 'routing', 'config'],
         });
       }
 

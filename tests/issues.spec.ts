@@ -5,11 +5,22 @@ const ADMIN_PASSWORD = 'testpassword123';
 
 async function loginAsAdmin(page: Page) {
   await page.goto('/login');
-  await page.getByTestId('email-input').fill(ADMIN_EMAIL);
-  await page.getByTestId('password-input').fill(ADMIN_PASSWORD);
-  await page.getByTestId('login-button').click();
 
-  await page.waitForURL('**/dashboard**', { timeout: 30000 });
+  const email = page.getByTestId('email-input');
+  await expect(email).toBeVisible({ timeout: 60_000 });
+  await email.fill(ADMIN_EMAIL);
+  await expect(email).toHaveValue(ADMIN_EMAIL);
+
+  const password = page.getByTestId('password-input');
+  await expect(password).toBeVisible({ timeout: 60_000 });
+  await password.fill(ADMIN_PASSWORD);
+  await expect(password).toHaveValue(ADMIN_PASSWORD);
+
+  const loginButton = page.getByTestId('login-button');
+  await expect(loginButton).toBeEnabled({ timeout: 60_000 });
+  await loginButton.click();
+
+  await page.waitForURL('**/dashboard**', { timeout: 60_000 });
 
   try {
     await page.getByTestId('loading-overlay').waitFor({ state: 'hidden', timeout: 45000 });
@@ -26,7 +37,7 @@ test.describe('Module Issues - E2E Tests', () => {
   });
 
   test('should load issues list and filters', async ({ page }) => {
-    await page.goto('/issues');
+    await page.goto('/issues', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByTestId('issues-filters')).toBeVisible();
     await expect(page.getByTestId('issues-list')).toBeVisible();
@@ -37,7 +48,7 @@ test.describe('Module Issues - E2E Tests', () => {
   });
 
   test('should filter issues by status', async ({ page }) => {
-    await page.goto('/issues');
+    await page.goto('/issues', { waitUntil: 'domcontentloaded' });
 
     await page.getByTestId('status-tab-OPEN').click();
     await expect(page.getByTestId('status-tab-OPEN')).toHaveClass(/border-\[#008751\]/);
@@ -47,7 +58,7 @@ test.describe('Module Issues - E2E Tests', () => {
   });
 
   test('should search issues', async ({ page }) => {
-    await page.goto('/issues');
+    await page.goto('/issues', { waitUntil: 'domcontentloaded' });
 
     await page.getByTestId('search-input').fill('moteur');
     await page.getByTestId('search-input').press('Enter');
@@ -58,7 +69,7 @@ test.describe('Module Issues - E2E Tests', () => {
   test('should create an issue and open its details', async ({ page }) => {
     const uniqueSummary = `Problème test E2E ${Date.now()}`;
 
-    await page.goto('/issues/create');
+    await page.goto('/issues/create', { waitUntil: 'domcontentloaded' });
 
     const vehicleSelect = page.getByTestId('vehicle-select');
     await vehicleSelect.waitFor({ state: 'attached' });
@@ -83,7 +94,7 @@ test.describe('Module Issues - E2E Tests', () => {
   });
 
   test('should show issues metrics on dashboard', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     await page.getByTestId('dashboard-issues-tab').click();
     await expect(page.getByTestId('issues-status')).toBeVisible();
@@ -93,4 +104,3 @@ test.describe('Module Issues - E2E Tests', () => {
     await expect(page.getByTestId('recent-issues')).toBeVisible();
   });
 });
-
