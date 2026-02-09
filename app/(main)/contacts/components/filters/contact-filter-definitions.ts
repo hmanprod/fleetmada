@@ -3,18 +3,18 @@ import { FilterField } from '../../../inspections/components/filters/filter-defi
 export const CONTACT_FILTER_FIELDS: FilterField[] = [
     {
         id: 'status',
-        label: 'Status',
+        label: 'Statut',
         type: 'enum',
         category: 'CONTACT' as any,
         options: [
-            { value: 'ACTIVE', label: 'Active' },
-            { value: 'INACTIVE', label: 'Inactive' },
-            { value: 'ARCHIVED', label: 'Archived' },
+            { value: 'ACTIVE', label: 'Actif' },
+            { value: 'INACTIVE', label: 'Inactif' },
+            { value: 'ARCHIVED', label: 'Archivé' },
         ]
     },
     {
         id: 'group',
-        label: 'Group',
+        label: 'Groupe',
         type: 'enum',
         category: 'CONTACT' as any,
         options: [] // Will be populated dynamically
@@ -25,23 +25,23 @@ export const CONTACT_FILTER_FIELDS: FilterField[] = [
         type: 'enum',
         category: 'CONTACT' as any,
         options: [
-            { value: 'Operator', label: 'Operator' },
-            { value: 'Technician', label: 'Technician' },
+            { value: 'Operator', label: 'Opérateur' },
+            { value: 'Technician', label: 'Technicien' },
             { value: 'Manager', label: 'Manager' },
-            { value: 'Employee', label: 'Employee' },
-            { value: 'Admin', label: 'Admin' },
-            { value: 'Vendor', label: 'Vendor' },
+            { value: 'Employee', label: 'Employé' },
+            { value: 'Admin', label: 'Administrateur' },
+            { value: 'Vendor', label: 'Fournisseur' },
         ]
     },
     {
         id: 'department',
-        label: 'Department',
+        label: 'Département',
         type: 'text',
         category: 'CONTACT' as any,
     },
     {
         id: 'jobTitle',
-        label: 'Job Title',
+        label: 'Intitulé du poste',
         type: 'text',
         category: 'CONTACT' as any,
     }

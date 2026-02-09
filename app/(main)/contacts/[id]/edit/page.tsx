@@ -173,14 +173,14 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                        <ArrowLeft size={18} /> Back
+                        <ArrowLeft size={18} /> Contacts
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Contact: {contact.firstName} {contact.lastName}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Modifier le contact : {contact.firstName} {contact.lastName}</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+                    <button onClick={handleCancel} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Annuler</button>
                     <button onClick={handleSave} disabled={saving || uploadingImage} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50" data-testid="save-contact-button">
-                        {saving ? 'Enregistrement...' : 'Save Changes'}
+                        {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
                     </button>
                 </div>
             </div>
@@ -195,12 +195,12 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
             <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
                 {/* Basic Details */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Basic Details</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Informations de base</h2>
 
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     value={firstName}
@@ -210,7 +210,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Deuxième prénom</label>
                                 <input
                                     type="text"
                                     value={middleName}
@@ -221,7 +221,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                             <input
                                 type="text"
                                 value={lastName}
@@ -239,18 +239,18 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                 onChange={e => setEmail(e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
-                            <p className="mt-1 text-xs text-gray-500">If this Contact is granted user access, email notifications will be sent here</p>
+                            <p className="mt-1 text-xs text-gray-500">Si ce contact a un accès utilisateur, les notifications email seront envoyées ici.</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Group</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Groupe</label>
                             <select
                                 value={groupId}
                                 onChange={e => setGroupId(e.target.value)}
                                 disabled={groupsLoading}
                                 className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751] disabled:bg-gray-100"
                             >
-                                <option value="">Please select</option>
+                                <option value="">Veuillez sélectionner</option>
                                 {groups.map(g => (
                                     <option key={g.id} value={g.id}>{g.name}</option>
                                 ))}
@@ -258,11 +258,11 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Photo de profil</label>
                             <div className="flex items-center gap-4">
                                 {image ? (
                                     <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-                                        <img src={image} alt="Profile" className="w-full h-full object-cover" />
+                                        <img src={image} alt="Profil" className="w-full h-full object-cover" />
                                         <button
                                             onClick={() => setImage(null)}
                                             className="absolute top-0 right-0 bg-red-500 text-white p-1 hover:bg-red-600 transition-colors"
@@ -284,7 +284,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                             className="flex items-center gap-2 bg-[#008751] text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-[#007043] transition-colors disabled:opacity-50"
                                         >
                                             {uploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                                            Pick File
+                                            Choisir un fichier
                                         </button>
                                         <button
                                             onClick={() => cameraInputRef.current?.click()}
@@ -292,7 +292,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                             className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                                         >
                                             {uploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
-                                            Take Photo
+                                            Prendre une photo
                                         </button>
                                     </div>
                                     <input
@@ -311,7 +311,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                         capture="environment"
                                     />
                                     <p className="text-xs text-gray-500 italic">
-                                        {image ? 'Image chargée' : 'No file selected'}
+                                        {image ? 'Image chargée' : 'Aucun fichier sélectionné'}
                                     </p>
                                 </div>
                             </div>
@@ -319,7 +319,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                     </div>
 
                     <div className="mt-8 border-t border-gray-100 pt-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Classifications</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Profils</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <label className="flex items-start gap-3">
                                 <input
@@ -329,8 +329,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                     className="mt-1 text-[#008751] focus:ring-[#008751] rounded"
                                 />
                                 <div>
-                                    <span className="block text-sm font-medium text-gray-900">Operator</span>
-                                    <span className="block text-xs text-gray-500">Allow this Contact to be assigned to assets</span>
+                                    <span className="block text-sm font-medium text-gray-900">Opérateur</span>
+                                    <span className="block text-xs text-gray-500">Permet d’assigner ce contact à des véhicules / équipements.</span>
                                 </div>
                             </label>
                             <label className="flex items-start gap-3">
@@ -341,8 +341,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                     className="mt-1 text-[#008751] focus:ring-[#008751] rounded"
                                 />
                                 <div>
-                                    <span className="block text-sm font-medium text-gray-900">Employee</span>
-                                    <span className="block text-xs text-gray-500">Current or former employee, for identification purposes only</span>
+                                    <span className="block text-sm font-medium text-gray-900">Employé</span>
+                                    <span className="block text-xs text-gray-500">Employé actuel ou ancien (à des fins d’identification).</span>
                                 </div>
                             </label>
                             <label className="flex items-start gap-3">
@@ -353,8 +353,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                     className="mt-1 text-[#008751] focus:ring-[#008751] rounded"
                                 />
                                 <div>
-                                    <span className="block text-sm font-medium text-gray-900">Technician</span>
-                                    <span className="block text-xs text-gray-500">Allow this Contact to be selected in labor line items on work orders</span>
+                                    <span className="block text-sm font-medium text-gray-900">Technicien</span>
+                                    <span className="block text-xs text-gray-500">Permet d’assigner ce contact à des tâches de maintenance.</span>
                                 </div>
                             </label>
                             <label className="flex items-start gap-3">
@@ -365,8 +365,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                     className="mt-1 text-[#008751] focus:ring-[#008751] rounded"
                                 />
                                 <div>
-                                    <span className="block text-sm font-medium text-gray-900">Manager</span>
-                                    <span className="block text-xs text-gray-500">Allow this Contact to manage assets, users, and settings</span>
+                                    <span className="block text-sm font-medium text-gray-900">Gestionnaire</span>
+                                    <span className="block text-xs text-gray-500">Permet de gérer les véhicules, les utilisateurs et les paramètres.</span>
                                 </div>
                             </label>
                         </div>
@@ -375,20 +375,20 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
                 {/* User Access */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">User Access</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Accès utilisateur</h2>
                     <div className="flex border border-gray-300 rounded-md overflow-hidden">
                         <label className="flex-1 p-4 cursor-pointer hover:bg-gray-50 flex items-start gap-3 border-r border-gray-300">
                             <input type="radio" name="access" className="mt-1 text-[#008751] focus:ring-[#008751]" />
                             <div>
-                                <span className="block text-sm font-bold text-gray-900">Enable Access to Fleetio</span>
-                                <span className="block text-xs text-gray-500 mt-1">This Contact will be enabled as a User, and will be able to log in to your Fleetio account with the access level you choose below.</span>
+                                <span className="block text-sm font-bold text-gray-900">Activer l’accès à FleetMada</span>
+                                <span className="block text-xs text-gray-500 mt-1">Ce contact pourra se connecter à votre compte FleetMada avec le niveau d’accès défini ci-dessous.</span>
                             </div>
                         </label>
                         <label className="flex-1 p-4 cursor-pointer bg-green-50 flex items-start gap-3">
                             <input type="radio" name="access" defaultChecked className="mt-1 text-[#008751] focus:ring-[#008751]" />
                             <div>
-                                <span className="block text-sm font-bold text-green-800">No Access</span>
-                                <span className="block text-xs text-green-700 mt-1">This Contact will not have access to your Fleetio account and will not receive any notifications.</span>
+                                <span className="block text-sm font-bold text-green-800">Aucun accès</span>
+                                <span className="block text-xs text-green-700 mt-1">Ce contact n’aura pas accès à votre compte FleetMada et ne recevra pas de notifications.</span>
                             </div>
                         </label>
                     </div>
@@ -396,33 +396,33 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
                 {/* Contact Information */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Contact Information</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Coordonnées</h2>
                     <div className="grid grid-cols-2 gap-4 space-y-2">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Phone Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone mobile</label>
                             <input
                                 type="text"
-                                placeholder="404-555-0123"
+                                placeholder="Ex : +261 34 00 000 00"
                                 value={phone}
                                 onChange={e => setPhone(e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Work Phone Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone professionnel</label>
                             <input
                                 type="text"
-                                placeholder="e.g. 555-212-3212"
+                                placeholder="Ex : +261 34 00 000 00"
                                 value={workPhone}
                                 onChange={e => setWorkPhone(e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Other Phone Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Autre téléphone</label>
                             <input
                                 type="text"
-                                placeholder="e.g. 555-212-3212"
+                                placeholder="Ex : +261 34 00 000 00"
                                 value={otherPhone}
                                 onChange={e => setOtherPhone(e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
@@ -432,7 +432,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
                     <div className="mt-6 space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
                             <input
                                 type="text"
                                 value={address}
@@ -440,21 +440,21 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                                 data-testid="contact-address-input"
                             />
-                            <p className="mt-1 text-xs text-gray-500">Street address, P.O. box, etc.</p>
+                            <p className="mt-1 text-xs text-gray-500">Rue, boîte postale, etc.</p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Complément d’adresse</label>
                             <input
                                 type="text"
                                 value={address2}
                                 onChange={e => setAddress2(e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
-                            <p className="mt-1 text-xs text-gray-500">Suite, unit, building, floor, etc.</p>
+                            <p className="mt-1 text-xs text-gray-500">Bâtiment, étage, suite, etc.</p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
                                 <input
                                     type="text"
                                     value={city}
@@ -463,7 +463,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Zip/Postal Code</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
                                 <input
                                     type="text"
                                     value={zipCode}
@@ -472,7 +472,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
                                 <input
                                     type="text"
                                     value={country}
@@ -486,20 +486,20 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
                 {/* Personal Details */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Personal Details</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Informations personnelles</h2>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Poste</label>
                             <input
                                 type="text"
-                                placeholder="e.g. Assistant to the Regional Manager"
+                                placeholder="Ex : Assistant du responsable régional"
                                 value={jobTitle}
                                 onChange={e => setJobTitle(e.target.value)}
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
                             <input
                                 type="date"
                                 value={dob}
@@ -508,7 +508,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Employee Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
                             <input
                                 type="text"
                                 value={employeeNumber}
@@ -518,7 +518,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Date d’entrée</label>
                                 <input
                                     type="date"
                                     value={startDate}
@@ -527,7 +527,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Leave Date</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Date de sortie</label>
                                 <input
                                     type="date"
                                     value={leaveDate}
@@ -537,7 +537,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de permis</label>
                             <input
                                 type="text"
                                 value={licenseNumber}
@@ -546,7 +546,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">License Class</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie de permis</label>
                             <div className="flex flex-wrap gap-4 mt-2">
                                 {['A', 'B', 'C', 'D', 'E'].map((cls) => (
                                     <label key={cls} className="flex items-center gap-2 cursor-pointer">
@@ -562,7 +562,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Hourly Labor Rate</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Taux horaire</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2.5 text-gray-500">Ar</span>
                                 <input
@@ -578,7 +578,7 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
                 <div className="flex justify-end gap-3 pt-4 pb-12">
                     <button onClick={handleSave} disabled={saving || uploadingImage} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm" data-testid="save-contact-button">
-                        {saving ? 'Enregistrement...' : 'Save Changes'}
+                        {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
                     </button>
                 </div>
 

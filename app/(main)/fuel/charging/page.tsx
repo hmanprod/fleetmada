@@ -182,13 +182,13 @@ export default function ChargingHistoryPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {error && (
-                            <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-red-600">
-                                    Error: {error}
-                                </td>
-                            </tr>
-                        )}
+	                        {error && (
+	                            <tr>
+	                                <td colSpan={8} className="px-6 py-4 text-center text-red-600">
+	                                    Erreur : {error}
+	                                </td>
+	                            </tr>
+	                        )}
                         {loading && entries.length === 0 ? (
                             <tr>
                                 <td colSpan={8} className="px-6 py-12 text-center">
@@ -214,10 +214,10 @@ export default function ChargingHistoryPage() {
                                             <img src={`https://source.unsplash.com/random/50x50/?electric-car&sig=${entry.id}`} className="w-6 h-6 rounded object-cover" alt="" />
                                             <div>
                                                 <div className="text-sm font-bold text-[#008751] hover:underline">{entry.vehicle?.name || entry.vehicleId}</div>
-                                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{entry.vehicle?.type || 'Vehicle'}</span>
-                                            </div>
-                                        </div>
-                                    </td>
+	                                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{entry.vehicle?.type || 'Véhicule'}</span>
+	                                            </div>
+	                                        </div>
+	                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-gray-900 underline decoration-dotted underline-offset-4">
                                         {formatDate(entry.date)}
                                     </td>

@@ -246,13 +246,16 @@ export default function PlaceEditPage({ params }: { params: { id: string } }) {
                                     height="100%"
                                     style={{ border: 0 }}
                                     src={mapUrl}
-                                    title="Google Maps Preview"
+                                    title="Aperçu Google Maps"
                                 ></iframe>
                             ) : (
                                 <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-center p-12">
                                     <div className="space-y-4">
                                         <MapPin size={40} className="text-gray-300 mx-auto" />
                                         <p className="text-gray-400 font-bold">Aucune coordonnée</p>
+                                        <p className="text-gray-400 text-sm max-w-xs mx-auto">
+                                            Renseignez une adresse ou des coordonnées (latitude/longitude) pour afficher l’aperçu sur la carte.
+                                        </p>
                                     </div>
                                 </div>
                             )}

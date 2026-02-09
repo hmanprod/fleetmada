@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Label } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { Info, HelpCircle } from 'lucide-react';
 
 const data = [
@@ -62,14 +62,35 @@ export default function ReplacementAnalysisPage() {
                                 domain={[0, 1.25]}
                             />
                             <Tooltip
-                                formatter={(value: number) => [`Ar${value.toFixed(2)}/km`, 'Coût']}
+                                labelFormatter={(label: any) => `Année ${label}`}
+                                formatter={(value: number, name: any) => {
+                                    const key = String(name);
+                                    const label =
+                                        key === 'total' ? 'Coût total' :
+                                            key === 'depreciation' ? 'Amortissement' :
+                                                key === 'cost' ? 'Coûts d’entretien' : key;
+                                    return [`Ar${value.toFixed(2)}/km`, label];
+                                }}
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                            />
+                            <Legend
+                                verticalAlign="top"
+                                align="center"
+                                iconType="circle"
+                                wrapperStyle={{ fontSize: 12, color: '#374151' }}
+                                formatter={(value: any) => {
+                                    const key = String(value);
+                                    if (key === 'total') return 'Coût total';
+                                    if (key === 'depreciation') return 'Amortissement';
+                                    if (key === 'cost') return 'Coûts d’entretien';
+                                    return key;
+                                }}
                             />
 
                             {/* Using Areas to mimic the layered look roughly */}
-                            <Area type="monotone" dataKey="total" stackId="1" stroke="#008751" fill="#008751" fillOpacity={0.1} strokeWidth={3} />
-                            <Area type="monotone" dataKey="depreciation" stackId="2" stroke="none" fill="#10B981" fillOpacity={0.2} />
-                            <Area type="monotone" dataKey="cost" stackId="3" stroke="none" fill="#34D399" fillOpacity={0.3} />
+                            <Area type="monotone" dataKey="total" stroke="#008751" fill="#008751" fillOpacity={0.08} strokeWidth={3} dot={false} />
+                            <Area type="monotone" dataKey="depreciation" stroke="#10B981" fill="#10B981" fillOpacity={0.10} strokeWidth={2} dot={false} />
+                            <Area type="monotone" dataKey="cost" stroke="#34D399" fill="#34D399" fillOpacity={0.10} strokeWidth={2} dot={false} />
 
                             {/* Optimal Replacement Line */}
                             <ReferenceLine x={7} stroke="#D97706" strokeDasharray="3 3" label={{ position: 'top', value: 'Remplacement optimal', fill: '#D97706', fontSize: 12 }} />

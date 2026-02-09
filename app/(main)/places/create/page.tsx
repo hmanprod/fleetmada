@@ -488,7 +488,7 @@ export default function PlaceCreatePage() {
                   loading="lazy"
                   allowFullScreen
                   src={mapUrl}
-                  title="Google Maps Preview"
+                  title="Aperçu Google Maps"
                 ></iframe>
               ) : (
                 <div className="absolute inset-0 bg-gray-50 flex items-center justify-center text-center p-12">
@@ -497,7 +497,24 @@ export default function PlaceCreatePage() {
                       <MapPin size={40} className="text-gray-300" />
                     </div>
                     <h4 className="text-lg font-bold text-gray-400">Aucune coordonnée</h4>
-                    <p className="text-gray-400 text-sm max-w-xs mx-auto">Veuillez saisir une adresse ou des coordonnées pour prévisualiser le lieu sur la carte.</p>
+                    <p className="text-gray-400 text-sm max-w-xs mx-auto">
+                      {autoGeocode
+                        ? 'Saisissez une adresse puis cliquez sur « Vérifier l’adresse » pour afficher l’aperçu.'
+                        : 'Renseignez la latitude et la longitude (mode manuel) pour afficher l’aperçu.'}
+                    </p>
+                    {autoGeocode && formData.address.trim() && (
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={handleGeocodeAddress}
+                          disabled={geocodeAddressLoading}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#008751] text-white font-bold hover:bg-[#007043] disabled:opacity-50"
+                        >
+                          {geocodeAddressLoading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
+                          Vérifier l’adresse
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -516,7 +533,7 @@ export default function PlaceCreatePage() {
 
               <div className="absolute bottom-4 left-4">
                 <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-blue-600 shadow-sm border border-blue-100">
-                  POWERED BY GOOGLE MAPS
+                  Propulsé par Google Maps
                 </div>
               </div>
             </div>

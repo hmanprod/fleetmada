@@ -241,7 +241,7 @@ export default function IssuesPage() {
         vehicleId: selectedIssue.vehicleId || '',
         date: new Date().toISOString(),
         isWorkOrder: type === 'work_order',
-        notes: `Created from issue: ${selectedIssue.summary}`,
+        notes: `Créé depuis le problème : ${selectedIssue.summary}`,
         status: 'SCHEDULED'
       });
       setModalType(null);
@@ -509,7 +509,29 @@ export default function IssuesPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {issues.map(issue => (
+            {!loading && !error && issues.length === 0 ? (
+              <tr>
+                <td colSpan={13} className="px-6 py-20 text-center">
+                  <div className="mx-auto max-w-md">
+                    <div className="h-16 w-16 rounded-full border-2 border-[#008751] text-[#008751] flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle size={32} />
+                    </div>
+                    <p className="text-gray-900 font-bold mb-1">Aucun problème trouvé</p>
+                    <p className="text-sm text-gray-500 mb-6">
+                      Aucun problème ne correspond aux filtres actuels. Essayez d’ajuster la recherche ou créez un nouveau problème.
+                    </p>
+                    <button
+                      onClick={handleAdd}
+                      className="inline-flex items-center gap-2 bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded"
+                    >
+                      <Plus size={18} />
+                      Créer un problème
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+            issues.map(issue => (
               <tr key={issue.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(issue.id)}>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}><input type="checkbox" className="rounded border-gray-300" /></td>
                 <td className="px-4 py-3">
@@ -526,12 +548,12 @@ export default function IssuesPage() {
                         {issue.vehicle ? `${issue.vehicle.make} ${issue.vehicle.model}` : 'N/A'}
                       </span>
                       <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded w-fit">
-                        {issue.vehicle?.vin || 'No VIN'}
+                        {issue.vehicle?.vin || '—'}
                       </span>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-500">Vehicle</td>
+                <td className="px-4 py-3 text-gray-500">Véhicule</td>
                 <td className="px-4 py-3 font-medium text-gray-900">#{issue.id.slice(-6)} <span className="text-xs bg-gray-100 px-1 rounded text-gray-500 font-normal">FleetMada</span></td>
                 <td className="px-4 py-3 text-gray-900 font-medium">
                   {issue.summary}
@@ -587,12 +609,15 @@ export default function IssuesPage() {
                       handleRowClick(issue.id);
                     }}
                     className="text-gray-400 hover:text-[#008751] p-1"
+                    aria-label="Ouvrir le problème"
+                    title="Ouvrir le problème"
                   >
                     <ChevronRight size={18} />
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>

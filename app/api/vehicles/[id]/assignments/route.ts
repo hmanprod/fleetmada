@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
   } catch (error) {
     console.error('Error fetching assignments:', error)
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Erreur interne du serveur' }, { status: 500 })
   }
 }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return NextResponse.json({ success: true, data: assignment })
   } catch (error) {
     console.error('Error creating assignment:', error)
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Erreur interne du serveur' }, { status: 500 })
   }
 }
 
@@ -102,7 +102,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ success: true, data: assignment })
   } catch (error) {
     console.error('Error updating assignment:', error)
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Erreur interne du serveur' }, { status: 500 })
   }
 }
 
@@ -127,6 +127,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Assignment deleted successfully' })
   } catch (error) {
     console.error('Error deleting assignment:', error)
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Erreur interne du serveur' }, { status: 500 })
   }
 }

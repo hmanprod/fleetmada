@@ -10,6 +10,7 @@ import {
     Car,
     User,
     Calendar,
+    Check,
     Upload,
     Camera,
     FileText,
@@ -295,28 +296,41 @@ export default function NewIssuePage() {
                                 ))}
                             </select>
                             <div className="flex gap-3">
-                                {priorityOptions.map((opt) => (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onClick={() => handleInputChange('priority', opt.value)}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md border-2 transition-all font-bold text-xs ${formData.priority === opt.value
+                                {priorityOptions.map((opt) => {
+                                    const isSelected = formData.priority === opt.value;
+                                    return (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => handleInputChange('priority', opt.value)}
+                                            aria-pressed={isSelected}
+                                            title={isSelected ? `${opt.label} (sélectionné)` : opt.label}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md border-2 transition-all font-bold text-xs ${isSelected
                                                 ? opt.value === 'NONE' ? 'bg-white border-gray-500 text-gray-700 ring-2 ring-gray-100' :
                                                     opt.value === 'LOW' ? 'bg-white border-blue-500 text-blue-700 ring-2 ring-blue-100' :
                                                         opt.value === 'MEDIUM' ? 'bg-white border-yellow-500 text-yellow-700 ring-2 ring-yellow-100' :
                                                             opt.value === 'HIGH' ? 'bg-white border-orange-500 text-orange-700 ring-2 ring-orange-100' :
                                                                 'bg-white border-red-500 text-red-700 ring-2 ring-red-100'
                                                 : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
-                                            }`}
-                                    >
-                                        <div className={`w-2 h-2 rounded-full ${opt.value === 'NONE' ? 'bg-gray-300' :
-                                            opt.value === 'LOW' ? 'bg-blue-500' :
-                                                opt.value === 'MEDIUM' ? 'bg-yellow-500' :
-                                                    opt.value === 'HIGH' ? 'bg-orange-500' : 'bg-red-600'
-                                            }`} />
-                                        {opt.label}
-                                    </button>
-                                ))}
+                                                }`}
+                                        >
+                                            {isSelected ? (
+                                                <Check size={14} className="text-current" />
+                                            ) : (
+                                                <div
+                                                    className={`w-2 h-2 rounded-full ${opt.value === 'NONE' ? 'bg-gray-300' :
+                                                        opt.value === 'LOW' ? 'bg-blue-500' :
+                                                            opt.value === 'MEDIUM' ? 'bg-yellow-500' :
+                                                                opt.value === 'HIGH' ? 'bg-orange-500' : 'bg-red-600'
+                                                        }`}
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                            {opt.label}
+                                            {isSelected && <span className="sr-only">Sélectionné</span>}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 

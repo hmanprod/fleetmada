@@ -64,7 +64,7 @@ export default function InspectionSchedulesPage() {
             });
 
             if (!schedulesRes.ok) {
-                throw new Error(`Failed to fetch schedules: ${schedulesRes.status}`);
+                throw new Error(`Impossible de charger les planifications d'inspection (HTTP ${schedulesRes.status}).`);
             }
 
             const schedulesData = await schedulesRes.json();
@@ -472,14 +472,30 @@ export default function InspectionSchedulesPage() {
                                 activeTab === 'MISSED' ? 'Aucune inspection en retard.' :
                                     'Aucune inspection ignorée.'}
                         </p>
-                        {schedules.length === 0 && (
-                            <p className="text-gray-400 text-sm mt-2">
-                                Assurez-vous d&apos;avoir configuré des planifications dans vos formulaires d&apos;inspection.
-                            </p>
-                        )}
-                    </div>
-                ) : (
-                    processedData.map((item) => {
+                    {schedules.length === 0 && (
+                        <p className="text-gray-400 text-sm mt-2">
+                            Assurez-vous d&apos;avoir configuré des planifications dans vos formulaires d&apos;inspection.
+                        </p>
+                    )}
+                    {schedules.length === 0 && (
+                        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <button
+                                onClick={() => router.push('/inspections/forms/create')}
+                                className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-lg shadow-sm"
+                            >
+                                Créer un formulaire d’inspection
+                            </button>
+                            <button
+                                onClick={() => router.push('/inspections/forms')}
+                                className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold rounded-lg"
+                            >
+                                Voir les formulaires
+                            </button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                processedData.map((item) => {
                         const uniqueKey = `${item.scheduleId}-${item.vehicleId}-${item.dueDate}`;
                         const dueDate = new Date(item.dueDate);
                         const isToday = dueDate.toDateString() === new Date().toDateString();

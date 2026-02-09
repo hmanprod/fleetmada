@@ -19,6 +19,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // Récupérer l'erreur depuis l'URL
   useEffect(() => {
@@ -44,6 +45,12 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
+    setLocalError(null);
+
+    if (!email.trim() || !password.trim()) {
+      setLocalError('Veuillez renseigner votre adresse email et votre mot de passe.');
+      return;
+    }
 
     try {
       await login({ email, password });
@@ -84,14 +91,14 @@ const LoginPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-sm border border-gray-200 sm:rounded-lg sm:px-10">
-          {(error || urlError) && (
+          {(error || urlError || localError) && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-red-500" />
-              <p className="text-sm text-red-600">{error || urlError}</p>
+              <p className="text-sm text-red-600">{error || urlError || localError}</p>
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Adresse email

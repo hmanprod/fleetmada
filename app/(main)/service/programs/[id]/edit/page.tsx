@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function ServiceProgramEditPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const [name, setName] = useState('Basic Vehicle Maintenance');
+    const [name, setName] = useState('Entretien véhicule (basique)');
     const [primaryMeter, setPrimaryMeter] = useState('Miles');
     const [secondaryMeter, setSecondaryMeter] = useState(false);
     const [template, setTemplate] = useState('');
@@ -35,20 +35,20 @@ export default function ServiceProgramEditPage({ params }: { params: { id: strin
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div>
                     <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-                        <span className="hover:underline cursor-pointer" onClick={() => router.push('/service/programs')}>Service Programs</span> <span className="text-gray-300">/</span> Basic Vehicle Maintenance
+                        <span className="hover:underline cursor-pointer" onClick={() => router.push('/service/programs')}>Programmes d'entretien</span> <span className="text-gray-300">/</span> Entretien véhicule (basique)
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Service Program</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Modifier le programme d'entretien</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleCancel} className="px-4 py-2 text-[#008751] font-medium hover:underline">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Program</button>
+                    <button onClick={handleCancel} className="px-4 py-2 text-[#008751] font-medium hover:underline">Annuler</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Enregistrer le programme</button>
                 </div>
             </div>
 
             <div className="max-w-3xl mx-auto py-8 px-4">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 space-y-6">
                     <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-1">Name <span className="text-red-500">*</span></label>
+                        <label className="block text-sm font-bold text-gray-900 mb-1">Nom <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             value={name}
@@ -60,17 +60,17 @@ export default function ServiceProgramEditPage({ params }: { params: { id: strin
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
                         <div className="flex items-center gap-2">
-                            <button className="bg-[#008751] hover:bg-[#007043] text-white text-sm font-bold px-4 py-2.5 rounded">Pick File</button>
-                            <button className="bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2.5 rounded border border-gray-300 border-dashed">Or drop file here</button>
+                            <button className="bg-[#008751] hover:bg-[#007043] text-white text-sm font-bold px-4 py-2.5 rounded">Choisir un fichier</button>
+                            <button className="bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2.5 rounded border border-gray-300 border-dashed">Ou glisser un fichier ici</button>
                         </div>
-                        <p className="mt-2 text-sm text-gray-500 italic">No file selected</p>
+                        <p className="mt-2 text-sm text-gray-500 italic">Aucun fichier sélectionné</p>
                     </div>
 
                     <div>
                         <label className="block text-sm font-bold text-gray-900 mb-1 flex items-center gap-1">
-                            Primary Meter <span className="text-red-500">*</span> <Lock size={12} className="text-gray-400" />
+                            Compteur principal <span className="text-red-500">*</span> <Lock size={12} className="text-gray-400" />
                         </label>
-                        <p className="text-sm text-gray-500 mb-2">Select how you measure utilization for this service program.</p>
+                        <p className="text-sm text-gray-500 mb-2">Choisissez comment mesurer l'utilisation pour ce programme d'entretien.</p>
                         <div className="space-y-2">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -91,7 +91,7 @@ export default function ServiceProgramEditPage({ params }: { params: { id: strin
                                     className="text-[#008751] focus:ring-[#008751] w-4 h-4 border-gray-300"
                                     disabled
                                 />
-                                <span className="text-sm text-gray-400 font-medium">Kilometers</span>
+                                <span className="text-sm text-gray-400 font-medium">Kilomètres</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -102,7 +102,7 @@ export default function ServiceProgramEditPage({ params }: { params: { id: strin
                                     className="text-[#008751] focus:ring-[#008751] w-4 h-4 border-gray-300"
                                     disabled
                                 />
-                                <span className="text-sm text-gray-400 font-medium">Hours</span>
+                                <span className="text-sm text-gray-400 font-medium">Heures</span>
                             </label>
                         </div>
                     </div>
@@ -120,9 +120,9 @@ export default function ServiceProgramEditPage({ params }: { params: { id: strin
                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008751]"></div>
                             </div>
                             <div>
-                                <label htmlFor="secondaryMeter" className="block text-sm font-bold text-gray-900 mb-1 cursor-pointer">Secondary Meter</label>
+                                <label htmlFor="secondaryMeter" className="block text-sm font-bold text-gray-900 mb-1 cursor-pointer">Compteur secondaire</label>
                                 <p className="text-sm text-gray-500 leading-relaxed">
-                                    Turn on to utilize an additional meter on the service program. This is useful for tracking service for vehicle engine hours or attached vehicle equipment (concrete mixer, welder, trailer, etc.)
+                                    Activez cette option pour utiliser un compteur supplémentaire sur ce programme d'entretien. Utile pour suivre l'entretien lié aux heures moteur ou à des équipements attachés (bétonnière, remorque, etc.).
                                 </p>
                             </div>
                         </div>
@@ -130,8 +130,8 @@ export default function ServiceProgramEditPage({ params }: { params: { id: strin
                 </div>
 
                 <div className="mt-6 flex justify-between items-center">
-                    <button onClick={handleCancel} className="text-[#008751] font-medium hover:underline">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Save Service Program</button>
+                    <button onClick={handleCancel} className="text-[#008751] font-medium hover:underline">Annuler</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm">Enregistrer le programme</button>
                 </div>
             </div>
         </div>

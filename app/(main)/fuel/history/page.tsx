@@ -176,13 +176,13 @@ export default function FuelHistoryPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {error && (
-              <tr>
-                <td colSpan={10} className="px-6 py-4 text-center text-red-600">
-                  Error: {error}
-                </td>
-              </tr>
-            )}
+	            {error && (
+	              <tr>
+	                <td colSpan={10} className="px-6 py-4 text-center text-red-600">
+	                  Erreur : {error}
+	                </td>
+	              </tr>
+	            )}
             {loading && entries.length === 0 ? (
               <tr>
                 <td colSpan={10} className="px-6 py-12 text-center">

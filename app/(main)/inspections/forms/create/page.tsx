@@ -7,14 +7,14 @@ import { useInspectionTemplates } from '@/lib/hooks/useInspectionTemplates';
 import inspectionsAPI, { InspectionTemplateCreateData, InspectionTemplate, JsonTemplateMetadata } from '@/lib/services/inspections-api';
 
 const COLORS = [
-    { name: 'None', value: undefined },
-    { name: 'Red', value: '#ef4444' },
+    { name: 'Aucune', value: undefined },
+    { name: 'Rouge', value: '#ef4444' },
     { name: 'Orange', value: '#f97316' },
-    { name: 'Yellow', value: '#eab308' },
-    { name: 'Green', value: '#22c55e' },
-    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Jaune', value: '#eab308' },
+    { name: 'Vert', value: '#22c55e' },
+    { name: 'Bleu', value: '#3b82f6' },
     { name: 'Indigo', value: '#6366f1' },
-    { name: 'Purple', value: '#a855f7' },
+    { name: 'Violet', value: '#a855f7' },
 ];
 
 export default function CreateInspectionFormPage() {
@@ -42,7 +42,7 @@ export default function CreateInspectionFormPage() {
                 const data = await inspectionsAPI.getJsonTemplates();
                 setJsonTemplates(data);
             } catch (err) {
-                console.error("Failed to fetch JSON templates:", err);
+                console.error("Échec de récupération des modèles JSON :", err);
             } finally {
                 setLoadingJson(false);
             }
@@ -73,9 +73,9 @@ export default function CreateInspectionFormPage() {
                     </button>
                     <div>
                         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                            <button onClick={() => router.push('/inspections/forms')} className="hover:text-gray-900 transition-colors">Inspection Forms</button>
+                            <button onClick={() => router.push('/inspections/forms')} className="hover:text-gray-900 transition-colors">Formulaires d’inspection</button>
                         </nav>
-                        <h1 className="text-2xl font-bold text-gray-900 leading-none">New Inspection Form</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 leading-none">Nouveau formulaire d’inspection</h1>
                     </div>
                 </div>
                 <div className="flex gap-3">
@@ -83,7 +83,7 @@ export default function CreateInspectionFormPage() {
                         onClick={() => router.back()}
                         className="px-6 py-2.5 text-gray-700 font-semibold hover:bg-gray-100 rounded-xl transition-colors"
                     >
-                        Cancel
+                        Annuler
                     </button>
                     <button
                         onClick={handleSave}
@@ -93,7 +93,7 @@ export default function CreateInspectionFormPage() {
                         {submitting ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         ) : (
-                            <span>Save Inspection Form</span>
+                            <span>Enregistrer le formulaire</span>
                         )}
                     </button>
                 </div>
@@ -102,14 +102,14 @@ export default function CreateInspectionFormPage() {
             <div className="max-w-3xl mx-auto py-12 px-4">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="p-8 border-b border-gray-100 bg-gray-50/30">
-                        <h2 className="text-xl font-bold text-gray-900">Details</h2>
+                        <h2 className="text-xl font-bold text-gray-900">Détails</h2>
                     </div>
 
                     <div className="p-8 space-y-8">
                         {/* Title */}
                         <div className="space-y-2">
                             <label className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
-                                Title <span className="text-red-500">*</span>
+                                Titre <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -134,7 +134,7 @@ export default function CreateInspectionFormPage() {
 
                         {/* Copy From Template */}
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Copy from Template</label>
+                            <label className="text-sm font-bold text-gray-700">Copier depuis un modèle</label>
                             <div className="relative">
                                 <select
                                     className="w-full p-3.5 bg-white border border-gray-300 rounded-xl focus:ring-4 focus:ring-[#008751]/10 focus:border-[#008751] outline-none transition-all appearance-none cursor-pointer disabled:bg-gray-50 disabled:text-gray-400"
@@ -151,7 +151,7 @@ export default function CreateInspectionFormPage() {
                                     }}
                                     disabled={loadingJson}
                                 >
-                                    <option value="">{loadingJson ? 'Loading templates...' : 'Please select'}</option>
+                                    <option value="">{loadingJson ? 'Chargement des modèles...' : 'Veuillez sélectionner'}</option>
                                     {jsonTemplates.map((template) => (
                                         <option key={template.filename} value={template.filename}>
                                             {template.title} ({template.category})
@@ -162,13 +162,13 @@ export default function CreateInspectionFormPage() {
                                     {loadingJson ? <Loader2 size={18} className="animate-spin" /> : <FileJson size={18} />}
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-500">Select a standard JSON template as a starting point (Optional)</p>
+                            <p className="text-sm text-gray-500">Choisissez un modèle JSON standard comme point de départ (optionnel)</p>
                         </div>
 
                         {/* Color Picker */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                                <Palette size={16} className="text-gray-400" /> Color
+                                <Palette size={16} className="text-gray-400" /> Couleur
                             </label>
                             <div className="flex flex-wrap gap-3">
                                 {COLORS.map((color) => (
@@ -201,7 +201,8 @@ export default function CreateInspectionFormPage() {
                                     <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008751]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008751]"></div>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Enable Location Exception Tracking</p>
+                                    <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Activer le suivi des exceptions de localisation</p>
+                                    <p className="text-xs text-gray-500 mt-1">Permet d’enregistrer une exception si l’inspection se fait hors de la zone attendue.</p>
                                 </div>
                             </label>
 
@@ -216,8 +217,8 @@ export default function CreateInspectionFormPage() {
                                     <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008751]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008751]"></div>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Prevent Use of Stored Photos</p>
-                                    <p className="text-xs text-gray-500 mt-1">Users will only be able to attach photos by taking them with the device's built-in camera</p>
+                                    <p className="text-sm font-bold text-gray-900 group-hover:text-gray-700 transition-colors">Empêcher l’utilisation de photos stockées</p>
+                                    <p className="text-xs text-gray-500 mt-1">Les utilisateurs ne pourront joindre des photos qu’en les prenant avec la caméra de l’appareil.</p>
                                 </div>
                             </label>
                         </div>
@@ -228,14 +229,14 @@ export default function CreateInspectionFormPage() {
                             onClick={() => router.back()}
                             className="text-sm font-bold text-[#008751] hover:text-[#007043] transition-colors"
                         >
-                            Cancel
+                            Annuler
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={submitting || !formData.name}
                             className="px-8 py-3 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50"
                         >
-                            {submitting ? 'Creating...' : 'Save Inspection Form'}
+                            {submitting ? 'Création…' : 'Enregistrer le formulaire'}
                         </button>
                     </div>
                 </div>

@@ -38,7 +38,7 @@ export default function ChargingEntryCreatePage() {
 
     const handleSave = async () => {
         if (!formData.vehicleId || !formData.date || !formData.energyKwh || !formData.cost) {
-            alert('Please fill in all required fields');
+            alert('Veuillez remplir tous les champs obligatoires.');
             return;
         }
 
@@ -95,12 +95,12 @@ export default function ChargingEntryCreatePage() {
             <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm font-medium">
-                        <ArrowLeft size={16} /> Charging History
+                        <ArrowLeft size={16} /> Historique des recharges
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">New Charging Entry</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Nouvelle recharge</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Cancel</button>
+                    <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded bg-white">Annuler</button>
 
                     <button
                         onClick={handleSave}
@@ -109,7 +109,7 @@ export default function ChargingEntryCreatePage() {
                         className="px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
                         {loading && <Loader2 size={16} className="animate-spin" />}
-                        Save Charging Entry
+                        Enregistrer
                     </button>
                 </div>
             </div>
@@ -117,23 +117,23 @@ export default function ChargingEntryCreatePage() {
             <div className="max-w-5xl mx-auto py-8 px-4 space-y-6">
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        Error: {error}
+                        Erreur : {error}
                     </div>
                 )}
 
                 {/* Vehicle Details */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Vehicle Details</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Détails du véhicule</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle <span className="text-red-500">*</span></label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Véhicule <span className="text-red-500">*</span></label>
                         <select
                             value={formData.vehicleId}
                             onChange={e => handleInputChange('vehicleId', e.target.value)}
                             data-testid="vehicle-select"
                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                         >
-                            <option value="">{vehiclesLoading ? 'Loading vehicles...' : 'Please select'}</option>
+                            <option value="">{vehiclesLoading ? 'Chargement des véhicules...' : 'Veuillez sélectionner'}</option>
                             {vehicles.map(vehicle => (
                                 <option key={vehicle.id} value={vehicle.id}>{vehicle.name}</option>
                             ))}
@@ -144,18 +144,18 @@ export default function ChargingEntryCreatePage() {
 
                 {/* Charging Event */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Charging Event</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Recharge</h2>
 
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
                             <select
                                 value={formData.vendor || ''}
                                 onChange={e => handleInputChange('vendor', e.target.value)}
                                 data-testid="vendor-select"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751] bg-white"
                             >
-                                <option value="">Please select</option>
+                                <option value="">Veuillez sélectionner</option>
                                 <option value="Tesla">Tesla Supercharger</option>
                                 <option value="ChargePoint">ChargePoint</option>
                                 <option value="Electrify America">Electrify America</option>
@@ -164,7 +164,7 @@ export default function ChargingEntryCreatePage() {
 
                         <div className="grid grid-cols-[1fr_1fr_auto] gap-6 items-end">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Charging Started <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Début de charge <span className="text-red-500">*</span></label>
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -189,7 +189,7 @@ export default function ChargingEntryCreatePage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Charging Ended</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Fin de charge</label>
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -214,13 +214,13 @@ export default function ChargingEntryCreatePage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Charging Duration</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
                                 <div className="relative">
                                     <input
                                         type="text"
                                         readOnly
                                         value={durationMinutes > 0 ? `${durationMinutes} min` : ''}
-                                        placeholder="Auto-calculated"
+                                        placeholder="Auto-calculée"
                                         data-testid="duration-input"
                                         className="w-24 p-2.5 border border-gray-300 rounded-md bg-gray-50"
                                     />
@@ -230,7 +230,7 @@ export default function ChargingEntryCreatePage() {
 
                         <div className="grid grid-cols-3 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Total Energy <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Énergie totale <span className="text-red-500">*</span></label>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -243,7 +243,7 @@ export default function ChargingEntryCreatePage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Energy Price</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Prix de l’énergie</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">MGA</span>
                                     <input
@@ -257,7 +257,7 @@ export default function ChargingEntryCreatePage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Energy Cost</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Coût de l’énergie</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">MGA</span>
                                     <input
@@ -272,32 +272,32 @@ export default function ChargingEntryCreatePage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
                             <input
                                 type="text"
                                 value={formData.location || ''}
                                 onChange={e => handleInputChange('location', e.target.value)}
-                                placeholder="Charging station location"
+                                placeholder="Lieu de la station de charge"
                                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                             />
                         </div>
 
                         <button className="text-[#008751] font-bold text-sm flex items-center gap-1 hover:underline">
-                            <Plus size={16} /> Add fees or discounts
+                            <Plus size={16} /> Ajouter des frais ou remises
                         </button>
                     </div>
                 </div>
 
                 {/* Additional Details */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Additional Details</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Détails additionnels</h2>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                         <textarea
                             rows={4}
                             value={formData.notes || ''}
                             onChange={e => handleInputChange('notes', e.target.value)}
-                            placeholder="Add any additional notes..."
+                            placeholder="Ajoutez des notes si nécessaire…"
                             className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-[#008751] focus:border-[#008751]"
                         ></textarea>
                     </div>

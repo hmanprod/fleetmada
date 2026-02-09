@@ -216,18 +216,38 @@ export default function PartsPage() {
                     <div className="h-16 w-16 rounded-full border-2 border-[#008751] text-[#008751] flex items-center justify-center mb-4">
                       <Package size={32} />
                     </div>
-                    <p className="text-gray-500 mb-1">Aucune pièce trouvée.</p>
-                    <p className="text-sm text-gray-400 mb-6 max-w-md text-center">
-                      Les pièces sont des enregistrements pour gérer l'historique de l'inventaire physique.
-                      <br />
-                      <button className="text-[#008751] hover:underline font-medium">En savoir plus</button>
+                    <p className="text-gray-500 mb-1">
+                      {activeTab === 'low-stock'
+                        ? 'Aucune pièce en stock faible.'
+                        : activeTab === 'archived'
+                          ? 'Aucune pièce archivée.'
+                          : 'Aucune pièce trouvée.'}
                     </p>
-                    <button
-                      onClick={handleAddPart}
-                      className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
-                    >
-                      <Plus size={20} /> Ajouter une pièce
-                    </button>
+                    <p className="text-sm text-gray-400 mb-6 max-w-md text-center">
+                      {activeTab === 'low-stock'
+                        ? "Les pièces passent en \"stock faible\" lorsqu'elles sont sous leur seuil d'alerte."
+                        : activeTab === 'archived'
+                          ? "Les pièces archivées apparaîtront ici."
+                          : "Ajoutez votre première pièce pour suivre le stock et la valeur d'inventaire."}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {activeTab !== 'all' && (
+                        <button
+                          type="button"
+                          onClick={() => handleTabChange('all')}
+                          className="px-4 py-2 border border-gray-300 rounded font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          Voir toutes les pièces
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleAddPart}
+                        className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+                      >
+                        <Plus size={20} /> Ajouter une pièce
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>

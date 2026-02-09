@@ -406,7 +406,7 @@ export default function VehicleAssignmentsPage() {
           <div className="h-10 border-b border-gray-200 flex min-w-max sticky top-0 bg-white z-10 shadow-sm">
             {viewMode === 'day' && hours.map(hour => (
               <div key={hour} className="w-20 border-r border-gray-100 px-2 py-2 text-xs text-gray-500 text-center">
-                {hour === 0 ? '12am' : hour === 12 ? '12pm' : hour > 12 ? `${hour - 12}pm` : `${hour}am`}
+                  {`${String(hour).padStart(2, '0')}h`}
               </div>
             ))}
             {viewMode === 'week' && daysOfWeek.map(day => {
@@ -414,7 +414,7 @@ export default function VehicleAssignmentsPage() {
               d.setDate(currentDate.getDate() - currentDate.getDay() + day);
               return (
                 <div key={day} className="w-32 border-r border-gray-100 px-2 py-2 text-xs text-gray-500 text-center">
-                  {d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                  {d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}
                 </div>
               );
             })}

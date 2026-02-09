@@ -13,6 +13,22 @@ import {
 } from '@/lib/hooks/useReports';
 import { ReportConfig } from '@/types/reports';
 
+const REPORT_CATEGORY_LABELS: Record<string, string> = {
+  Vehicles: 'Véhicules',
+  Service: 'Entretien',
+  Fuel: 'Carburant',
+  Issues: 'Problèmes',
+  Inspections: 'Inspections',
+  Contacts: 'Contacts',
+  Parts: 'Pièces',
+  Custom: 'Personnalisé',
+};
+
+function reportCategoryLabel(category: string | undefined) {
+  if (!category) return REPORT_CATEGORY_LABELS.Custom;
+  return REPORT_CATEGORY_LABELS[category] ?? category;
+}
+
 interface ReportCardProps {
   report: any;
   onGenerate: (template: string) => void;
@@ -51,6 +67,7 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
                 }}
                 className="p-1 hover:bg-gray-100 rounded"
                 title="Partager"
+                aria-label="Partager"
               >
                 <Share2 size={16} className="text-gray-400 hover:text-blue-500" />
               </button>
@@ -60,7 +77,7 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
           <p className="text-sm text-gray-500 mb-4 flex-1">{report.description}</p>
 
           <div className="flex justify-between items-center">
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-medium">{report.category}</span>
+            <span className="text-xs text-gray-500 font-semibold">{reportCategoryLabel(report.category)}</span>
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
@@ -102,6 +119,8 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
                     onToggleFavorite(report.id || report.template);
                   }}
                   className="p-1 hover:bg-gray-100 rounded"
+                  title="Ajouter aux favoris"
+                  aria-label="Ajouter aux favoris"
                 >
                   <Heart size={14} className="text-gray-400 hover:text-red-500" />
                 </button>
@@ -111,6 +130,8 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
                     onGenerate(report.template);
                   }}
                   className="p-1 hover:bg-gray-100 rounded"
+                  title="Générer le rapport"
+                  aria-label="Générer le rapport"
                 >
                   <Play size={14} className="text-gray-400 hover:text-green-500" />
                 </button>
@@ -119,7 +140,7 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
             <p className="text-sm text-gray-500 mb-2">{report.description}</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-medium">{report.category}</span>
+            <span className="text-xs text-gray-500 font-semibold">{reportCategoryLabel(report.category)}</span>
             {report.id && (
               <button
                 onClick={(e) => {
@@ -127,6 +148,8 @@ function ReportCard({ report, onGenerate, onToggleFavorite, onExport, onShare, v
                   onExport(report.id, 'csv');
                 }}
                 className="p-1 hover:bg-gray-100 rounded"
+                title="Exporter CSV"
+                aria-label="Exporter CSV"
               >
                 <Download size={14} className="text-gray-400" />
               </button>
@@ -284,20 +307,20 @@ export default function ReportsPage() {
 
   // Catégories avec compteurs
   const reportCategories = [
-    { id: 'Vehicles', name: 'Vehicles', icon: Car, count: templates['Vehicles']?.length || 0 },
-    { id: 'Service', name: 'Service', icon: Wrench, count: templates['Service']?.length || 0 },
-    { id: 'Fuel', name: 'Fuel', icon: Fuel, count: templates['Fuel']?.length || 0 },
-    { id: 'Issues', name: 'Issues', icon: AlertTriangle, count: templates['Issues']?.length || 0 },
+    { id: 'Vehicles', name: 'Véhicules', icon: Car, count: templates['Vehicles']?.length || 0 },
+    { id: 'Service', name: 'Entretien', icon: Wrench, count: templates['Service']?.length || 0 },
+    { id: 'Fuel', name: 'Carburant', icon: Fuel, count: templates['Fuel']?.length || 0 },
+    { id: 'Issues', name: 'Problèmes', icon: AlertTriangle, count: templates['Issues']?.length || 0 },
     { id: 'Inspections', name: 'Inspections', icon: ClipboardCheck, count: templates['Inspections']?.length || 0 },
     { id: 'Contacts', name: 'Contacts', icon: Users, count: templates['Contacts']?.length || 0 },
-    { id: 'Parts', name: 'Parts', icon: Box, count: templates['Parts']?.length || 0 },
+    { id: 'Parts', name: 'Pièces', icon: Box, count: templates['Parts']?.length || 0 },
   ];
 
   const tabs = [
-    { id: 'standard', name: 'Standard Reports', icon: FileText },
-    { id: 'favorites', name: 'Favorites', icon: Star, count: reports.filter((r: any) => r.isFavorite).length },
-    { id: 'saved', name: 'Saved', icon: Save, count: reports.filter((r: any) => r.isSaved).length },
-    { id: 'shared', name: 'Shared', icon: Share2, count: 0 }, // À implémenter
+    { id: 'standard', name: 'Rapports standards', icon: FileText },
+    { id: 'favorites', name: 'Favoris', icon: Star, count: reports.filter((r: any) => r.isFavorite).length },
+    { id: 'saved', name: 'Enregistrés', icon: Save, count: reports.filter((r: any) => r.isSaved).length },
+    { id: 'shared', name: 'Partagés', icon: Share2, count: 0 }, // À implémenter
   ];
 
   const isLoading = reportsLoading || templatesLoading || generateLoading;
@@ -311,7 +334,7 @@ export default function ReportsPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search for a Report"
+              placeholder="Rechercher un rapport"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#008751] focus:border-[#008751]"
@@ -347,11 +370,12 @@ export default function ReportsPage() {
 
         <div className="mt-6 px-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Report Types</h3>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Types de rapports</h3>
             <button
               onClick={refetchTemplates}
               className="p-1 hover:bg-gray-100 rounded"
               title="Rafraîchir"
+              aria-label="Rafraîchir"
             >
               <RefreshCw size={12} className="text-gray-400" />
             </button>
@@ -381,20 +405,22 @@ export default function ReportsPage() {
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Reports</h1>
+            <h1 className="text-3xl font-bold text-gray-900" data-testid="page-title">Rapports</h1>
             {isGenerating && (
               <p className="text-sm text-blue-600 mt-1" data-testid="generating-indicator">Génération d'un rapport en cours...</p>
             )}
           </div>
           <div className="flex gap-2">
             <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 bg-white">
-              <ArrowUpDown size={14} /> Name <ChevronDown size={14} />
+              <ArrowUpDown size={14} /> Nom <ChevronDown size={14} />
             </button>
             <div className="flex border border-gray-300 rounded overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 hover:bg-gray-200 ${viewMode === 'grid' ? 'bg-gray-100 text-gray-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                 data-testid="view-grid"
+                title="Vue en grille"
+                aria-label="Vue en grille"
               >
                 <LayoutGrid size={18} />
               </button>
@@ -402,6 +428,8 @@ export default function ReportsPage() {
                 onClick={() => setViewMode('list')}
                 className={`p-2 border-l border-gray-300 ${viewMode === 'list' ? 'bg-gray-100 text-gray-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                 data-testid="view-list"
+                title="Vue en liste"
+                aria-label="Vue en liste"
               >
                 <ListIcon size={18} />
               </button>

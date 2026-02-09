@@ -67,7 +67,7 @@ export default function CreateVehicleRenewalPage() {
     };
 
     const handleSaveAndAddAnother = () => {
-        console.log('Save and add another:', formData);
+        console.log('Enregistrer et ajouter un autre :', formData);
         // TODO: Implement save and reset logic
     };
 

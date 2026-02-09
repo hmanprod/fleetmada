@@ -32,13 +32,13 @@ export type QAModule = {
 export const QA_MODULES: QAModule[] = [
   {
     id: 'auth',
-    label: 'Auth',
+    label: 'Authentification',
     areas: ['auth'],
     playwrightFiles: ['tests/login-onboarding.spec.ts', 'tests/registration-flow.spec.ts'],
   },
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: 'Tableau de bord',
     areas: ['dashboard'],
     playwrightFiles: ['tests/dashboard.spec.ts'],
   },
@@ -60,19 +60,19 @@ export const QA_MODULES: QAModule[] = [
   },
   {
     id: 'service',
-    label: 'Service',
+    label: 'Entretien',
     areas: ['service'],
     playwrightFiles: ['tests/service.spec.ts'],
   },
   {
     id: 'issues',
-    label: 'Issues',
+    label: 'Problèmes',
     areas: ['issues'],
     playwrightFiles: ['tests/issues.spec.ts'],
   },
   {
     id: 'fuel',
-    label: 'Fuel',
+    label: 'Carburant',
     areas: ['fuel'],
     playwrightFiles: ['tests/fuel.spec.ts'],
   },
@@ -84,7 +84,7 @@ export const QA_MODULES: QAModule[] = [
   },
   {
     id: 'places',
-    label: 'Places',
+    label: 'Sites',
     areas: ['places'],
     playwrightFiles: ['tests/places.spec.ts'],
   },
@@ -96,19 +96,19 @@ export const QA_MODULES: QAModule[] = [
   },
   {
     id: 'vendors',
-    label: 'Vendors',
+    label: 'Fournisseurs',
     areas: ['vendors'],
     playwrightFiles: ['tests/vendors.spec.ts'],
   },
   {
     id: 'reminders',
-    label: 'Reminders',
+    label: 'Rappels',
     areas: ['reminders'],
     playwrightFiles: ['tests/reminders.spec.ts'],
   },
   {
     id: 'settings',
-    label: 'Settings',
+    label: 'Paramètres',
     areas: ['settings'],
     playwrightFiles: ['tests/settings.spec.ts'],
   },
@@ -120,7 +120,7 @@ export const QA_MODULES: QAModule[] = [
   },
   {
     id: 'reports',
-    label: 'Reports',
+    label: 'Rapports',
     areas: ['reports'],
     playwrightFiles: ['tests/reports.spec.ts'],
   },
@@ -133,4 +133,3 @@ export function getModuleById(id: string): QAModule | undefined {
 export function listModuleIds(): QAModuleId[] {
   return QA_MODULES.map(m => m.id);
 }
-

@@ -42,6 +42,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     } catch (error) {
         console.error('Error fetching reminders:', error)
-        return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
+        return NextResponse.json({ success: false, error: 'Erreur interne du serveur' }, { status: 500 })
     }
 }

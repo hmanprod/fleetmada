@@ -41,7 +41,7 @@ export async function GET(
         return NextResponse.json({ success: true, data: schedules });
     } catch (error) {
         console.error('Failed to fetch schedules:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
     }
 }
 
@@ -82,6 +82,6 @@ export async function POST(
         return NextResponse.json({ success: true, data: schedule });
     } catch (error) {
         console.error('Failed to create schedule:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
     }
 }

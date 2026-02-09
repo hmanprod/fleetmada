@@ -410,7 +410,7 @@ export default function DocumentsUploadPage() {
               data-testid="upload-button"
               className="flex-1 px-4 py-2 bg-[#008751] text-white rounded-md hover:bg-[#007043] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploading ? 'Upload...' : `Télécharger (${selectedFiles.length})`}
+              {uploading ? 'Téléversement…' : `Téléverser (${selectedFiles.length})`}
             </button>
 
           </div>

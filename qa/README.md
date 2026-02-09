@@ -1,4 +1,4 @@
-# QA Auditor (local)
+# Audit QA (local)
 
 Objectif: exécuter un audit QA reproductible en local (seed DB + régression Playwright + exploration/crawl) et produire un dossier d’artefacts sous `qa/audits/`.
 

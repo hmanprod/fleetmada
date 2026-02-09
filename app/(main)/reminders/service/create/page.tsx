@@ -98,7 +98,7 @@ export default function CreateServiceReminderPage() {
     };
 
     const handleSaveAndAddAnother = () => {
-        console.log('Save and add another:', formData);
+        console.log('Enregistrer et ajouter un autre :', formData);
         // TODO: Implement save and reset logic
     };
 
@@ -132,8 +132,19 @@ export default function CreateServiceReminderPage() {
                 <div className="space-y-6">
                     <div className="bg-blue-50 border border-blue-200 rounded p-4 flex items-start gap-3 text-blue-800 text-sm">
                         <Info size={20} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                            Plusieurs véhicules de la même marque/modèle ou du même type ont-ils besoin du même calendrier d'entretien ? Utilisez un <a href="#" className="font-semibold underline">Programme d'entretien</a> à la place ! <a href="#" className="underline">En savoir plus</a>
+                        <div className="flex-1">
+                            <p className="font-medium">
+                                Plusieurs véhicules identiques à gérer ? Utilisez un programme d'entretien plutôt qu'un rappel par véhicule.
+                            </p>
+                            <div className="mt-2 flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/service/programs')}
+                                    className="px-3 py-1.5 rounded bg-white border border-blue-200 text-blue-800 font-bold hover:bg-blue-50"
+                                >
+                                    Voir les programmes d'entretien
+                                </button>
+                            </div>
                         </div>
                     </div>
 

@@ -140,6 +140,6 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('Error fetching meter entries:', error)
-        return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
+        return NextResponse.json({ success: false, error: 'Erreur interne du serveur' }, { status: 500 })
     }
 }

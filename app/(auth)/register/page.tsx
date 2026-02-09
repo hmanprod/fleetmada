@@ -31,6 +31,18 @@ const RegisterPage = () => {
     clearError();
     setLocalError(null);
 
+    if (
+      !formData.firstName.trim() ||
+      !formData.lastName.trim() ||
+      !formData.companyName.trim() ||
+      !formData.email.trim() ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      setLocalError('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+
     // Validation côté client
     if (formData.password !== formData.confirmPassword) {
       setLocalError("Les mots de passe ne correspondent pas");
@@ -99,7 +111,7 @@ const RegisterPage = () => {
             </div>
           )}
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>

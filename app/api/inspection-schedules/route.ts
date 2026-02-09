@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Failed to fetch inspection schedules:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
     }
 }
 
@@ -311,7 +311,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Failed to update inspection schedule status:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
     }
 }
-

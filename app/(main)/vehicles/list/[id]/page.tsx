@@ -143,13 +143,13 @@ export default function VehicleDetail({ params }: { params: { id: string } }) {
     }, [activeTab, vehicle]);
 
     // Status badge mapper
-    const getStatusBadge = (status: string) => {
-        const statusMap = {
-            'ACTIVE': { label: 'Active', class: 'bg-green-100 text-green-800' },
-            'INACTIVE': { label: 'Inactive', class: 'bg-gray-100 text-gray-800' },
-            'MAINTENANCE': { label: 'En maintenance', class: 'bg-yellow-100 text-yellow-800' },
-            'DISPOSED': { label: 'Retiré du service', class: 'bg-red-100 text-red-800' }
-        };
+	    const getStatusBadge = (status: string) => {
+	        const statusMap = {
+	            'ACTIVE': { label: 'Actif', class: 'bg-green-100 text-green-800' },
+	            'INACTIVE': { label: 'Inactif', class: 'bg-gray-100 text-gray-800' },
+	            'MAINTENANCE': { label: 'En maintenance', class: 'bg-yellow-100 text-yellow-800' },
+	            'DISPOSED': { label: 'Retiré du service', class: 'bg-red-100 text-red-800' }
+	        };
 
         const config = statusMap[status as keyof typeof statusMap] || { label: status, class: 'bg-gray-100 text-gray-800' };
 

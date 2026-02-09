@@ -21,7 +21,7 @@ export default function ServiceProgramCreatePage() {
 
   const handleSave = async () => {
     if (!name) {
-      setError('Name is required');
+      setError('Le nom est obligatoire');
       return;
     }
 
@@ -38,7 +38,7 @@ export default function ServiceProgramCreatePage() {
         body: JSON.stringify({
           name,
           frequency: '10000 km', // Default frequency as it's required by API
-          description: `Template: ${template}`,
+          description: `Modèle : ${template}`,
           active: true,
           tasks: [] // Could be extended to select tasks
         })
@@ -50,10 +50,10 @@ export default function ServiceProgramCreatePage() {
       if (result.success) {
         router.push('/service/programs');
       } else {
-        setError(result.error || 'Failed to save program');
+        setError(result.error || 'Échec de l’enregistrement du programme');
       }
     } catch (err) {
-      setError('An error occurred while saving');
+      setError('Une erreur est survenue lors de l’enregistrement');
       console.error(err);
     } finally {
       setLoading(false);
@@ -70,12 +70,12 @@ export default function ServiceProgramCreatePage() {
       <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
         <div>
           <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-            <span className="hover:underline cursor-pointer" onClick={handleBack}>Service Programs</span> <span className="text-gray-300">/</span> New
+            <span className="hover:underline cursor-pointer" onClick={handleBack}>Programmes d'entretien</span> <span className="text-gray-300">/</span> Nouveau
           </div>
-          <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">New Service Program</h1>
+          <h1 data-testid="page-title" className="text-2xl font-bold text-gray-900">Nouveau programme d'entretien</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-[#008751] font-medium hover:underline" disabled={loading}>Cancel</button>
+          <button onClick={handleCancel} data-testid="cancel-button" className="px-4 py-2 text-[#008751] font-medium hover:underline" disabled={loading}>Annuler</button>
           <button
             onClick={handleSave}
             data-testid="save-button"
@@ -85,9 +85,9 @@ export default function ServiceProgramCreatePage() {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Saving...
+                Enregistrement...
               </>
-            ) : 'Save Service Program'}
+            ) : "Enregistrer le programme"}
           </button>
         </div>
 
@@ -103,7 +103,7 @@ export default function ServiceProgramCreatePage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 space-y-6">
 
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-1">Name <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-gray-900 mb-1">Nom <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={name}
@@ -114,34 +114,34 @@ export default function ServiceProgramCreatePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Template</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Modèle</label>
             <select
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
               data-testid="program-template"
               className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-[#008751] focus:border-[#008751]"
             >
-              <option value="">Please select</option>
-              <option value="basic">Basic Vehicle Maintenance</option>
-              <option value="heavy">Heavy Duty Service</option>
-              <option value="custom">Custom Template</option>
+              <option value="">Veuillez sélectionner</option>
+              <option value="basic">Entretien véhicule (basique)</option>
+              <option value="heavy">Service intensif</option>
+              <option value="custom">Modèle personnalisé</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
             <div className="flex items-center gap-2">
-              <button className="bg-[#008751] hover:bg-[#007043] text-white text-sm font-bold px-4 py-2.5 rounded">Pick File</button>
-              <button className="bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2.5 rounded border border-gray-300 border-dashed">Or drop file here</button>
+              <button className="bg-[#008751] hover:bg-[#007043] text-white text-sm font-bold px-4 py-2.5 rounded">Choisir un fichier</button>
+              <button className="bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2.5 rounded border border-gray-300 border-dashed">Ou glisser un fichier ici</button>
             </div>
-            <p className="mt-2 text-sm text-gray-500 italic">No file selected</p>
+            <p className="mt-2 text-sm text-gray-500 italic">Aucun fichier sélectionné</p>
           </div>
 
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-1 flex items-center gap-1">
-              Primary Meter <span className="text-red-500">*</span>
+              Compteur principal <span className="text-red-500">*</span>
             </label>
-            <p className="text-sm text-gray-500 mb-2">Select how you measure utilization for this service program.</p>
+            <p className="text-sm text-gray-500 mb-2">Choisissez comment mesurer l'utilisation pour ce programme d'entretien.</p>
             <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -162,7 +162,7 @@ export default function ServiceProgramCreatePage() {
                   onChange={() => setPrimaryMeter('Kilometers')}
                   className="text-[#008751] focus:ring-[#008751] w-4 h-4 border-gray-300"
                 />
-                <span className="text-sm text-gray-900 font-medium">Kilometers</span>
+                <span className="text-sm text-gray-900 font-medium">Kilomètres</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -172,7 +172,7 @@ export default function ServiceProgramCreatePage() {
                   onChange={() => setPrimaryMeter('Hours')}
                   className="text-[#008751] focus:ring-[#008751] w-4 h-4 border-gray-300"
                 />
-                <span className="text-sm text-gray-900 font-medium">Hours</span>
+                <span className="text-sm text-gray-900 font-medium">Heures</span>
               </label>
             </div>
           </div>
@@ -190,9 +190,9 @@ export default function ServiceProgramCreatePage() {
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008751]"></div>
               </div>
               <div>
-                <label htmlFor="secondaryMeter" className="block text-sm font-bold text-gray-900 mb-1 cursor-pointer">Secondary Meter</label>
+                <label htmlFor="secondaryMeter" className="block text-sm font-bold text-gray-900 mb-1 cursor-pointer">Compteur secondaire</label>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Turn on to utilize an additional meter on the service program. This is useful for tracking service for vehicle engine hours or attached vehicle equipment (concrete mixer, welder, trailer, etc.)
+                  Activez cette option pour utiliser un compteur supplémentaire sur ce programme d'entretien. Utile pour suivre l'entretien lié aux heures moteur ou à des équipements attachés (bétonnière, remorque, etc.).
                 </p>
               </div>
             </div>
@@ -200,13 +200,13 @@ export default function ServiceProgramCreatePage() {
         </div>
 
         <div className="mt-6 flex justify-between items-center">
-          <button onClick={handleCancel} className="text-[#008751] font-medium hover:underline" disabled={loading}>Cancel</button>
+          <button onClick={handleCancel} className="text-[#008751] font-medium hover:underline" disabled={loading}>Annuler</button>
           <button
             onClick={handleSave}
             className={`px-4 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded shadow-sm ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             disabled={loading}
           >
-            {loading ? 'Saving...' : 'Save Service Program'}
+            {loading ? 'Enregistrement...' : "Enregistrer le programme"}
           </button>
         </div>
 

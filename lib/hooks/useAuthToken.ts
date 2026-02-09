@@ -56,7 +56,7 @@ export async function authenticatedFetch(
     });
   } catch (error) {
     if ((error as any)?.name === 'AbortError') {
-      throw new Error(`API timeout after ${timeoutMs}ms: ${url}`);
+      throw new Error(`Délai d'attente dépassé (${timeoutMs} ms) pour ${url}`);
     }
     throw error;
   } finally {
@@ -64,7 +64,16 @@ export async function authenticatedFetch(
   }
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    const statusText =
+      response.status === 400 ? 'Requête invalide' :
+        response.status === 401 ? 'Non autorisé' :
+          response.status === 403 ? 'Accès interdit' :
+            response.status === 404 ? 'Ressource introuvable' :
+              response.status === 409 ? 'Conflit' :
+                response.status === 429 ? 'Trop de requêtes' :
+                  response.status >= 500 ? 'Erreur interne du serveur' :
+                    response.statusText || 'Erreur inconnue';
+    throw new Error(`Erreur API : ${response.status} ${statusText}`);
   }
 
   return response.json();

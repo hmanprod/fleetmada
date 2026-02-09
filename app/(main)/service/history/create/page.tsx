@@ -207,13 +207,13 @@ export default function ServiceEntryCreatePage() {
           url: item.document.filePath
         }));
         setDocList(prev => [...prev, ...newDocs]);
-        toast.success(`${type === 'photo' ? 'Photos' : 'Documents'} uploaded successfully`);
+        toast.success(`${type === 'photo' ? 'Photos' : 'Documents'} importés avec succès`);
       } else {
-        toast.error('Upload failed: ' + (data.error || 'Unknown error'));
+        toast.error("Échec de l'import : " + (data.error || 'Erreur inconnue'));
       }
     } catch (err) {
       console.error('Upload error:', err);
-      toast.error('Error uploading files');
+      toast.error("Erreur lors de l'import des fichiers");
     } finally {
       setIsUploading(false);
     }
@@ -228,7 +228,7 @@ export default function ServiceEntryCreatePage() {
 
   const handleSave = async () => {
     if (!formData.vehicleId) {
-      toast.error('Please select a vehicle');
+      toast.error('Veuillez sélectionner un véhicule');
       return;
     }
 
@@ -264,14 +264,14 @@ export default function ServiceEntryCreatePage() {
       <div className="bg-white border-b border-gray-200 px-8 py-3 sticky top-0 z-20 flex justify-between items-center shadow-sm">
         <div className="flex flex-col">
           <button onClick={handleBack} className="text-[#008751] hover:underline flex items-center gap-1 text-sm font-medium mb-1">
-            <ArrowLeft size={14} /> Service Entries
+            <ArrowLeft size={14} /> Historique de service
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">New Service Entry</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Nouvelle entrée de service</h1>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-50 rounded-md border border-gray-300 bg-white transition-colors">Cancel</button>
+          <button onClick={handleBack} className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-50 rounded-md border border-gray-300 bg-white transition-colors">Annuler</button>
           <button onClick={handleSave} className="px-5 py-2 bg-[#008751] hover:bg-[#007043] text-white font-bold rounded-md shadow-sm transition-all flex items-center gap-2">
-            Save Service Entry
+            Enregistrer l'entrée de service
           </button>
         </div>
       </div>
@@ -281,12 +281,12 @@ export default function ServiceEntryCreatePage() {
         {/* Details Section */}
         <section className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-100 bg-[#fcfcfc] rounded-t-xl">
-            <h2 className="text-lg font-bold text-gray-900">Details</h2>
+            <h2 className="text-lg font-bold text-gray-900">Détails</h2>
           </div>
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Vehicle <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Véhicule <span className="text-red-500">*</span></label>
                 <VehicleSelect
                   vehicles={vehicles as any[]}
                   selectedVehicleId={formData.vehicleId}
@@ -296,26 +296,28 @@ export default function ServiceEntryCreatePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Repair Priority Class</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Classe de priorité de réparation</label>
                 <div className="relative">
                   <select
                     value={formData.repairPriority}
                     onChange={(e) => handleInputChange('repairPriority', e.target.value)}
                     className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] appearance-none"
                   >
-                    <option value="">Please select</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="non-scheduled">Non-Scheduled</option>
-                    <option value="emergency">Emergency</option>
+                    <option value="">Veuillez sélectionner</option>
+                    <option value="scheduled">Planifié</option>
+                    <option value="non-scheduled">Non planifié</option>
+                    <option value="emergency">Urgence</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                 </div>
-                <p className="mt-2 text-[11px] text-gray-500 leading-relaxed font-medium capitalize">Repair Priority Class (VMRS Code Key 16) is a simple way to classify whether a service or repair was scheduled, non-scheduled, or an emergency.</p>
+                <p className="mt-2 text-[11px] text-gray-500 leading-relaxed font-medium">
+                  La classe de priorité (VMRS Key 16) permet d’indiquer si un entretien/réparation était planifié, non planifié, ou en urgence.
+                </p>
               </div>
 
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Odometer <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Compteur (km) <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <input
                       type="number"
@@ -379,7 +381,7 @@ export default function ServiceEntryCreatePage() {
               </div>
 
               <div className="col-span-full border-t border-gray-100 pt-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Reference</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Référence</label>
                 <input
                   type="text"
                   value={formData.reference}
@@ -399,12 +401,12 @@ export default function ServiceEntryCreatePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Labels</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Étiquettes</label>
                 <div className="relative">
                   <select
                     className="w-full p-2.5 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] appearance-none"
                   >
-                    <option value="">Please select</option>
+                    <option value="">Veuillez sélectionner</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                 </div>
@@ -416,9 +418,9 @@ export default function ServiceEntryCreatePage() {
         {/* Issues Section */}
         <section className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-[#fcfcfc] rounded-t-xl">
-            <h2 className="text-lg font-bold text-gray-900">Issues</h2>
+            <h2 className="text-lg font-bold text-gray-900">Problèmes</h2>
             <button className="text-[#008751] font-bold text-sm flex items-center gap-1 hover:bg-green-50 px-2 py-1 rounded">
-              <Plus size={16} /> Add Issue
+              <Plus size={16} /> Ajouter un problème
             </button>
           </div>
 
@@ -429,7 +431,7 @@ export default function ServiceEntryCreatePage() {
                 onClick={() => setActiveIssueTab(tab)}
                 className={`py-3 px-1 text-sm font-bold capitalize relative ${activeIssueTab === tab ? 'text-[#008751]' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                {tab}
+                {tab === 'open' ? 'Ouverts' : tab === 'resolved' ? 'Résolus' : 'Fermés'}
                 {activeIssueTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#008751]"></div>}
               </button>
             ))}
@@ -438,24 +440,24 @@ export default function ServiceEntryCreatePage() {
           {!formData.vehicleId ? (
             <div className="p-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
               <div className="bg-white p-3 rounded-full shadow-sm mb-4 border border-gray-100"><AlertCircle className="text-yellow-500" size={24} /></div>
-              <p className="text-sm font-semibold text-gray-900">Select a vehicle first.</p>
-              <p className="text-xs text-gray-500 mt-1">Select a vehicle above to see issues associated with it.</p>
+              <p className="text-sm font-semibold text-gray-900">Sélectionnez d’abord un véhicule.</p>
+              <p className="text-xs text-gray-500 mt-1">Choisissez un véhicule ci-dessus pour voir les problèmes associés.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <div className="p-4 bg-gray-50/50 flex items-center gap-2 border-b border-gray-100">
                 <AlertCircle className="text-blue-500" size={16} />
-                <span className="text-xs font-medium text-gray-600">Select any issues that were resolved as part of this service.</span>
+                <span className="text-xs font-medium text-gray-600">Sélectionnez les problèmes résolus dans le cadre de cet entretien.</span>
               </div>
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-white">
                     <th className="px-6 py-3 w-10"></th>
-                    <th className="px-3 py-3 font-medium">Priority</th>
-                    <th className="px-3 py-3 font-medium">Issue</th>
-                    <th className="px-3 py-3 font-medium">Summary</th>
-                    <th className="px-3 py-3 font-medium">Status</th>
-                    <th className="px-3 py-3 font-medium text-right">Reported</th>
+                    <th className="px-3 py-3 font-medium">Priorité</th>
+                    <th className="px-3 py-3 font-medium">Problème</th>
+                    <th className="px-3 py-3 font-medium">Résumé</th>
+                    <th className="px-3 py-3 font-medium">Statut</th>
+                    <th className="px-3 py-3 font-medium text-right">Signalé</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -490,7 +492,7 @@ export default function ServiceEntryCreatePage() {
                   ))}
                   {filteredIssues[activeIssueTab].length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-12 text-center text-gray-400 text-sm">No {activeIssueTab} issues found.</td>
+                      <td colSpan={6} className="p-12 text-center text-gray-400 text-sm">Aucun problème {activeIssueTab === 'open' ? 'ouvert' : activeIssueTab === 'resolved' ? 'résolu' : 'fermé'} trouvé.</td>
                     </tr>
                   )}
                 </tbody>
@@ -503,12 +505,12 @@ export default function ServiceEntryCreatePage() {
         <section className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-gray-200 overflow-visible">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-[#fcfcfc] rounded-t-xl">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-gray-900">Line Items</h2>
+              <h2 className="text-lg font-bold text-gray-900">Éléments</h2>
               <span className="bg-gray-100 text-gray-500 text-[11px] font-bold px-1.5 py-0.5 rounded-full ring-1 ring-gray-200">{lineItems.length}</span>
             </div>
             <div className="flex items-center gap-4">
               <button className="text-[#008751] font-bold text-sm flex items-center gap-1.5 hover:bg-green-50 px-2 py-1 rounded transition-colors group">
-                View Service Reminders
+                Voir les rappels de service
                 <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full inline-block transform transition-transform group-hover:scale-110">5</span>
               </button>
             </div>
@@ -531,9 +533,9 @@ export default function ServiceEntryCreatePage() {
                 <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"><Settings2 size={18} /></button>
               </div>
               <div className="hidden md:flex items-center gap-0 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-right">
-                <span className="w-28 px-2">Labor</span>
-                <span className="w-28 px-2">Parts</span>
-                <span className="w-32 px-2 mr-10">Subtotal</span>
+                <span className="w-28 px-2">Main-d'œuvre</span>
+                <span className="w-28 px-2">Pièces</span>
+                <span className="w-32 px-2 mr-10">Sous-total</span>
               </div>
             </div>
 
@@ -615,22 +617,22 @@ export default function ServiceEntryCreatePage() {
 
                       {isExpanded && (
                         <div className="px-14 pb-6 space-y-6 pt-2 border-t border-gray-50 bg-[#fefefe]">
-                          <div className="flex items-center gap-6 text-[11px] font-medium text-gray-500">
+                            <div className="flex items-center gap-6 text-[11px] font-medium text-gray-500">
                             <div className="flex items-center gap-1.5">
                               <Calendar size={13} className="text-gray-400" />
-                              Last Completed: <span className="text-gray-900">Never</span>
+                              Dernière réalisation : <span className="text-gray-900">Jamais</span>
                             </div>
                             <button className="flex items-center gap-1.5 text-[#008751] hover:underline font-bold">
-                              <Plus size={13} /> Add Service Reminder
+                              <Plus size={13} /> Créer un rappel de service
                             </button>
                           </div>
 
                           <button className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded text-xs font-bold text-gray-700 hover:bg-gray-50 bg-white">
-                            <AlertTriangle size={14} className="text-gray-400" /> Link Issues
+                            <AlertTriangle size={14} className="text-gray-400" /> Associer des problèmes
                           </button>
 
                           <textarea
-                            placeholder="Add notes or additional details"
+                            placeholder="Ajouter des notes ou des détails"
                             value={item.notes || ''}
                             onChange={(e) => updateLineItem(item.id, 'notes', e.target.value)}
                             className="w-full border border-gray-200 rounded-md p-3 text-sm focus:ring-1 focus:ring-[#008751] outline-none h-24 placeholder:text-gray-300"
@@ -638,17 +640,17 @@ export default function ServiceEntryCreatePage() {
 
                           <div className="space-y-4">
                             <button className="flex items-center gap-1 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-gray-700">
-                              MAINTENANCE CATEGORIZATION <ChevronDown size={14} className="text-gray-400" />
+                              CATÉGORISATION D'ENTRETIEN <ChevronDown size={14} className="text-gray-400" />
                             </button>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                               <div className="space-y-2">
                                 <label className="flex items-center gap-1 text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                                  Reason for Repair <Info size={12} className="text-gray-300 pointer-events-none" />
+                                  Motif de réparation <Info size={12} className="text-gray-300 pointer-events-none" />
                                 </label>
                                 <div className="relative group/select">
                                   <select className="w-full p-2.5 border border-gray-200 rounded text-sm bg-white text-[#008751] font-medium appearance-none cursor-pointer group-hover/select:border-gray-300 transition-colors outline-none focus:border-[#008751]">
-                                    <option>Select Reason for Repair</option>
+                                    <option>Sélectionner un motif</option>
                                   </select>
                                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                                 </div>
@@ -656,12 +658,12 @@ export default function ServiceEntryCreatePage() {
 
                               <div className="space-y-2">
                                 <label className="flex items-center gap-1 text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                                  Category / System / Assembly <Info size={12} className="text-gray-300 pointer-events-none" />
+                                  Catégorie / Système / Assemblage <Info size={12} className="text-gray-300 pointer-events-none" />
                                 </label>
                                 <div className="flex gap-2">
                                   <div className="flex-[0.8] relative group/select">
                                     <select className="w-full p-2.5 border border-gray-200 rounded text-sm bg-white font-medium appearance-none cursor-pointer group-hover/select:border-gray-300 transition-colors outline-none focus:border-[#008751]">
-                                      <option>2 - Drive Train</option>
+                                      <option>2 - Chaîne cinématique</option>
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                                   </div>
@@ -673,7 +675,7 @@ export default function ServiceEntryCreatePage() {
                                   </div>
                                   <div className="flex-1 relative group/select">
                                     <select className="w-full p-2.5 border border-gray-200 rounded text-sm bg-white font-medium appearance-none cursor-pointer group-hover/select:border-gray-300 transition-colors outline-none focus:border-[#008751] truncate pr-8">
-                                      <option>033 - Range Selector ...</option>
+                                      <option>033 - Sélecteur de gamme ...</option>
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                                   </div>
@@ -689,39 +691,39 @@ export default function ServiceEntryCreatePage() {
               </div>
             ) : (
               <div className="py-20 text-center bg-gray-50/50 rounded-lg border-2 border-dashed border-gray-200">
-                <p className="text-sm font-medium text-gray-400">No line items added. Start by searching for a task above.</p>
+                <p className="text-sm font-medium text-gray-400">Aucun élément ajouté. Commencez par rechercher une tâche ci-dessus.</p>
               </div>
             )}
 
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-gray-100 pt-10">
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-4 uppercase tracking-tighter">General Notes</h3>
+                <h3 className="text-sm font-bold text-gray-700 mb-4 uppercase tracking-tighter">Notes générales</h3>
                 <textarea
                   value={formData.generalNotes}
                   onChange={(e) => handleInputChange('generalNotes', e.target.value)}
-                  placeholder="Add notes or additional details"
+                  placeholder="Ajouter des notes ou des détails"
                   className="w-full h-40 border border-gray-300 rounded-md p-4 text-sm focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] resize-none"
                 ></textarea>
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-6 uppercase tracking-tighter">Cost Summary</h3>
+                <h3 className="text-sm font-bold text-gray-700 mb-6 uppercase tracking-tighter">Résumé des coûts</h3>
                 <div className="space-y-4 border-b border-gray-100 pb-6">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 font-medium">Subtotal</span>
+                    <span className="text-gray-500 font-medium">Sous-total</span>
                     <span className="text-gray-900 font-bold">€{costSummary.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 font-medium pl-4 border-l-2 border-gray-100">Labor</span>
+                    <span className="text-gray-500 font-medium pl-4 border-l-2 border-gray-100">Main-d'œuvre</span>
                     <span className="text-gray-500">€{costSummary.labor.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 font-medium pl-4 border-l-2 border-gray-100">Parts</span>
+                    <span className="text-gray-500 font-medium pl-4 border-l-2 border-gray-100">Pièces</span>
                     <span className="text-gray-500">€{costSummary.parts.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between items-center text-sm pt-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500 font-medium">Discount</span>
+                      <span className="text-gray-500 font-medium">Remise</span>
                       <div className="flex rounded border border-gray-200 overflow-hidden">
                         <button
                           onClick={() => handleInputChange('discountType', '%')}
@@ -744,7 +746,7 @@ export default function ServiceEntryCreatePage() {
 
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500 font-medium">Tax</span>
+                      <span className="text-gray-500 font-medium">Taxe</span>
                       <div className="flex rounded border border-gray-200 overflow-hidden">
                         <button
                           onClick={() => handleInputChange('taxType', '%')}
@@ -796,8 +798,8 @@ export default function ServiceEntryCreatePage() {
                 <div className="bg-gray-100 p-4 rounded-full mb-4 group-hover:bg-green-50 transition-colors">
                   <Upload size={28} className="text-gray-400 group-hover:text-[#008751]" />
                 </div>
-                <p className="text-sm font-bold text-gray-900">Click to upload photos</p>
-                {isUploading && <p className="text-xs text-[#008751] mt-2 font-medium animate-pulse">Uploading...</p>}
+                <p className="text-sm font-bold text-gray-900">Cliquer pour importer des photos</p>
+                {isUploading && <p className="text-xs text-[#008751] mt-2 font-medium animate-pulse">Import en cours...</p>}
               </div>
 
               {/* Photos List */}
@@ -841,8 +843,8 @@ export default function ServiceEntryCreatePage() {
                 <div className="bg-gray-100 p-4 rounded-full mb-4 group-hover:bg-green-50 transition-colors">
                   <Upload size={28} className="text-gray-400 group-hover:text-[#008751]" />
                 </div>
-                <p className="text-sm font-bold text-gray-900">Click to upload documents</p>
-                {isUploading && <p className="text-xs text-[#008751] mt-2 font-medium animate-pulse">Uploading...</p>}
+                <p className="text-sm font-bold text-gray-900">Cliquer pour importer des documents</p>
+                {isUploading && <p className="text-xs text-[#008751] mt-2 font-medium animate-pulse">Import en cours...</p>}
               </div>
 
               {/* Documents List */}
@@ -869,7 +871,7 @@ export default function ServiceEntryCreatePage() {
         {/* Comments Section */}
         <section className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 bg-[#fcfcfc]">
-            <h2 className="text-lg font-bold text-gray-900">Comments</h2>
+            <h2 className="text-lg font-bold text-gray-900">Commentaires</h2>
           </div>
           <div className="p-8">
             <div className="flex gap-4">
@@ -878,7 +880,7 @@ export default function ServiceEntryCreatePage() {
                 value={formData.comment}
                 onChange={(e) => handleInputChange('comment', e.target.value)}
                 className="flex-1 border border-gray-300 rounded-lg p-4 focus:ring-2 focus:ring-[#008751]/20 focus:border-[#008751] transition-all text-sm outline-none"
-                placeholder="Add an optional comment"
+                placeholder="Ajouter un commentaire (optionnel)"
                 rows={4}
               ></textarea>
             </div>
@@ -887,10 +889,10 @@ export default function ServiceEntryCreatePage() {
 
         {/* Bottom Actions */}
         <div className="flex justify-end gap-3 pt-4 pb-20">
-          <button onClick={handleBack} className="px-6 py-2.5 text-gray-700 font-bold hover:bg-gray-50 rounded-md border border-gray-300 bg-white shadow-sm transition-all">Cancel</button>
-          <button onClick={() => { }} className="px-6 py-2.5 text-gray-700 font-bold hover:bg-gray-50 rounded-md border border-gray-300 bg-white shadow-sm transition-all">Save & Add Another</button>
+          <button onClick={handleBack} className="px-6 py-2.5 text-gray-700 font-bold hover:bg-gray-50 rounded-md border border-gray-300 bg-white shadow-sm transition-all">Annuler</button>
+          <button onClick={() => { }} className="px-6 py-2.5 text-gray-700 font-bold hover:bg-gray-50 rounded-md border border-gray-300 bg-white shadow-sm transition-all">Enregistrer et ajouter un autre</button>
           <button onClick={handleSave} className="px-8 py-2.5 bg-[#008751] hover:bg-[#007043] text-white font-black rounded-md shadow-lg transition-all active:scale-[0.98]">
-            Save Service Entry
+            Enregistrer l'entrée de service
           </button>
         </div>
 

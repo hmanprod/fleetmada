@@ -52,6 +52,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
             onClick={() => onPreview(document.id)}
             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
             title="Prévisualiser"
+            aria-label="Prévisualiser"
             data-testid="preview-button"
           >
             <Eye size={16} />
@@ -61,6 +62,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
             onClick={() => onDownload(document.id)}
             className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
             title="Télécharger"
+            aria-label="Télécharger"
             data-testid="download-button"
           >
             <Download size={16} />
@@ -70,6 +72,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDownload, onDel
             onClick={() => onDelete(document.id)}
             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
             title="Supprimer"
+            aria-label="Supprimer"
             data-testid="delete-button"
           >
             <Trash2 size={16} />
@@ -273,6 +276,7 @@ export default function DocumentsPage() {
             onClick={() => setShowFilters(!showFilters)}
             className={`border rounded p-2 text-gray-600 hover:bg-gray-50 ${showFilters ? 'bg-gray-50' : ''}`}
             title="Filtres"
+            aria-label="Filtres"
             data-testid="filter-button"
           >
             <Filter size={20} />
@@ -282,6 +286,7 @@ export default function DocumentsPage() {
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             className="border rounded p-2 text-gray-600 hover:bg-gray-50"
             title="Changer la vue"
+            aria-label="Changer la vue"
           >
             <FolderOpen size={20} />
           </button>
@@ -290,7 +295,7 @@ export default function DocumentsPage() {
             className="bg-[#008751] hover:bg-[#007043] text-white font-bold py-2 px-4 rounded flex items-center gap-2"
             data-testid="add-document-button"
           >
-            <Plus size={20} /> Add Document
+            <Plus size={20} /> Ajouter un document
           </button>
 
         </div>
@@ -398,7 +403,7 @@ export default function DocumentsPage() {
                 disabled={uploading}
                 className="bg-[#008751] text-white px-4 py-2 rounded text-sm hover:bg-[#007043] disabled:opacity-50"
               >
-                {uploading ? 'Upload...' : 'Tout uploader'}
+                {uploading ? 'Téléversement…' : 'Tout téléverser'}
               </button>
               <button
                 onClick={() => setSelectedFiles([])}

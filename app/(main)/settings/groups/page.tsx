@@ -143,12 +143,16 @@ export default function GroupsManagementPage() {
                                             <button
                                                 onClick={() => handleOpenModal(group)}
                                                 className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                                aria-label="Modifier le groupe"
+                                                title="Modifier le groupe"
                                             >
                                                 <Edit2 size={16} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(group.id, group.name)}
                                                 className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                                aria-label="Supprimer le groupe"
+                                                title="Supprimer le groupe"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -168,7 +172,12 @@ export default function GroupsManagementPage() {
                             <h3 className="text-lg font-bold text-gray-900">
                                 {editingGroup ? 'Modifier le groupe' : 'Nouveau groupe'}
                             </h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                                aria-label="Fermer"
+                                title="Fermer"
+                            >
                                 <Plus size={20} className="rotate-45" />
                             </button>
                         </div>
