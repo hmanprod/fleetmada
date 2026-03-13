@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
+import { deleteCloudinaryAssetByUrl, isCloudinaryUrl } from '@/lib/cloudinary'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -39,7 +40,15 @@ const validateToken = (token: string): TokenPayload | null => {
 // Fonction pour supprimer le fichier physique
 const deleteFile = async (filePath: string, issueId: string) => {
   try {
-    // Construire le chemin complet du fichier
+    if (isCloudinaryUrl(filePath)) {
+      const result = await deleteCloudinaryAssetByUrl(filePath)
+      if (!result.ok) {
+        logAction('Cloudinary deletion failed', 'system', { filePath, issueId, result })
+      }
+      return
+    }
+
+    // Supprimer le fichier local pour compatibilité avec les anciens uploads
     const fullPath = join(process.cwd(), filePath)
     await unlink(fullPath)
     logAction('File deleted from disk', 'system', { filePath: fullPath })

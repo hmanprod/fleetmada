@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-import { existsSync } from 'fs'
+import { buildCloudinaryFolder, uploadBufferToCloudinary } from '@/lib/cloudinary'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -182,26 +180,20 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             )
         }
 
-        // Créer le répertoire uploads s'il n'existe pas
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'service-entries', serviceEntryId)
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true })
-        }
-
         const uploadedPhotos: any[] = []
 
         for (const file of files) {
             // Générer un nom de fichier unique
             const timestamp = Date.now()
             const randomStr = Math.random().toString(36).substring(2, 8)
-            const extension = path.extname(file.name) || '.jpg'
-            const fileName = `${timestamp}-${randomStr}${extension}`
-            const filePath = `/uploads/service-entries/${serviceEntryId}/${fileName}`
-            const fullPath = path.join(uploadDir, fileName)
-
-            // Écrire le fichier
+            const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+            const fileName = `${timestamp}-${randomStr}-${sanitizedName}`
             const buffer = Buffer.from(await file.arrayBuffer())
-            await writeFile(fullPath, buffer)
+            const folder = buildCloudinaryFolder('service-entries', serviceEntryId)
+            const uploadResult = await uploadBufferToCloudinary(buffer, {
+                folder,
+                fileName
+            })
 
             // Créer l'entrée dans la base de données
             const photo = await prisma.photo.create({
@@ -209,8 +201,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
                     entityType: 'serviceEntry',
                     entityId: serviceEntryId,
                     fileName: file.name,
-                    filePath: filePath,
-                    fileSize: file.size,
+                    filePath: uploadResult.secureUrl,
+                    fileSize: uploadResult.bytes,
                     mimeType: file.type || 'image/jpeg',
                     userId: userId,
                     isPublic: false

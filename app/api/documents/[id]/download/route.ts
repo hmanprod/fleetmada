@@ -130,23 +130,53 @@ export async function GET(
 
       const document = accessCheck.document!;
 
-      // Dans une implémentation réelle, vous chargeriez le fichier depuis votre service de stockage
-      // (AWS S3, Google Cloud Storage, etc.)
-      // Ici, nous simulons un fichier avec des données factices
-
-      const fileBuffer = Buffer.from(`Contenu du fichier: ${document.fileName}\nTaille: ${document.fileSize} bytes\nType: ${document.mimeType}\nChecksum: ${document.checksum || 'N/A'}`);
-
-      // Configuration des headers pour le téléchargement
       const downloadHeaders = new Headers();
-      downloadHeaders.set('Content-Type', document.mimeType);
-      downloadHeaders.set('Content-Length', document.fileSize.toString());
       downloadHeaders.set('Content-Disposition', `attachment; filename="${encodeURIComponent(document.fileName)}"`);
-      
-      // Ajout d'en-têtes de sécurité
       downloadHeaders.set('X-Content-Type-Options', 'nosniff');
       downloadHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       downloadHeaders.set('Pragma', 'no-cache');
       downloadHeaders.set('Expires', '0');
+
+      // Si le document est sur Cloudinary (ou autre URL), proxy le téléchargement
+      if (document.filePath.startsWith('http')) {
+        const remoteResponse = await fetch(document.filePath);
+        if (!remoteResponse.ok || !remoteResponse.body) {
+          throw new Error('Impossible de récupérer le fichier distant');
+        }
+
+        const contentType = remoteResponse.headers.get('content-type') || document.mimeType;
+        const contentLength = remoteResponse.headers.get('content-length') || document.fileSize.toString();
+
+        downloadHeaders.set('Content-Type', contentType);
+        downloadHeaders.set('Content-Length', contentLength);
+
+        logAction('Download Document - Success (Remote)', userId, { 
+          userId, 
+          documentId: document.id,
+          fileName: document.fileName,
+          fileSize: document.fileSize,
+          mimeType: contentType
+        });
+
+        return new NextResponse(remoteResponse.body, {
+          status: 200,
+          headers: downloadHeaders
+        });
+      }
+
+      // Fallback local (ancien stockage) ou contenu simulé
+      const localPath = path.join(process.cwd(), 'public', document.filePath);
+      let fileBuffer: Buffer;
+
+      if (fs.existsSync(localPath)) {
+        fileBuffer = await fs.promises.readFile(localPath);
+        downloadHeaders.set('Content-Type', document.mimeType);
+        downloadHeaders.set('Content-Length', fileBuffer.length.toString());
+      } else {
+        fileBuffer = Buffer.from(`Contenu du fichier: ${document.fileName}\nTaille: ${document.fileSize} bytes\nType: ${document.mimeType}\nChecksum: ${document.checksum || 'N/A'}`);
+        downloadHeaders.set('Content-Type', document.mimeType);
+        downloadHeaders.set('Content-Length', document.fileSize.toString());
+      }
 
       logAction('Download Document - Success', userId, { 
         userId, 

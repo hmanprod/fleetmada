@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { buildCloudinaryFolder, uploadBufferToCloudinary } from '@/lib/cloudinary';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -116,20 +115,15 @@ export async function POST(
             );
         }
 
-        // Create upload directory
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'photos', 'vehicles', vehicleId);
-        await mkdir(uploadDir, { recursive: true });
-
-        // Generate unique filename
-        const ext = path.extname(file.name);
-        const uniqueFileName = `${uuidv4()}${ext}`;
-        const filePath = path.join(uploadDir, uniqueFileName);
-        const publicPath = `/uploads/photos/vehicles/${vehicleId}/${uniqueFileName}`;
-
-        // Write file to disk
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const uniqueFileName = `${uuidv4()}-${sanitizedName}`;
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        await writeFile(filePath, buffer);
+        const folder = buildCloudinaryFolder('vehicles', vehicleId);
+        const uploadResult = await uploadBufferToCloudinary(buffer, {
+            folder,
+            fileName: uniqueFileName
+        });
 
         // Parse tags
         const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()) : [];
@@ -140,8 +134,8 @@ export async function POST(
                 entityType: 'vehicle',
                 entityId: vehicleId,
                 fileName: file.name,
-                filePath: publicPath,
-                fileSize: file.size,
+                filePath: uploadResult.secureUrl,
+                fileSize: uploadResult.bytes,
                 mimeType: file.type,
                 locationType: locationType || undefined,
                 description: description || undefined,

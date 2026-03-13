@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { buildCloudinaryFolder, uploadBufferToCloudinary } from '@/lib/cloudinary';
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -134,16 +133,14 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const uniqueFileName = `${timestamp}_${sanitizedFileName}`;
 
-    // Chemin de stockage
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents');
-    await mkdir(uploadDir, { recursive: true });
-
-    // Sauvegarde du fichier
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filePathOnDisk = path.join(uploadDir, uniqueFileName);
-    await writeFile(filePathOnDisk, buffer);
+    const folder = buildCloudinaryFolder('documents', metadata.companyId || companyId || userId);
+    const uploadResult = await uploadBufferToCloudinary(buffer, {
+      folder,
+      fileName: uniqueFileName
+    });
 
-    const filePath = `/uploads/documents/${uniqueFileName}`;
+    const filePath = uploadResult.secureUrl;
 
     // Génération du checksum pour l'intégrité
     const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
@@ -153,7 +150,7 @@ const processFile = async (file: File, metadata: UploadMultipleInput, userId: st
     const document = await prisma.document.create({
       data: {
         fileName: file.name,
-        fileSize: file.size,
+        fileSize: uploadResult.bytes,
         filePath,
         mimeType: file.type,
         userId,

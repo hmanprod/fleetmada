@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import { unlink } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
+import { deleteCloudinaryAssetByUrl, isCloudinaryUrl } from '@/lib/cloudinary'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -120,10 +121,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
             )
         }
 
-        // Supprimer le fichier physique
-        const fullPath = path.join(process.cwd(), 'public', existingPhoto.filePath)
-        if (existsSync(fullPath)) {
-            await unlink(fullPath)
+        // Supprimer le fichier physique (Cloudinary ou local legacy)
+        if (isCloudinaryUrl(existingPhoto.filePath)) {
+            const result = await deleteCloudinaryAssetByUrl(existingPhoto.filePath)
+            if (!result.ok) {
+                logAction('Cloudinary deletion failed', userId, { photoId, result })
+            }
+        } else {
+            const fullPath = path.join(process.cwd(), 'public', existingPhoto.filePath)
+            if (existsSync(fullPath)) {
+                await unlink(fullPath)
+            }
         }
 
         // Supprimer l'entrée de la base de données

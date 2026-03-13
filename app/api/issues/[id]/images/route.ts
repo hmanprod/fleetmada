@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { buildCloudinaryFolder, uploadBufferToCloudinary } from '@/lib/cloudinary'
 
 // Interface pour les données du token JWT décodé
 interface TokenPayload {
@@ -38,25 +37,21 @@ const validateToken = (token: string): TokenPayload | null => {
 
 // Fonction pour sauvegarder le fichier
 const saveFile = async (file: File, issueId: string): Promise<{ fileName: string, filePath: string, fileSize: number, mimeType: string }> => {
-  const uploadsDir = join(process.cwd(), 'uploads', 'issues', issueId)
-  
-  // Créer le dossier s'il n'existe pas
-  await mkdir(uploadsDir, { recursive: true })
-  
   const timestamp = Date.now()
   const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const fileName = `${timestamp}_${originalName}`
-  const filePath = join(uploadsDir, fileName)
-  
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
-  
-  await writeFile(filePath, buffer)
-  
+  const folder = buildCloudinaryFolder('issues', issueId)
+  const uploadResult = await uploadBufferToCloudinary(buffer, {
+    folder,
+    fileName
+  })
+
   return {
     fileName,
-    filePath: `/uploads/issues/${issueId}/${fileName}`,
-    fileSize: buffer.length,
+    filePath: uploadResult.secureUrl,
+    fileSize: uploadResult.bytes,
     mimeType: file.type
   }
 }

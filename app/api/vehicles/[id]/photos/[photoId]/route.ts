@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { unlink } from 'fs/promises';
 import path from 'path';
+import { deleteCloudinaryAssetByUrl, isCloudinaryUrl } from '@/lib/cloudinary';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -90,10 +91,17 @@ export async function DELETE(
             );
         }
 
-        // Delete file from disk
+        // Delete file from Cloudinary or disk (legacy)
         try {
-            const filePath = path.join(process.cwd(), 'public', photo.filePath);
-            await unlink(filePath);
+            if (isCloudinaryUrl(photo.filePath)) {
+                const result = await deleteCloudinaryAssetByUrl(photo.filePath);
+                if (!result.ok) {
+                    console.warn('Cloudinary deletion failed:', result);
+                }
+            } else {
+                const filePath = path.join(process.cwd(), 'public', photo.filePath);
+                await unlink(filePath);
+            }
         } catch (fileError) {
             console.warn('Impossible de supprimer le fichier:', fileError);
         }
