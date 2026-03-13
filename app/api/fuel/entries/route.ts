@@ -56,7 +56,7 @@ const buildWhereClause = (filters: FuelEntryFilters, userId: string) => {
   }
 
   if (filters.vendor) {
-    where.vendor = {
+    where.vendorName = {
       contains: filters.vendor,
       mode: 'insensitive'
     }
@@ -80,7 +80,7 @@ const buildWhereClause = (filters: FuelEntryFilters, userId: string) => {
 
   if (filters.search) {
     where.OR = [
-      { vendor: { contains: filters.search, mode: 'insensitive' } },
+      { vendorName: { contains: filters.search, mode: 'insensitive' } },
       { vehicle: { name: { contains: filters.search, mode: 'insensitive' } } }
     ]
   }

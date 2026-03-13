@@ -18,9 +18,9 @@ interface TokenPayload {
 const DocumentUpdateSchema = z.object({
   attachedTo: z.string().optional(),
   attachedId: z.string().optional(),
-  labels: z.string().optional(),
+  labels: z.union([z.string(), z.array(z.string())]).optional(),
   description: z.string().optional(),
-  isPublic: z.string().transform(Boolean).optional()
+  isPublic: z.union([z.boolean(), z.string()]).optional()
 });
 
 // Types TypeScript
@@ -236,7 +236,10 @@ export async function PUT(
       }
 
       if (updateData.labels !== undefined) {
-        dataToUpdate.labels = updateData.labels.split(',').map(label => label.trim());
+        const normalizedLabels = Array.isArray(updateData.labels)
+          ? updateData.labels.map(label => label.trim()).filter(Boolean)
+          : updateData.labels.split(',').map(label => label.trim()).filter(Boolean);
+        dataToUpdate.labels = normalizedLabels;
       }
 
       if (updateData.description !== undefined) {
@@ -244,7 +247,9 @@ export async function PUT(
       }
 
       if (updateData.isPublic !== undefined) {
-        dataToUpdate.isPublic = updateData.isPublic;
+        dataToUpdate.isPublic = typeof updateData.isPublic === 'boolean'
+          ? updateData.isPublic
+          : updateData.isPublic === 'true';
       }
 
       // Mise à jour du document

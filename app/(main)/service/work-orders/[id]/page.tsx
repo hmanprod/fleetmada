@@ -15,7 +15,7 @@ import { useToast, ToastContainer } from '@/components/NotificationToast';
 export default function WorkOrderDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { toast, toasts, removeToast } = useToast();
-    const { entry, loading, error } = useServiceEntry(params.id);
+    const { entry, loading, error, refetch } = useServiceEntry(params.id);
     const [showMenu, setShowMenu] = useState(false);
 
     // Sidebar State
@@ -245,7 +245,7 @@ export default function WorkOrderDetailPage({ params }: { params: { id: string }
                                 try {
                                     await serviceAPI.updateServiceEntry(entry.id, { status: 'COMPLETED' });
                                     toast.success('Succès', 'Ordre de travail terminé');
-                                    router.refresh();
+                                    await refetch();
                                 } catch (err) {
                                     toast.error('Erreur', 'Échec de la mise à jour');
                                 }

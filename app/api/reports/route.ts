@@ -197,6 +197,7 @@ export async function GET(request: NextRequest) {
         title: report.title,
         description: report.description,
         category: report.category,
+        isSaved: report.isSaved,
         isFavorite: report.isFavorite,
         config: report.config,
         createdAt: report.createdAt,

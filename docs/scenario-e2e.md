@@ -130,7 +130,15 @@ Ce document reprend les modules de `docs/userstory.md` et les reordonne pour une
 2. Le retrouver via recherche/filtre (`/documents`).
 3. Ouvrir `/documents/[id]`, tester preview/download/edit/delete.
 
-### E2E-13 - Tableau de bord
+### E2E-13 - Documents (transverse)
+- Source: `docs/userstories/12-modules-hors-menu.md`
+- Objectif: valider le repository documentaire central.
+- Parcours:
+1. Ouvrir `/documents/upload` et televerser un document.
+2. Retrouver le document via recherche/filtre dans `/documents`.
+3. Ouvrir `/documents/[id]`, tester preview/download/edit/delete.
+
+### E2E-14 - Tableau de bord
 - Source: `docs/userstories/01-tableau-de-bord.md`
 - Objectif: verifier la consolidation KPI apres alimentation des modules.
 - Parcours:
@@ -138,7 +146,7 @@ Ce document reprend les modules de `docs/userstory.md` et les reordonne pour une
 2. Verifier la presence des widgets cles (vehicules, service, fuel, inspections, issues, pieces).
 3. Verifier qu'un rafraichissement recharge les donnees.
 
-### E2E-14 - Rapports & notifications
+### E2E-15 - Rapports & notifications
 - Source: `docs/userstories/12-modules-hors-menu.md`
 - Objectif: valider production et diffusion de syntheses.
 - Parcours:
@@ -147,8 +155,8 @@ Ce document reprend les modules de `docs/userstory.md` et les reordonne pour une
 3. Verifier la recuperation des notifications via les flux de l'application.
 
 ## Decoupage recommande pour execution Playwright
-- Suite Smoke (PR): E2E-01, E2E-05, E2E-06, E2E-09, E2E-10, E2E-13
-- Suite Regression metier (nightly): E2E-02 a E2E-14
+- Suite Smoke (PR): E2E-01, E2E-05, E2E-06, E2E-09, E2E-10, E2E-14
+- Suite Regression metier (nightly): E2E-02 a E2E-15
 - Suite Role-based (nightly): verifier restrictions ADMIN/MANAGER/TECHNICIAN/DRIVER sur modules sensibles
 
 ## Methodologie d'execution par module
