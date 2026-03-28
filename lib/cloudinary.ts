@@ -49,7 +49,7 @@ export const buildCloudinaryFolder = (...parts: Array<string | null | undefined>
 
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
-  options: { folder?: string; fileName?: string; resourceType?: string; tags?: string[] } = {}
+  options: { folder?: string; fileName?: string; resourceType?: 'video' | 'image' | 'auto' | 'raw'; tags?: string[] } = {}
 ): Promise<CloudinaryUploadResult> => {
   ensureConfigured();
   const publicId = options.fileName ? options.fileName.replace(/\.[^/.]+$/, '') : undefined;
