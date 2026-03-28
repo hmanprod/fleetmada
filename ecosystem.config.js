@@ -13,6 +13,9 @@ module.exports = {
       // Limites mémoire adaptées à 1Go RAM
       max_memory_restart: '400M',
 
+      // Charger le fichier .env
+      env_file: '/var/www/html/fleetmada/.env',
+
       // Variables d'environnement
       env: {
         NODE_ENV: 'production',
