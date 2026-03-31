@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Settings, Bell, AlertTriangle, TrendingUp, Calendar, Bug } from 'lucide-react';
+import Link from 'next/link';
+import { RefreshCw, Settings, Bell, AlertTriangle, TrendingUp, Calendar, Bug, Sparkles, Car, ClipboardCheck, BarChart3 } from 'lucide-react';
 
 // Import des composants dashboard
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -80,6 +81,8 @@ export default function Dashboard() {
   const maintenanceStatus = useMaintenanceStatus();
   const dashboardMetrics = useDashboardMetrics();
   const issuesStatus = useIssuesStatus();
+
+  const isOnboarding = !fleetOverview.loading && (fleetOverview.data?.totalVehicles ?? 0) === 0;
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -189,27 +192,66 @@ export default function Dashboard() {
       </div>
 
       {/* Onboarding pour nouveaux utilisateurs */}
-      {fleetOverview.data?.totalVehicles === 0 && (
+      {isOnboarding && isAdminOrManager && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-blue-900">
-                  Bienvenue sur FleetMada !
-                </h3>
-                <div className="mt-2 text-blue-700">
-                  <p>
-                    Commencez par ajouter des véhicules à votre flotte pour voir vos métriques dashboard.
-                  </p>
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 p-8">
+            <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-emerald-200/40 blur-2xl" />
+            <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-emerald-300/30 blur-3xl" />
+            <div className="relative flex flex-col gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 text-emerald-700 px-3 py-1 text-sm font-medium">
+                  <Sparkles className="h-4 w-4" />
+                  Bienvenue sur FleetMada
                 </div>
-                <div className="mt-4">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                <h2 className="mt-4 text-3xl font-bold text-gray-900">
+                  Démarrez votre flotte en 3 étapes simples
+                </h2>
+                <p className="mt-2 text-gray-600">
+                  Pas de KPIs vides: ajoutez vos données et votre dashboard deviendra vivant en quelques minutes.
+                </p>
+
+                <div className="mt-5 w-full rounded-xl bg-white/90 border border-emerald-200 p-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/vehicles/list/create"
+                    className="inline-flex items-center gap-2 rounded-md bg-[#008751] px-4 py-2 text-white font-medium hover:bg-[#007046]"
+                  >
+                    <Car className="h-4 w-4" />
                     Ajouter mon premier véhicule
-                  </button>
+                  </Link>
+                  <Link
+                    href="/vehicles/list"
+                    className="inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-white px-4 py-2 text-emerald-800 font-medium hover:bg-emerald-50"
+                  >
+                    Voir la liste des véhicules
+                  </Link>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Link href="/vehicles/list/create" className="group rounded-xl bg-white/80 border border-emerald-100 p-4 hover:border-emerald-300 hover:shadow-md transition">
+                  <div className="flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <Car className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-emerald-700">Ajoutez vos véhicules</div>
+                  <div className="text-sm text-gray-600">Immatriculation, modèle, statut</div>
+                </Link>
+                <Link href="/reminders/service" className="group rounded-xl bg-white/80 border border-emerald-100 p-4 hover:border-emerald-300 hover:shadow-md transition">
+                  <div className="flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <ClipboardCheck className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-emerald-700">Planifiez l’entretien</div>
+                  <div className="text-sm text-gray-600">Rappels et inspections</div>
+                </Link>
+                <Link href="/fuel/history" className="group rounded-xl bg-white/80 border border-emerald-100 p-4 hover:border-emerald-300 hover:shadow-md transition">
+                  <div className="flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+                    <BarChart3 className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-gray-900 group-hover:text-emerald-700">Suivez vos coûts</div>
+                  <div className="text-sm text-gray-600">Carburant, maintenance, recharge</div>
+                </Link>
               </div>
             </div>
           </div>
@@ -217,7 +259,7 @@ export default function Dashboard() {
       )}
 
       {/* Navigation par onglets - Uniquement pour Admin/Manager */}
-      {isAdminOrManager && (
+      {isAdminOrManager && !isOnboarding && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
@@ -269,98 +311,121 @@ export default function Dashboard() {
 
         {/* Dashboard Admin/Manager - Vue d'ensemble */}
         {isAdminOrManager && activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Métriques principales */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                data-testid="metric-card-total-vehicles"
-                title="Total Véhicules"
-                value={fleetOverview.data?.totalVehicles || 0}
-                icon={TrendingUp}
-                color="blue"
-                loading={fleetOverview.loading}
-                trend={{
-                  value: fleetOverview.healthScore,
-                  label: 'Score santé',
-                  isPositive: fleetOverview.healthScore >= 80
-                }}
-              />
-
-              <MetricCard
-                data-testid="metric-card-total-costs"
-                title="Coûts (30j)"
-                value={`${(costAnalysis.data?.summary.totalCosts || 0).toLocaleString()}€`}
-                icon={TrendingUp}
-                color="purple"
-                loading={costAnalysis.loading}
-                subtitle="Carburant + Entretien"
-              />
-
-              <MetricCard
-                data-testid="metric-card-maintenance"
-                title="Maintenance"
-                value={maintenanceStatus.data?.summary.overdueReminders || 0}
-                icon={Calendar}
-                color={maintenanceStatus.hasCritical ? 'red' : 'yellow'}
-                loading={maintenanceStatus.loading}
-                subtitle="En retard"
-              />
-
-              <MetricCard
-                title="Taux d'Utilisation"
-                value={`${fleetOverview.data?.utilizationRate || 0}%`}
-                icon={TrendingUp}
-                color="green"
-                loading={fleetOverview.loading}
-                trend={{
-                  value: fleetOverview.data?.utilizationRate || 0,
-                  isPositive: (fleetOverview.data?.utilizationRate || 0) >= 80
-                }}
-              />
-            </div>
-
-            {/* Alertes et graphiques */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Alertes */}
-              <div className="lg:col-span-1">
-                <AlertSummary data-testid="alert-summary" alerts={systemAlerts} />
+          isOnboarding ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="rounded-xl border border-emerald-100 bg-white p-5">
+                <div className="text-sm font-semibold text-gray-900">Étape 1</div>
+                <div className="mt-1 text-lg font-bold text-[#008751]">Créez votre flotte</div>
+                <p className="mt-2 text-sm text-gray-600">Ajoutez vos véhicules pour activer les KPIs.</p>
+                <Link href="/vehicles/list/create" className="mt-3 inline-flex text-sm font-medium text-[#008751] hover:underline">Ajouter un véhicule</Link>
               </div>
-
-              {/* Graphique des coûts */}
-              <div className="lg:col-span-2">
-                {costAnalysis.data ? (
-                  <TrendChart
-                    title="Évolution des Coûts (30 derniers jours)"
-                    data={[
-                      { name: 'Carburant', value: costAnalysis.data.breakdown.fuel.total },
-                      { name: 'Entretien', value: costAnalysis.data.breakdown.service.total },
-                      { name: 'Recharge', value: costAnalysis.data.breakdown.charging.total }
-                    ]}
-                    type="bar"
-                    height={300}
-                    color="#008751"
-                  />
-                ) : (
-                  <TrendChart
-                    title="Évolution des Coûts (30 derniers jours)"
-                    data={[]}
-                    type="bar"
-                    height={300}
-                    loading={costAnalysis.loading}
-                  />
-                )}
+              <div className="rounded-xl border border-emerald-100 bg-white p-5">
+                <div className="text-sm font-semibold text-gray-900">Étape 2</div>
+                <div className="mt-1 text-lg font-bold text-[#008751]">Programmez l’entretien</div>
+                <p className="mt-2 text-sm text-gray-600">Créez des rappels pour vos inspections.</p>
+                <Link href="/reminders/service" className="mt-3 inline-flex text-sm font-medium text-[#008751] hover:underline">Créer un rappel</Link>
+              </div>
+              <div className="rounded-xl border border-emerald-100 bg-white p-5">
+                <div className="text-sm font-semibold text-gray-900">Étape 3</div>
+                <div className="mt-1 text-lg font-bold text-[#008751]">Suivez vos coûts</div>
+                <p className="mt-2 text-sm text-gray-600">Enregistrez carburant, recharge et maintenance.</p>
+                <Link href="/fuel/history" className="mt-3 inline-flex text-sm font-medium text-[#008751] hover:underline">Ajouter un coût</Link>
               </div>
             </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Métriques principales */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <MetricCard
+                  data-testid="metric-card-total-vehicles"
+                  title="Total Véhicules"
+                  value={fleetOverview.data?.totalVehicles || 0}
+                  icon={TrendingUp}
+                  color="blue"
+                  loading={fleetOverview.loading}
+                  trend={{
+                    value: fleetOverview.healthScore,
+                    label: 'Score santé',
+                    isPositive: fleetOverview.healthScore >= 80
+                  }}
+                />
 
-            {/* Vue d'ensemble véhicules */}
-            {dashboardMetrics.vehicles && (
-              <VehicleOverview
-                vehicles={dashboardMetrics.vehicles.vehiclesWithMetrics}
-                summary={dashboardMetrics.vehicles.summary}
-                loading={dashboardMetrics.loading}
-              />
-            )}
-          </div>
+                <MetricCard
+                  data-testid="metric-card-total-costs"
+                  title="Coûts (30j)"
+                  value={`${(costAnalysis.data?.summary.totalCosts || 0).toLocaleString()}€`}
+                  icon={TrendingUp}
+                  color="purple"
+                  loading={costAnalysis.loading}
+                  subtitle="Carburant + Entretien"
+                />
+
+                <MetricCard
+                  data-testid="metric-card-maintenance"
+                  title="Maintenance"
+                  value={maintenanceStatus.data?.summary.overdueReminders || 0}
+                  icon={Calendar}
+                  color={maintenanceStatus.hasCritical ? 'red' : 'yellow'}
+                  loading={maintenanceStatus.loading}
+                  subtitle="En retard"
+                />
+
+                <MetricCard
+                  title="Taux d'Utilisation"
+                  value={`${fleetOverview.data?.utilizationRate || 0}%`}
+                  icon={TrendingUp}
+                  color="green"
+                  loading={fleetOverview.loading}
+                  trend={{
+                    value: fleetOverview.data?.utilizationRate || 0,
+                    isPositive: (fleetOverview.data?.utilizationRate || 0) >= 80
+                  }}
+                />
+              </div>
+
+              {/* Alertes et graphiques */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Alertes */}
+                <div className="lg:col-span-1">
+                  <AlertSummary data-testid="alert-summary" alerts={systemAlerts} />
+                </div>
+
+                {/* Graphique des coûts */}
+                <div className="lg:col-span-2">
+                  {costAnalysis.data ? (
+                    <TrendChart
+                      title="Évolution des Coûts (30 derniers jours)"
+                      data={[
+                        { name: 'Carburant', value: costAnalysis.data.breakdown.fuel.total },
+                        { name: 'Entretien', value: costAnalysis.data.breakdown.service.total },
+                        { name: 'Recharge', value: costAnalysis.data.breakdown.charging.total }
+                      ]}
+                      type="bar"
+                      height={300}
+                      color="#008751"
+                    />
+                  ) : (
+                    <TrendChart
+                      title="Évolution des Coûts (30 derniers jours)"
+                      data={[]}
+                      type="bar"
+                      height={300}
+                      loading={costAnalysis.loading}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Vue d'ensemble véhicules */}
+              {dashboardMetrics.vehicles && (
+                <VehicleOverview
+                  vehicles={dashboardMetrics.vehicles.vehiclesWithMetrics}
+                  summary={dashboardMetrics.vehicles.summary}
+                  loading={dashboardMetrics.loading}
+                />
+              )}
+            </div>
+          )
         )}
 
         {/* Analyse des coûts */}
