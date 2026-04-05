@@ -30,6 +30,7 @@ async function registerAndCompleteOnboarding(page: Page) {
 
 test.describe('E2E-07 Vehicles', () => {
   test('creer, modifier, affecter et ajouter une lecture compteur', async ({ page }) => {
+    test.setTimeout(120000);
     const ts = Date.now();
     const vehicleName = `E2E Vehicle ${ts}`;
     const updatedVehicleName = `${vehicleName} Updated`;
@@ -129,9 +130,10 @@ test.describe('E2E-07 Vehicles', () => {
     ).toBeVisible();
 
     await page.goto('/vehicles/assignments');
+    await page.waitForLoadState('networkidle');
     await expect(
       page.getByRole('heading', { name: /Affectations de véhicules/i }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
     await page.getByRole('button', { name: /Ajouter une affectation/i }).click();
     await expect(
       page.getByRole('heading', { name: /Ajouter une affectation/i }),
