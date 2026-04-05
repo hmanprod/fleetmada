@@ -321,4 +321,15 @@ test-results/
 playwright-report/
 .sonarqube/
 .scannerwork/
-qa/audits/
+QA/audits/
+
+# ========================================
+# 📸 PLAYWRIGHT SCREENSHOTS & REPORTS
+# ========================================
+# E2E test screenshots (generated on each run)
+output/playwright/*.png
+output/playwright/*.mp4
+
+# E2E test PDF reports
+rapport-tests-e2e-*.pdf
+rapport-*.pdf
